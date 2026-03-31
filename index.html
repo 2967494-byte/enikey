@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enikey | Разработка систем и сайтов</title>
+    <meta name="description" content="Современные веб-приложения и системные решения от опытного разработчика.">
+    <!-- Google Fonts: Outfit and Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="particles-bg"></canvas>
+    <div class="blob-bg">
+        <div class="blob shape-1"></div>
+        <div class="blob shape-2"></div>
+        <div class="blob shape-3"></div>
+    </div>
+
+    <nav class="navbar glass-effect">
+        <div class="container nav-content">
+            <a href="#" class="logo">
+                <img src="enikey_agency_logo.png" alt="Enikey Logo" class="logo-img">
+                <span class="logo-text">Enikey</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#about" data-i18n="nav_about">Обо мне</a></li>
+                <li><a href="#services" data-i18n="nav_services">Услуги</a></li>
+                <li><a href="#projects" data-i18n="nav_projects">Проекты</a></li>
+                <li><a href="#contact" class="btn btn-primary" data-i18n="nav_contact">Связаться</a></li>
+            </ul>
+            <div class="lang-switcher">
+                <button class="lang-btn active" data-lang="ru">RU</button>
+                <button class="lang-btn" data-lang="en">EN</button>
+                <button class="lang-btn" data-lang="zh">ZH</button>
+            </div>
+            <button class="mobile-menu-btn" aria-label="Открыть меню">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero" id="home">
+            <div class="container hero-content">
+                <div class="hero-text reveal">
+                    <div class="badge" data-i18n="hero_badge">Доступен для новых проектов</div>
+                    <h1 class="hero-title" data-i18n="hero_title" data-i18n-html="true">
+                        Создаю <span class="gradient-text">инновационные</span> системы и сайты
+                    </h1>
+                    <p class="hero-subtitle" data-i18n="hero_subtitle">
+                        Разработка масштабируемых веб-приложений, сложных корпоративных систем и креативных лендингов с акцентом на производительность и потрясающий дизайн.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="#projects" class="btn btn-primary btn-lg shine-effect" data-i18n="hero_btn_work">Смотреть работы</a>
+                        <a href="#about" class="btn btn-outline btn-lg" data-i18n="hero_btn_more">Узнать больше</a>
+                    </div>
+                </div>
+                <div class="hero-visual reveal reveal-delay">
+                    <div class="glass-card visual-card interactive-card">
+                        <div class="card-glow"></div>
+                        <div class="code-editor">
+                            <div class="editor-header">
+                                <span class="dot red"></span>
+                                <span class="dot yellow"></span>
+                                <span class="dot green"></span>
+                                <span class="file-name">agency.ts</span>
+                            </div>
+                            <pre><code class="language-js">
+const team = {
+    name: "Enikey",
+    role: "Digital Agency",
+    focus: ["Web Apps", "Systems", "Design"],
+    drive: ["Sleek UI", "Clean Code"],
+    buildFuture() {
+        return "Creating next-gen experiences";
+    }
+};
+
+team.buildFuture();
+                            </code></pre>
+                        </div>
+                    </div>
+                    <!-- Floating elements -->
+                    <div class="floating-bubble bubble-1 glass-effect">
+                        <span data-i18n="bubble_perf">Высокая производительность</span>
+                    </div>
+                    <div class="floating-bubble bubble-2 glass-effect">
+                        <span data-i18n="bubble_design">Premium Design</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="about" id="about">
+            <div class="container about-content">
+                <div class="about-text reveal">
+                    <div style="margin-bottom: 2rem;">
+                        <img src="enikey_agency_logo.png" alt="Enikey Emblem" style="width: 160px; height: 160px; border-radius: 50%; border: 3px solid var(--glass-border); box-shadow: 0 0 40px rgba(138,43,226,0.5);">
+                    </div>
+                    <h2 class="section-title" data-i18n="about_title" data-i18n-html="true">Мы — <span class="gradient-text">Enikey</span></h2>
+                    <p class="section-subtitle" style="text-align:left; margin-bottom:1.5rem; line-height: 1.8;" data-i18n="about_p1">Мы не просто пишем код и рисуем интерфейсы. Мы проектируем цифровое будущее вашего бизнеса. Enikey — это синергия бескомпромиссной инженерной точности и эстетики премиального дизайна.</p>
+                    <p data-i18n="about_p2" style="color:var(--text-secondary); margin-bottom:2rem;">Мы объединяем передовые технологии масштабируемой разработки с передовым визуальным опытом (WOW-эффектами), помогая вашему бизнесу выделяться и работать эффективнее на всех уровнях.</p>
+                </div>
+                <div class="about-visual reveal reveal-delay">
+                    <div class="glass-card image-card interactive-card">
+                        <div class="card-glow"></div>
+                        <img src="agency_tech_abstract.png" alt="Agency Abstract Tech Background" class="feature-image">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="projects" id="projects">
+            <div class="container">
+                <div class="section-header reveal">
+                    <h2 class="section-title" data-i18n="projects_title" data-i18n-html="true">Избранные <span class="gradient-text">Проекты</span></h2>
+                    <p class="section-subtitle" data-i18n="projects_subtitle">Последние запуски нашей команды</p>
+                </div>
+                <div class="projects-grid">
+                    <div class="glass-card project-card interactive-card reveal scale-in">
+                        <div class="card-glow"></div>
+                        <div class="project-image-wrapper">
+                            <img src="ui_dashboard_preview.png" alt="Futuristic Dashboard" class="project-image">
+                        </div>
+                        <div class="project-info">
+                            <h3 data-i18n="proj1_title">Neon FinTech UI</h3>
+                            <p data-i18n="proj1_desc">Концепт интерфейса управления активами с использованием WebGL</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="services" id="services">
+            <div class="container">
+                <div class="section-header reveal">
+                    <h2 class="section-title" data-i18n="services_title" data-i18n-html="true">Что я <span class="gradient-text">предлагаю</span></h2>
+                    <p class="section-subtitle" data-i18n="services_subtitle">Комплексный подход от архитектуры до финального пикселя</p>
+                </div>
+                
+                <div class="services-grid">
+                    <div class="glass-card service-card interactive-card reveal scale-in">
+                        <div class="card-glow"></div>
+                        <div class="service-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                        </div>
+                        <h3 data-i18n="srv_web_title">Web-Разработка</h3>
+                        <p data-i18n="srv_web_desc">Современные веб-приложения на базе React, Vue, Next.js. Сложные интерфейсы и потрясающая анимация.</p>
+                    </div>
+                    <div class="glass-card service-card interactive-card reveal scale-in reveal-delay">
+                        <div class="card-glow"></div>
+                        <div class="service-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        </div>
+                        <h3 data-i18n="srv_sys_title">Системная Архитектура</h3>
+                        <p data-i18n="srv_sys_desc">Проектирование высоконагруженных отказоустойчивых систем. Микросервисы, базы данных, API.</p>
+                    </div>
+                    <div class="glass-card service-card interactive-card reveal scale-in reveal-delay-2">
+                        <div class="card-glow"></div>
+                        <div class="service-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                        </div>
+                        <h3 data-i18n="srv_design_title">UI/UX Дизайн</h3>
+                        <p data-i18n="srv_design_desc">Разработка интерфейсов, которые не только красивы, но и удобны. Внимание к мельчайшим деталям.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta" id="contact">
+            <div class="container">
+                <div class="glass-card cta-card reveal">
+                    <div class="card-glow"></div>
+                    <h2 data-i18n="cta_title" data-i18n-html="true">Готовы начать <span class="gradient-text">проект</span>?</h2>
+                    <p data-i18n="cta_desc">Свяжитесь со мной для обсуждения вашей идеи и получения оценки</p>
+                    <a href="mailto:hello@example.com" class="btn btn-primary btn-lg shine-effect" data-i18n="cta_btn">Написать мне</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-brand">
+                <a href="#" class="logo">
+                    <img src="enikey_agency_logo.png" alt="Enikey Logo" class="logo-img">
+                    <span class="logo-text">Enikey</span>
+                </a>
+                <p data-i18n="footer_desc">Создаю будущее систем и веба.</p>
+            </div>
+            <div class="footer-links">
+                <a href="#home" data-i18n="footer_nav_home">Главная</a>
+                <a href="#about" data-i18n="nav_about">Обо мне</a>
+                <a href="#services" data-i18n="nav_services">Услуги</a>
+                <a href="#projects" data-i18n="nav_projects">Проекты</a>
+            </div>
+            <div class="footer-social">
+                <a href="#" class="social-icon">GH</a>
+                <a href="#" class="social-icon">LN</a>
+                <a href="#" class="social-icon">TG</a>
+            </div>
+        </div>
+        <div class="container footer-bottom">
+            <p data-i18n="footer_copy" data-i18n-html="true">&copy; 2026 Enikey. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script src="translations.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
