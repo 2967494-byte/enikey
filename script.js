@@ -195,34 +195,22 @@ document.addEventListener('DOMContentLoaded', () => {
             spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
             spans[1].style.opacity = '0';
             spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
-            
-            // Simple display block for demo
-            navLinks.style.display = 'flex';
-            navLinks.style.flexDirection = 'column';
-            navLinks.style.position = 'absolute';
-            navLinks.style.top = '100%';
-            navLinks.style.left = '0';
-            navLinks.style.width = '100%';
-            navLinks.style.background = 'rgba(20, 20, 30, 0.95)';
-            navLinks.style.backdropFilter = 'blur(10px)';
-            navLinks.style.padding = '2rem 0';
-            navLinks.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+            navLinks.classList.add('mobile-active');
         } else {
             spans[0].style.transform = 'none';
             spans[1].style.opacity = '1';
             spans[2].style.transform = 'none';
-            
-            navLinks.style.display = '';
-            navLinks.style.flexDirection = '';
-            navLinks.style.position = '';
-            navLinks.style.top = '';
-            navLinks.style.left = '';
-            navLinks.style.width = '';
-            navLinks.style.background = '';
-            navLinks.style.backdropFilter = '';
-            navLinks.style.padding = '';
-            navLinks.style.borderBottom = '';
+            navLinks.classList.remove('mobile-active');
         }
+    });
+
+    // Close mobile menu when a link is clicked
+    navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 900 && mobileMenuBtn.classList.contains('active')) {
+                mobileMenuBtn.click();
+            }
+        });
     });
 
     // Language Switcher Logic
