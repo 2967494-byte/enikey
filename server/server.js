@@ -139,6 +139,123 @@ app.get('/api/published', (req, res) => {
     });
 });
 
+const https = require('https');
+
+app.post('/api/translate', (req, res) => {
+    db.get("SELECT settings FROM agent_config WHERE id = 1", [], (err, row) => {
+        if (err || !row) return res.status(500).json({ error: 'AI Config not set' });
+        
+        const config = JSON.parse(row.settings);
+        const { data, langs } = req.body;
+
+        const prompt = `Translate this JSON tech content from Russian to ${langs.join(' and ')}. Keep HTML tags. Return ONLY JSON with keys for each language. Content: ${JSON.stringify(data)}`;
+
+        // OpenAI payload
+        const payload = JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.3
+        });
+
+        const options = {
+            hostname: 'api.openai.com',
+            path: '/v1/chat/completions',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${config.key}`
+            }
+        };
+
+        const aiReq = https.request(options, (aiRes) => {
+            let responseBody = '';
+            aiRes.on('data', (chunk) => responseBody += chunk);
+            aiRes.on('end', () => {
+                try {
+                    const result = JSON.parse(responseBody);
+                    const contentStr = result.choices[0].message.content;
+                    const jsonMatch = contentStr.match(/\{[\s\S]*\}/);
+                    res.json(JSON.parse(jsonMatch ? jsonMatch[0] : contentStr));
+                } catch (e) {
+                    res.status(500).json({ error: 'AI Parse Error: ' + responseBody });
+                }
+            });
+        });
+
+        aiReq.on('error', (e) => res.status(500).json({ error: e.message }));
+        aiReq.write(payload);
+        aiReq.end();
+    });
+});
+
+app.post('/api/generate', (req, res) => {
+    db.get("SELECT settings FROM agent_config WHERE id = 1", [], (err, row) => {
+        if (err || !row) return res.status(500).json({ error: 'AI Config not set' });
+        
+        const config = JSON.parse(row.settings);
+        const { task } = req.body;
+
+        const prompt = `You are an AI Content Creator for 'Enikey Pulse' tech agency. 
+        Task: ${task.prompt}
+        Type: ${task.type}
+        Generate a professional draft in Russian, English, and Chinese. 
+        Return ONLY valid JSON with this structure:
+        {
+          "title": { "ru": "...", "en": "...", "zh": "..." },
+          "excerpt": { "ru": "...", "en": "...", "zh": "..." },
+          "content": { "ru": "...", "en": "...", "zh": "..." },
+          "image": "agency_tech_abstract.png"
+        }`;
+
+        const payload = JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "system", content: "You output only JSON." }, { role: "user", content: prompt }],
+            temperature: 0.7
+        });
+
+        const options = {
+            hostname: 'api.openai.com',
+            path: '/v1/chat/completions',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${config.key}`
+            }
+        };
+
+        const aiReq = https.request(options, (aiRes) => {
+            let responseBody = '';
+            aiRes.on('data', (chunk) => responseBody += chunk);
+            aiRes.on('end', () => {
+                try {
+                    const result = JSON.parse(responseBody);
+                    const contentStr = result.choices[0].message.content;
+                    const jsonMatch = contentStr.match(/\{[\s\S]*\}/);
+                    const draftData = JSON.parse(jsonMatch ? jsonMatch[0] : contentStr);
+                    
+                    // Формируем финальный объект для очереди
+                    const draft = {
+                        id: Date.now().toString(),
+                        type: task.type,
+                        status: 'pending',
+                        title: draftData.title,
+                        summary: draftData.excerpt,
+                        content: draftData.content,
+                        image: draftData.image || 'agency_tech_abstract.png'
+                    };
+                    res.json(draft);
+                } catch (e) {
+                    res.status(500).json({ error: 'AI Generation Error: ' + responseBody });
+                }
+            });
+        });
+
+        aiReq.on('error', (e) => res.status(500).json({ error: e.message }));
+        aiReq.write(payload);
+        aiReq.end();
+    });
+});
+
 app.post('/api/published_direct', (req, res) => {
     const item = req.body;
     const id = item.id || Date.now().toString();

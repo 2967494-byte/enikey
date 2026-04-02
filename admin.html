@@ -459,10 +459,14 @@
                         </div>
                     </div>
                     
-                    <div class="lang-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                    <div class="lang-tabs" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
                         <button type="button" class="tab-btn active" onclick="switchLangTab(this, 'ru')">RU</button>
                         <button type="button" class="tab-btn" onclick="switchLangTab(this, 'en')">EN</button>
                         <button type="button" class="tab-btn" onclick="switchLangTab(this, 'zh')">ZH</button>
+                        <div style="flex-grow: 1;"></div>
+                        <button type="button" class="btn btn-outline btn-small" id="ai-translate-btn" onclick="translateWithAI()" style="font-size: 0.7rem; color: #00d1ff; border-color: rgba(0,209,255,0.3);">
+                            <i class="fas fa-robot"></i> ИИ-Перевод (из RU)
+                        </button>
                     </div>
 
                     <div class="lang-content" id="lang-ru">
@@ -508,6 +512,44 @@
             };
             typeSelect.onchange = updateFields;
             updateFields();
+        }
+
+        async function translateWithAI() {
+            const btn = document.getElementById('ai-translate-btn');
+            const type = document.getElementById('new-type').value;
+            const originalData = {
+                title: document.getElementById('new-title-ru').value,
+                excerpt: document.getElementById('new-excerpt-ru').value,
+                content: type === 'article' ? document.getElementById('new-content-ru').value : ''
+            };
+
+            if (!originalData.title) return alert('Сначала заполните заголовок на русском!');
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Перевожу...';
+            btn.disabled = true;
+
+            try {
+                const translations = await window.PulseAgent.translate(originalData, ['en', 'zh']);
+                
+                if (translations.en) {
+                    document.getElementById('new-title-en').value = translations.en.title;
+                    document.getElementById('new-excerpt-en').value = translations.en.excerpt;
+                    if (type === 'article') document.getElementById('new-content-en').value = translations.en.content;
+                }
+                
+                if (translations.zh) {
+                    document.getElementById('new-title-zh').value = translations.zh.title;
+                    document.getElementById('new-excerpt-zh').value = translations.zh.excerpt;
+                    if (type === 'article') document.getElementById('new-content-zh').value = translations.zh.content;
+                }
+                
+                alert('Перевод завершен!');
+            } catch (e) {
+                alert('Ошибка ИИ: ' + e.message);
+            } finally {
+                btn.innerHTML = '<i class="fas fa-robot"></i> ИИ-Перевод (из RU)';
+                btn.disabled = false;
+            }
         }
 
         function switchLangTab(btn, lang) {
