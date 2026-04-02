@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enikey Software Pulse | Статья</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="particles-bg"></div>
+
+    <nav class="navbar glass-effect">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">
+                <img src="enikey_agency_logo.png" alt="Enikey Logo" class="logo-img">
+                <span class="logo-text">Enikey Software</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html#about" data-i18n="nav_about">О компании</a></li>
+                <li><a href="index.html#pulse" data-i18n="nav_projects">Пульс</a></li>
+                <li><a href="index.html#services" data-i18n="nav_services">Услуги</a></li>
+                <li><a href="index.html#contact" data-i18n="nav_contact" class="btn btn-outline">Связаться</a></li>
+            </ul>
+
+            <div class="theme-controller">
+                <i class="fas fa-moon"></i>
+                <input type="range" class="brightness-slider" min="0" max="100" value="0">
+                <i class="fas fa-sun"></i>
+            </div>
+
+            <div class="lang-switcher">
+                <button class="lang-btn" data-lang="ru">RU</button>
+                <button class="lang-btn" data-lang="en">EN</button>
+                <button class="lang-btn" data-lang="zh">ZH</button>
+            </div>
+            <div class="mobile-menu-btn">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="article-page">
+        <section class="article-hero">
+            <div class="container">
+                <div id="article-header" class="reveal active">
+                    <!-- Dynamic Header -->
+                </div>
+            </div>
+        </section>
+
+        <section class="article-body">
+            <div class="container">
+                <div class="article-layout">
+                    <article id="article-text" class="glass-card reveal active">
+                        <!-- Dynamic Content -->
+                    </article>
+
+                    <aside class="article-sidebar">
+                        <div class="glass-card sidebar-card reveal active">
+                            <h4 data-i18n="news_label">Новости</h4>
+                            <div id="sidebar-news" class="posts-stack">
+                                <!-- Dynamic Sidebar News -->
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </section>
+
+        <section class="comments-section" id="comments">
+            <div class="container">
+                <div class="section-header reveal active">
+                    <h2 class="section-title">Диалог с <span class="gradient-text">Командой</span></h2>
+                    <p class="section-subtitle">Оставляйте мысли, а мы поддержим диалог</p>
+                </div>
+
+                <div class="comments-container glass-card reveal active">
+                    <div class="comment-form">
+                        <textarea id="comment-input" placeholder="Напишите комментарий..."></textarea>
+                        <div class="form-footer">
+                            <span class="ai-badge"><span class="pulse-dot"></span> <span data-i18n="ai_moderated">Модерируется Enikey Software</span></span>
+                            <button class="btn btn-gradient" id="submit-comment">Отправить</button>
+                        </div>
+                    </div>
+
+                    <div id="comments-list" class="comments-list">
+                        <!-- Dynamic Comments -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-brand">
+                <a href="index.html" class="logo">
+                    <img src="enikey_agency_logo.png" alt="Enikey Logo" class="logo-img">
+                    <span class="logo-text">Enikey Software</span>
+                </a>
+                <p data-i18n="footer_desc">Создаем будущее цифровых систем и веба.</p>
+            </div>
+            <div class="footer-links">
+                <a href="index.html" data-i18n="footer_nav_home">Главная</a>
+                <a href="index.html#about" data-i18n="nav_about">О компании</a>
+                <a href="index.html#pulse" data-i18n="nav_projects">Пульс</a>
+            </div>
+        </div>
+        <div class="container footer-bottom">
+            <p data-i18n="footer_copy">&copy; 2026 Enikey Agency. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script src="translations.js"></script>
+    <script src="api-config.js"></script>
+    <script src="pulse-api.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Specific logic for article page if needed, but let's try to keep it in script.js 
+        // to handle state and translations correctly as a single-entry point.
+    </script>
+</body>
+</html>

@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enikey | Разработка систем и сайтов</title>
+    <title>Enikey Software | Разработка систем и сайтов</title>
     <meta name="description" content="Современные веб-приложения и системные решения от опытного разработчика.">
     <!-- Google Fonts: Outfit and Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <canvas id="particles-bg"></canvas>
@@ -23,7 +24,7 @@
         <div class="container nav-content">
             <a href="#" class="logo">
                 <img src="enikey_agency_logo.png" alt="Enikey Logo" class="logo-img">
-                <span class="logo-text">Enikey</span>
+                <span class="logo-text" data-i18n="logo_name">Enikey Software</span>
             </a>
             <ul class="nav-links">
                 <li><a href="#about" data-i18n="nav_about">Обо мне</a></li>
@@ -31,6 +32,13 @@
                 <li><a href="#projects" data-i18n="nav_projects">Проекты</a></li>
                 <li><a href="#contact" class="btn btn-primary" data-i18n="nav_contact">Связаться</a></li>
             </ul>
+
+            <div class="theme-controller">
+                <i class="fas fa-moon"></i>
+                <input type="range" class="brightness-slider" min="0" max="100" value="0">
+                <i class="fas fa-sun"></i>
+            </div>
+
             <div class="lang-switcher">
                 <button class="lang-btn active" data-lang="ru">RU</button>
                 <button class="lang-btn" data-lang="en">EN</button>
@@ -115,21 +123,47 @@ team.buildFuture();
             </div>
         </section>
 
-        <section class="projects" id="projects">
+        <section class="pulse" id="pulse">
             <div class="container">
                 <div class="section-header reveal">
-                    <h2 class="section-title" data-i18n="projects_title" data-i18n-html="true">Избранные <span class="gradient-text">Проекты</span></h2>
-                    <p class="section-subtitle" data-i18n="projects_subtitle">Последние запуски нашей команды</p>
+                    <h2 class="section-title" data-i18n="pulse_title" data-i18n-html="true">Enikey <span class="gradient-text">Pulse</span></h2>
+                    <p class="section-subtitle" data-i18n="pulse_subtitle">Ежедневные новости технологий и глубокая аналитика от нашего ИИ-агента</p>
                 </div>
-                <div class="projects-grid">
-                    <div class="glass-card project-card interactive-card reveal scale-in">
-                        <div class="card-glow"></div>
-                        <div class="project-image-wrapper">
-                            <img src="ui_dashboard_preview.png" alt="Futuristic Dashboard" class="project-image">
+                
+                <div class="pulse-grid">
+                    <!-- Dynamic News Column -->
+                    <div class="news-column reveal">
+                        <div class="column-header">
+                            <span class="label neon-text" data-i18n="news_label">Новости</span>
                         </div>
-                        <div class="project-info">
-                            <h3 data-i18n="proj1_title">Neon FinTech UI</h3>
-                            <p data-i18n="proj1_desc">Концепт интерфейса управления активами с использованием WebGL</p>
+                        <div id="news-container" class="posts-stack">
+                            <!-- News will be injected here -->
+                            <div class="glass-card post-card mini-card">
+                                <div class="post-meta"><span>10:45</span> • <span data-i18n="ai_moderated">Модерируется ИИ</span></div>
+                                <h3 data-i18n="mock_news_title">ИИ-агенты Enikey теперь автоматизируют публикацию новостей</h3>
+                                <p data-i18n="mock_news_desc">Мы запустили систему автономного контента...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Featured Article Column -->
+                    <div class="article-column reveal reveal-delay">
+                        <div class="column-header">
+                            <span class="label neon-text" data-i18n="articles_label">Статьи</span>
+                        </div>
+                        <div id="articles-container">
+                            <div class="glass-card article-card interactive-card">
+                                <div class="card-glow"></div>
+                                <div class="article-image-wrapper">
+                                    <img src="ui_dashboard_preview.png" alt="Featured Article" class="article-image">
+                                </div>
+                                <div class="article-content">
+                                    <div class="post-meta"><span>02 Апр 2026</span> • <span data-i18n="read_time">8 мин чтения</span></div>
+                                    <h3 data-i18n="mock_article_title">Будущее интерфейсов: От Glassmorphism к нейроморфному дизайну</h3>
+                                    <p data-i18n="mock_article_desc">В этой статье мы разберем, как ИИ меняет наше представление о взаимодействии с ПО...</p>
+                                    <a href="#" class="btn btn-outline btn-small" data-i18n="read_more">Читать далее</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -189,7 +223,7 @@ team.buildFuture();
             <div class="footer-brand">
                 <a href="#" class="logo">
                     <img src="enikey_agency_logo.png" alt="Enikey Logo" class="logo-img">
-                    <span class="logo-text">Enikey</span>
+                    <span class="logo-text">Enikey Software</span>
                 </a>
                 <p data-i18n="footer_desc">Создаю будущее систем и веба.</p>
             </div>
@@ -206,11 +240,40 @@ team.buildFuture();
             </div>
         </div>
         <div class="container footer-bottom">
-            <p data-i18n="footer_copy" data-i18n-html="true">&copy; 2026 Enikey. Все права защищены.</p>
+            <p data-i18n="footer_copy" data-i18n-html="true">&copy; 2026 Enikey Software. Все права защищены.</p>
         </div>
     </footer>
 
+    <!-- Cookie Banner -->
+    <div id="cookie-banner" class="glass-effect cookie-banner">
+        <div class="cookie-text">
+            <span data-i18n="cookie_text">Мы используем файлы cookie для улучшения работы сайта. Оставаясь с нами, вы соглашаетесь с нашей</span>
+            <a href="privacy.html" data-i18n="privacy_policy">политикой конфиденциальности</a>.
+        </div>
+        <button class="btn btn-primary btn-small" id="accept-cookies" data-i18n="accept">Принять</button>
+    </div>
+
     <script src="translations.js"></script>
+    <script src="api-config.js"></script>
+    <script src="pulse-api.js"></script>
     <script src="script.js"></script>
+    <script>
+        // Cookie Banner Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const banner = document.getElementById('cookie-banner');
+            const acceptBtn = document.getElementById('accept-cookies');
+            
+            if (!localStorage.getItem('cookies-accepted')) {
+                setTimeout(() => {
+                    banner.classList.add('active');
+                }, 2000);
+            }
+            
+            acceptBtn.addEventListener('click', () => {
+                localStorage.setItem('cookies-accepted', 'true');
+                banner.classList.remove('active');
+            });
+        });
+    </script>
 </body>
 </html>

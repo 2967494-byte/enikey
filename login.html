@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enikey Admin | Вход</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 3rem;
+            text-align: center;
+        }
+        .login-card h1 { margin-bottom: 2rem; }
+        .login-form { display: flex; flex-direction: column; gap: 1.2rem; }
+    </style>
+</head>
+<body class="admin-page">
+    <canvas id="particles-bg"></canvas>
+    <div class="blob-bg">
+        <div class="blob shape-1"></div>
+        <div class="blob shape-2"></div>
+    </div>
+
+    <div style="position: fixed; top: 2rem; right: 2rem; z-index: 100;">
+        <div class="theme-controller">
+            <i class="fas fa-moon"></i>
+            <input type="range" class="brightness-slider" min="0" max="100" value="0">
+            <i class="fas fa-sun"></i>
+        </div>
+    </div>
+
+    <div class="login-container">
+        <div class="glass-card login-card reveal active">
+            <a href="index.html" class="logo" style="justify-content: center; margin-bottom: 2rem;">
+                <img src="enikey_agency_logo.png" alt="Enikey Logo" class="logo-img">
+                <span class="logo-text">Enikey <span class="gradient-text">Admin</span></span>
+            </a>
+            <h1>Вход в кабинет</h1>
+            <form id="login-form" class="login-form admin-form">
+                <div style="text-align: left;">
+                    <label>Email</label>
+                    <input type="email" id="email" placeholder="admin@enikey.agency" required>
+                </div>
+                <div style="text-align: left;">
+                    <label>Пароль</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Войти</button>
+            </form>
+            <p id="error-msg" style="color: #ff5f56; margin-top: 1rem; font-size: 0.9rem; display: none;"></p>
+        </div>
+    </div>
+
+    <script src="translations.js"></script>
+    <script src="api-config.js"></script>
+    <script src="pulse-api.js"></script>
+    <script src="script.js"></script>
+    <script>
+        const loginForm = document.getElementById('login-form');
+        const errorMsg = document.getElementById('error-msg');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Логика Supabase Auth (если SDK подключен через HTML)
+            if (window.supabase) {
+                const { data, error } = await window.supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    errorMsg.textContent = error.message;
+                    errorMsg.style.display = 'block';
+                } else {
+                    window.location.href = 'admin.html';
+                }
+            } else {
+                // Временная имитация для тестирования без проекта Supabase
+                if (email === 'admin@enikey.agency' && password === 'admin') {
+                    localStorage.setItem('enikey_admin_session', 'active');
+                    window.location.href = 'admin.html';
+                } else {
+                    errorMsg.textContent = "Неверный логин или пароль (по умолчанию admin/admin)";
+                    errorMsg.style.display = 'block';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

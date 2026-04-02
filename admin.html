@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enikey Admin | Модерация Pulse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="admin-page">
+    <canvas id="particles-bg"></canvas>
+    <div class="blob-bg">
+        <div class="blob shape-1"></div>
+        <div class="blob shape-2"></div>
+    </div>
+
+    <nav class="navbar glass-effect">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">
+                <img src="enikey_agency_logo.png" alt="Enikey Logo" class="logo-img">
+                <span class="logo-text">Enikey <span class="gradient-text">Admin</span></span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">На сайт</a></li>
+                <li><a href="#" class="btn btn-primary" onclick="generateAIDraft()">Сгенерировать черновик (AI)</a></li>
+                <li><a href="#" class="btn btn-outline btn-small" onclick="logout()" data-i18n="logout">Выйти</a></li>
+            </ul>
+
+            <div class="theme-controller">
+                <i class="fas fa-moon"></i>
+                <input type="range" class="brightness-slider" min="0" max="100" value="0">
+                <i class="fas fa-sun"></i>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="admin-header reveal">
+            <h1 class="hero-title">Модерация <span class="gradient-text">Pulse</span></h1>
+            <div class="ai-badge">
+                <div class="pulse-dot"></div>
+                <span>ИИ-агент активен</span>
+            </div>
+        </div>
+
+        <div class="admin-tabs reveal">
+            <button class="tab-btn active" onclick="setFilter('all')" data-i18n="all_filter">Все</button>
+            <button class="tab-btn" onclick="setFilter('news')" data-i18n="news_filter">Новости</button>
+            <button class="tab-btn" onclick="setFilter('article')" data-i18n="articles_filter">Статьи</button>
+            <button class="tab-btn" onclick="setFilter('settings')" data-i18n="settings_btn">Настройки</button>
+            <div style="flex-grow: 1;"></div>
+            <button class="btn btn-outline btn-small" onclick="openManualCreateModal()" style="border-color: var(--primary-color); color: var(--primary-color);">+ Создать вручную</button>
+        </div>
+
+        <div id="admin-queue" class="admin-grid reveal reveal-delay">
+            <!-- Очередь модерации будет здесь -->
+        </div>
+
+        <div id="settings-view" class="settings-view reveal">
+            <!-- Global AI Settings -->
+            <div class="glass-card" style="margin-bottom: 2rem; padding: 1.5rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="font-size: 1rem; margin: 0; color: var(--primary-color);">Глобальные настройки API</h3>
+                    <button class="btn btn-primary btn-small" onclick="saveGlobalSettings()">Сохранить настройки API</button>
+                </div>
+                <div class="admin-form" style="display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 1rem;">
+                    <div class="input-group">
+                        <label>Провайдер</label>
+                        <select id="global-provider" class="btn btn-outline btn-small" style="text-align: left; background: rgba(0,0,0,0.2);">
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic</option>
+                            <option value="custom">Custom API</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>API URL</label>
+                        <input type="text" id="global-api-url" class="btn-small" style="background: rgba(0,0,0,0.2);">
+                    </div>
+                    <div class="input-group">
+                        <label>API Key</label>
+                        <input type="password" id="global-api-key" class="btn-small" style="background: rgba(0,0,0,0.2);">
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2 data-i18n="ai_tasks_btn">Задачи ИИ</h2>
+                <button class="btn btn-primary" onclick="openTaskModal()" data-i18n="add_task_btn">Добавить задачу</button>
+            </div>
+            
+            <div id="tasks-list" class="admin-grid">
+                <!-- Список задач будет здесь -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal for Preview/Edit -->
+    <div id="preview-modal" class="modal-overlay">
+        <div class="preview-modal">
+            <button class="close-modal" onclick="closePreview()">&times;</button>
+            <div id="modal-content">
+                <!-- Контент модалки: превью или форма редактирования -->
+            </div>
+        </div>
+    </div>
+
+    <script src="translations.js"></script>
+    <script src="api-config.js"></script>
+    <script src="pulse-api.js"></script>
+    <script src="pulse-agent.js"></script>
+    <script>
+        let currentFilter = 'all';
+        let currentItems = [];
+        let agentTasks = [];
+        let editingTaskId = null;
+
+        // Проверка авторизации
+        async function checkAuth() {
+            if (window.supabase) {
+                const { data: { session } } = await window.supabase.auth.getSession();
+                if (!session) window.location.href = 'login.html';
+            } else {
+                if (localStorage.getItem('enikey_admin_session') !== 'active') {
+                    window.location.href = 'login.html';
+                }
+            }
+        }
+
+        async function logout() {
+            if (window.supabase) await window.supabase.auth.signOut();
+            localStorage.removeItem('enikey_admin_session');
+            window.location.href = 'login.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.ThemeEngine) ThemeEngine.init();
+            await checkAuth();
+            renderAdminQueue();
+            loadTasks();
+            loadGlobalSettings();
+        });
+
+        async function loadGlobalSettings() {
+            const settings = await window.PulseAPI.getAgentSettings();
+            document.getElementById('global-provider').value = settings.provider;
+            document.getElementById('global-api-url').value = settings.url;
+            document.getElementById('global-api-key').value = settings.key;
+        }
+
+        async function saveGlobalSettings() {
+            const settings = {
+                provider: document.getElementById('global-provider').value,
+                url: document.getElementById('global-api-url').value,
+                key: document.getElementById('global-api-key').value
+            };
+            await window.PulseAPI.updateAgentSettings(settings);
+            alert('Глобальные настройки сохранены!');
+        }
+
+        async function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('onclick').includes(filter));
+            });
+
+            const queue = document.getElementById('admin-queue');
+            const settings = document.getElementById('settings-view');
+
+            if (filter === 'settings') {
+                queue.style.display = 'none';
+                settings.classList.add('active');
+            } else {
+                queue.style.display = 'grid';
+                settings.classList.remove('active');
+                renderAdminQueue();
+            }
+        }
+
+        async function loadTasks() {
+            agentTasks = await window.PulseAPI.getAgentTasks();
+            renderTasksList();
+        }
+
+        function renderTasksList() {
+            const list = document.getElementById('tasks-list');
+            const lang = localStorage.getItem('lang') || 'ru';
+            
+            list.innerHTML = agentTasks.map((task, index) => {
+                const daysStr = task.schedule.days.map(d => ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][d]).join(', ');
+                return `
+                <div class="admin-card glass-effect reveal active">
+                    <div class="post-meta">
+                        <span class="status-badge ${task.schedule.enabled ? 'status-approved' : 'status-pending'}">
+                            ${task.schedule.enabled ? 'Активна' : 'Пауза'}
+                        </span>
+                        <span>${task.type === 'news' ? 'Новости' : 'Статьи'}</span>
+                    </div>
+                    <h4>${task.name}</h4>
+                    <p style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">
+                        <i class="far fa-calendar-alt"></i> ${daysStr} в ${task.schedule.time}
+                    </p>
+                    <div class="admin-actions">
+                        <button class="btn btn-primary btn-small" onclick="runTaskNow(${index})">Запустить</button>
+                        <button class="btn btn-outline btn-small" onclick="openTaskModal(${index})">Править</button>
+                        <button class="btn btn-outline btn-small" style="color: #ff5f56; border-color: rgba(255,95,86,0.3);" onclick="deleteTask(${task.id})">Удалить</button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function openTaskModal(index = null) {
+            editingTaskId = (index !== null) ? agentTasks[index].id : null;
+            const task = (index !== null) ? agentTasks[index] : {
+                name: '', type: 'news', 
+                schedule: { days: [1,2,3,4,5], time: '10:00', enabled: true },
+                prompt: '', useImage: true, imagePrompt: ''
+            };
+
+            const modal = document.getElementById('preview-modal');
+            const content = document.getElementById('modal-content');
+            
+            content.innerHTML = `
+                <h2 style="margin-bottom: 2rem;">${editingTaskId ? 'Редактировать задачу' : 'Новая задача ИИ'}</h2>
+                <div class="admin-form">
+                    <div class="input-group">
+                        <label>Название задачи</label>
+                        <input type="text" id="task-name" value="${task.name}" placeholder="Напр: Утренние новости">
+                    </div>
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label>Тип контента</label>
+                            <select id="task-type" class="btn btn-outline" style="text-align: left; padding: 0.8rem;">
+                                <option value="news" ${task.type === 'news' ? 'selected' : ''}>Новости</option>
+                                <option value="article" ${task.type === 'article' ? 'selected' : ''}>Статьи</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Время публикации</label>
+                            <input type="time" id="task-time" value="${task.schedule.time}">
+                        </div>
+                    </div>
+                    <label>Дни недели</label>
+                    <div class="day-picker" id="day-picker-modal">
+                        ${[1,2,3,4,5,6,0].map(d => `
+                            <button class="day-btn ${task.schedule.days.includes(d) ? 'active' : ''}" onclick="this.classList.toggle('active')">
+                                ${['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][d]}
+                                <input type="hidden" value="${d}">
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div class="input-group" style="margin-top: 1.5rem;">
+                        <label>Промпт для ИИ-агента</label>
+                        <textarea id="task-prompt" rows="3">${task.prompt}</textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label>Генерировать изображения?</label>
+                            <div class="toggle-group ${task.useImage ? 'active' : ''}" onclick="this.classList.toggle('active')">
+                                <div class="toggle-switch"></div>
+                                <span style="font-size: 0.8rem;">Да</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Промпт для изображения</label>
+                            <input type="text" id="task-image-prompt" value="${task.imagePrompt}">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button class="btn btn-primary" onclick="saveTask()">Сохранить задачу</button>
+                        <button class="btn btn-outline" onclick="closePreview()">Отмена</button>
+                    </div>
+                </div>
+            `;
+            modal.style.display = 'flex';
+        }
+
+        async function saveTask() {
+            const selectedDays = [];
+            document.getElementById('day-picker-modal').querySelectorAll('.day-btn.active input').forEach(inp => {
+                selectedDays.push(parseInt(inp.value));
+            });
+
+            const taskData = {
+                id: editingTaskId,
+                name: document.getElementById('task-name').value,
+                type: document.getElementById('task-type').value,
+                schedule: {
+                    days: selectedDays,
+                    time: document.getElementById('task-time').value,
+                    enabled: true
+                },
+                prompt: document.getElementById('task-prompt').value,
+                useImage: document.querySelector('.toggle-group.active') !== null,
+                imagePrompt: document.getElementById('task-image-prompt').value
+            };
+
+            await window.PulseAPI.saveAgentTask(taskData);
+            closePreview();
+            loadTasks();
+            alert('Задача сохранена!');
+        }
+
+        async function deleteTask(id) {
+            if (confirm('Удалить эту задачу?')) {
+                await window.PulseAPI.deleteAgentTask(id);
+                loadTasks();
+            }
+        }
+
+        async function runTaskNow(index) {
+            const task = agentTasks[index];
+            if (window.PulseAgent) {
+                await window.PulseAgent.generateDraft(task);
+                alert(`Задача "${task.name}" запущена! Результат в очереди.`);
+                setFilter('all');
+            }
+        }
+
+        async function renderAdminQueue() {
+            const queueContainer = document.getElementById('admin-queue');
+            currentItems = await window.PulseAPI.getPending();
+            
+            const filteredItems = currentFilter === 'all' 
+                ? currentItems 
+                : currentItems.map((item, index) => ({...item, originalIndex: index})).filter(item => item.type === currentFilter);
+
+            if (filteredItems.length === 0) {
+                queueContainer.innerHTML = '<div class="glass-card" style="grid-column: 1/-1; text-align: center;"><h3>Очередь пуста. ИИ-агент еще не подготовил новые материалы.</h3></div>';
+                return;
+            }
+
+            queueContainer.innerHTML = filteredItems.map((item, index) => {
+                const realIndex = item.originalIndex !== undefined ? item.originalIndex : index;
+                return `
+                <div class="admin-card glass-effect reveal active">
+                    <div class="post-meta">
+                        <span class="status-badge ${getStatusClass(item.status)}">${item.status}</span>
+                        <span>${item.type === 'news' ? 'Новость' : 'Статья'}</span>
+                    </div>
+                    <h4>${item.title.ru}</h4>
+                    <p>${item.excerpt ? item.excerpt.ru : item.desc.ru}</p>
+                    ${item.reworkReason ? `<div style="color: #ff5f56; font-size: 0.8rem; margin: 0.5rem 0; padding: 0.5rem; background: rgba(255,95,86,0.1); border-radius: 4px;"><strong>Причина доработки:</strong> ${item.reworkReason}</div>` : ''}
+                    <div class="admin-actions">
+                        <button class="btn btn-outline btn-small" onclick="previewItem(${realIndex})" data-i18n="read_more">Предпросмотр</button>
+                        <button class="btn btn-outline btn-small" onclick="editItem(${realIndex})" data-i18n="edit_btn">Править</button>
+                        <button class="btn btn-primary btn-small" onclick="approveAndRefresh(${realIndex})">Одобрить</button>
+                        <button class="btn btn-outline btn-small" style="color: #ff5f56; border-color: rgba(255,95,86,0.3);" onclick="reworkAndRefresh(${realIndex})">Доработать</button>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function getStatusClass(status) {
+            if (status === 'pending') return 'status-pending';
+            if (status === 'approved') return 'status-approved';
+            if (status === 'rework') return 'status-rework';
+            return '';
+        }
+
+        async function previewItem(index) {
+            const item = currentItems[index];
+            const modal = document.getElementById('preview-modal');
+            const content = document.getElementById('modal-content');
+            
+            let html = `<h2>${item.title.ru}</h2>`;
+            if (item.type === 'article') {
+                html += `<div class="article-hero"><img src="${item.image}" alt="" style="width:100%; border-radius:12px; margin: 1rem 0;"></div>`;
+                html += `<div>${item.content.ru}</div>`;
+            } else {
+                html += `<p>${item.excerpt.ru}</p>`;
+            }
+            
+            content.innerHTML = html;
+            modal.style.display = 'flex';
+        }
+
+        async function editItem(index) {
+            const item = currentItems[index];
+            const modal = document.getElementById('preview-modal');
+            const content = document.getElementById('modal-content');
+            
+            content.innerHTML = `
+                <h2 style="margin-bottom: 2rem;">Редактирование ${item.type === 'news' ? 'новости' : 'статьи'}</h2>
+                <form class="admin-form" onsubmit="saveItem(event, ${index})">
+                    <label>Заголовок (RU)</label>
+                    <input type="text" id="edit-title-ru" value="${item.title.ru}" required>
+                    <label>Краткое описание / Лид (RU)</label>
+                    <textarea id="edit-excerpt-ru" rows="3" required>${item.excerpt ? item.excerpt.ru : item.title.ru}</textarea>
+                    ${item.type === 'article' ? `
+                        <label>Контент (HTML)</label>
+                        <textarea id="edit-content-ru" rows="10" required>${item.content.ru}</textarea>
+                    ` : ''}
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button type="submit" class="btn btn-primary" data-i18n="save_btn">Сохранить</button>
+                        <button type="button" class="btn btn-outline" onclick="closePreview()">Отмена</button>
+                    </div>
+                </form>
+            `;
+            modal.style.display = 'flex';
+        }
+
+        async function saveItem(event, index) {
+            event.preventDefault();
+            const newData = {
+                title: { ...currentItems[index].title, ru: document.getElementById('edit-title-ru').value },
+                excerpt: { ...currentItems[index].excerpt, ru: document.getElementById('edit-excerpt-ru').value }
+            };
+            
+            if (currentItems[index].type === 'article') {
+                newData.content = { ...currentItems[index].content, ru: document.getElementById('edit-content-ru').value };
+            }
+
+            await window.PulseAPI.updatePending(index, newData);
+            closePreview();
+            renderAdminQueue();
+        }
+
+        function closePreview() {
+            document.getElementById('preview-modal').style.display = 'none';
+        }
+
+        async function approveAndRefresh(index) {
+            await window.PulseAPI.approve(index);
+            renderAdminQueue();
+            alert('Опубликовано!');
+        }
+
+        async function reworkAndRefresh(index) {
+            const comment = prompt('Добавьте комментарий для ИИ-агента:', 'Слишком официально, добавь больше драйва');
+            if (comment !== null) {
+                await window.PulseAPI.rework(index, comment);
+                renderAdminQueue();
+                alert('Отправлено на доработку');
+            }
+        }
+
+        async function openManualCreateModal() {
+            const modal = document.getElementById('preview-modal');
+            const content = document.getElementById('modal-content');
+            
+            content.innerHTML = `
+                <h2 style="margin-bottom: 2rem;">Создать новость или статью</h2>
+                <form class="admin-form" onsubmit="saveManualItem(event)">
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label>Тип</label>
+                            <select id="new-type" class="btn btn-outline" style="text-align: left;">
+                                <option value="news">Новость</option>
+                                <option value="article">Статья</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Изображение (URL)</label>
+                            <input type="text" id="new-image" placeholder="https://...">
+                        </div>
+                    </div>
+                    
+                    <div class="lang-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                        <button type="button" class="tab-btn active" onclick="switchLangTab(this, 'ru')">RU</button>
+                        <button type="button" class="tab-btn" onclick="switchLangTab(this, 'en')">EN</button>
+                        <button type="button" class="tab-btn" onclick="switchLangTab(this, 'zh')">ZH</button>
+                    </div>
+
+                    <div class="lang-content" id="lang-ru">
+                        <label>Заголовок (RU)</label>
+                        <input type="text" id="new-title-ru" required>
+                        <label>Лид / Краткое описание (RU)</label>
+                        <textarea id="new-excerpt-ru" rows="2" required></textarea>
+                        <label class="article-only">Контент HTML (RU)</label>
+                        <textarea id="new-content-ru" rows="6" class="article-only"></textarea>
+                    </div>
+
+                    <div class="lang-content" id="lang-en" style="display: none;">
+                        <label>Title (EN)</label>
+                        <input type="text" id="new-title-en">
+                        <label>Excerpt (EN)</label>
+                        <textarea id="new-excerpt-en" rows="2"></textarea>
+                        <label class="article-only">Content HTML (EN)</label>
+                        <textarea id="new-content-en" rows="6" class="article-only"></textarea>
+                    </div>
+
+                    <div class="lang-content" id="lang-zh" style="display: none;">
+                        <label>标题 (ZH)</label>
+                        <input type="text" id="new-title-zh">
+                        <label>摘要 (ZH)</label>
+                        <textarea id="new-excerpt-zh" rows="2"></textarea>
+                        <label class="article-only">HTML 内容 (ZH)</label>
+                        <textarea id="new-content-zh" rows="6" class="article-only"></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button type="submit" class="btn btn-primary">Опубликовать</button>
+                        <button type="button" class="btn btn-outline" onclick="closePreview()">Отмена</button>
+                    </div>
+                </form>
+            `;
+            modal.style.display = 'flex';
+
+            // Переключение видимости контента для новостей/статей
+            const typeSelect = document.getElementById('new-type');
+            const updateFields = () => {
+                const isArticle = typeSelect.value === 'article';
+                document.querySelectorAll('.article-only').forEach(el => el.style.display = isArticle ? 'block' : 'none');
+            };
+            typeSelect.onchange = updateFields;
+            updateFields();
+        }
+
+        function switchLangTab(btn, lang) {
+            btn.parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.lang-content').forEach(c => c.style.display = 'none');
+            document.getElementById(`lang-${lang}`).style.display = 'block';
+        }
+
+        async function saveManualItem(event) {
+            event.preventDefault();
+            const type = document.getElementById('new-type').value;
+            const newItem = {
+                id: Date.now().toString(),
+                type: type,
+                image: document.getElementById('new-image').value || 'agency_tech_abstract.png',
+                title: {
+                    ru: document.getElementById('new-title-ru').value,
+                    en: document.getElementById('new-title-en').value || document.getElementById('new-title-ru').value,
+                    zh: document.getElementById('new-title-zh').value || document.getElementById('new-title-ru').value
+                },
+                excerpt: {
+                    ru: document.getElementById('new-excerpt-ru').value,
+                    en: document.getElementById('new-excerpt-en').value || document.getElementById('new-excerpt-ru').value,
+                    zh: document.getElementById('new-excerpt-zh').value || document.getElementById('new-excerpt-ru').value
+                },
+                publishedAt: new Date().toISOString(),
+                status: 'published'
+            };
+
+            if (type === 'article') {
+                newItem.content = {
+                    ru: document.getElementById('new-content-ru').value,
+                    en: document.getElementById('new-content-en').value || document.getElementById('new-content-ru').value,
+                    zh: document.getElementById('new-content-zh').value || document.getElementById('new-content-ru').value
+                };
+            }
+
+            // Добавляем сразу в опубликованные (через эндпоинт approve или специальный прямой)
+            // В нашем PulseAPI.approve(index) работает с очередью. Сделаем проще:
+            // Добавим в очередь и тут же одобрим, или добавим новый метод в API.
+            // Для скорости просто добавим в опубликованные напрямую (надо добавить эндпоинт в server.js)
+            
+            try {
+                const res = await fetch(`${window.API_CONFIG.BASE_URL}/published_direct`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newItem)
+                });
+                if (res.ok) {
+                    alert('Опубликовано!');
+                    closePreview();
+                    location.reload(); // Перезагрузим для обновления сетки
+                }
+            } catch (e) {
+                alert('Ошибка при публикации. Проверьте сервер.');
+            }
+        }
+
+        async function generateAIDraft() {
+            if (window.PulseAgent) {
+                await window.PulseAgent.generateDraft();
+                renderAdminQueue();
+            }
+        }
+    </script>
+</body>
+</html>
