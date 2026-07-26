@@ -31,101 +31,103 @@
             <span class="vertical-label">IDE CONFIG</span>
         </button>
 
-        <div class="ide-panel-content">
-            <div class="ide-panel-header">
-                <div class="ide-title">
-                    <i class="fas fa-terminal"></i>
-                    <span data-i18n="ide_panel_title">Панель управления IDE</span>
+        <div class="ide-panel-inner">
+            <div class="ide-panel-content">
+                <div class="ide-panel-header">
+                    <div class="ide-title">
+                        <i class="fas fa-terminal"></i>
+                        <span data-i18n="ide_panel_title">Панель управления IDE</span>
+                    </div>
+                    <div class="ide-badge" data-i18n="ide_status">Система: 200 OK</div>
                 </div>
-                <div class="ide-badge" data-i18n="ide_status">Система: 200 OK</div>
-            </div>
 
-            <div class="ide-section">
-                <div class="ide-section-title">
-                    <i class="fas fa-circle-half-stroke"></i>
-                    <span data-i18n="theme_label">Тема оформления</span>
+                <div class="ide-section">
+                    <div class="ide-section-title">
+                        <i class="fas fa-circle-half-stroke"></i>
+                        <span data-i18n="theme_label">Тема оформления</span>
+                    </div>
+                    <div class="theme-options-grid">
+                        <button class="theme-option-btn active" data-theme="dark">
+                            <i class="fas fa-moon"></i>
+                            <span data-i18n="theme_dark">Тёмная</span>
+                        </button>
+                        <button class="theme-option-btn" data-theme="light">
+                            <i class="fas fa-sun"></i>
+                            <span data-i18n="theme_light">Светлая</span>
+                        </button>
+                        <button class="theme-option-btn" data-theme="cyber">
+                            <i class="fas fa-bolt"></i>
+                            <span data-i18n="theme_cyber">Киберпанк</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="theme-options-grid">
-                    <button class="theme-option-btn active" data-theme="dark">
-                        <i class="fas fa-moon"></i>
-                        <span data-i18n="theme_dark">Тёмная</span>
-                    </button>
-                    <button class="theme-option-btn" data-theme="light">
-                        <i class="fas fa-sun"></i>
-                        <span data-i18n="theme_light">Светлая</span>
-                    </button>
-                    <button class="theme-option-btn" data-theme="cyber">
-                        <i class="fas fa-bolt"></i>
-                        <span data-i18n="theme_cyber">Киберпанк</span>
-                    </button>
-                </div>
-            </div>
 
-            <div class="ide-section">
-                <div class="ide-section-title">
-                    <i class="fas fa-palette"></i>
-                    <span data-i18n="syntax_color_label">Цветовая гамма</span>
+                <div class="ide-section">
+                    <div class="ide-section-title">
+                        <i class="fas fa-palette"></i>
+                        <span data-i18n="syntax_color_label">Цветовая гамма</span>
+                    </div>
+                    <div class="palette-swatches">
+                        <button class="palette-swatch active" data-palette="violet" title="Neon Violet">
+                            <span class="swatch-color violet"></span>
+                            <span class="swatch-name" data-i18n="palette_violet">Neon Violet</span>
+                        </button>
+                        <button class="palette-swatch" data-palette="emerald" title="Emerald Matrix">
+                            <span class="swatch-color emerald"></span>
+                            <span class="swatch-name" data-i18n="palette_emerald">Emerald Matrix</span>
+                        </button>
+                        <button class="palette-swatch" data-palette="cyan" title="Cyber Cyan">
+                            <span class="swatch-color cyan"></span>
+                            <span class="swatch-name" data-i18n="palette_cyan">Cyber Cyan</span>
+                        </button>
+                        <button class="palette-swatch" data-palette="amber" title="Solar Amber">
+                            <span class="swatch-color amber"></span>
+                            <span class="swatch-name" data-i18n="palette_amber">Solar Amber</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="palette-swatches">
-                    <button class="palette-swatch active" data-palette="violet" title="Neon Violet">
-                        <span class="swatch-color violet"></span>
-                        <span class="swatch-name" data-i18n="palette_violet">Neon Violet</span>
-                    </button>
-                    <button class="palette-swatch" data-palette="emerald" title="Emerald Matrix">
-                        <span class="swatch-color emerald"></span>
-                        <span class="swatch-name" data-i18n="palette_emerald">Emerald Matrix</span>
-                    </button>
-                    <button class="palette-swatch" data-palette="cyan" title="Cyber Cyan">
-                        <span class="swatch-color cyan"></span>
-                        <span class="swatch-name" data-i18n="palette_cyan">Cyber Cyan</span>
-                    </button>
-                    <button class="palette-swatch" data-palette="amber" title="Solar Amber">
-                        <span class="swatch-color amber"></span>
-                        <span class="swatch-name" data-i18n="palette_amber">Solar Amber</span>
-                    </button>
-                </div>
-            </div>
 
-            <div class="ide-section">
-                <div class="ide-section-title">
-                    <i class="fas fa-wave-square"></i>
-                    <span data-i18n="canvas_settings_label">Фоновая анимация</span>
+                <div class="ide-section">
+                    <div class="ide-section-title">
+                        <i class="fas fa-wave-square"></i>
+                        <span data-i18n="canvas_settings_label">Фоновая анимация</span>
+                    </div>
+                    <div class="control-row">
+                        <label data-i18n="density_label">Плотность связей</label>
+                        <input type="range" id="density-slider" min="30" max="180" value="90">
+                    </div>
+                    <div class="control-row">
+                        <label data-i18n="speed_label">Скорость частиц</label>
+                        <input type="range" id="speed-slider" min="1" max="10" value="4">
+                    </div>
                 </div>
-                <div class="control-row">
-                    <label data-i18n="density_label">Плотность связей</label>
-                    <input type="range" id="density-slider" min="30" max="180" value="90">
-                </div>
-                <div class="control-row">
-                    <label data-i18n="speed_label">Скорость частиц</label>
-                    <input type="range" id="speed-slider" min="1" max="10" value="4">
-                </div>
-            </div>
 
-            <div class="ide-section">
-                <div class="ide-section-title">
-                    <i class="fas fa-sliders"></i>
-                    <span>Опции среды</span>
-                </div>
-                <div class="toggle-control-row">
-                    <span data-i18n="grid_overlay_label">Сетка координатора</span>
-                    <label class="switch-toggle">
-                        <input type="checkbox" id="toggle-grid">
-                        <span class="slider-round"></span>
-                    </label>
-                </div>
-                <div class="toggle-control-row">
-                    <span data-i18n="cursor_glow_label">Неоновый курсор</span>
-                    <label class="switch-toggle">
-                        <input type="checkbox" id="toggle-cursor" checked>
-                        <span class="slider-round"></span>
-                    </label>
-                </div>
-                <div class="toggle-control-row">
-                    <span data-i18n="audio_fx_label">Звуковой отклик</span>
-                    <label class="switch-toggle">
-                        <input type="checkbox" id="toggle-audio" checked>
-                        <span class="slider-round"></span>
-                    </label>
+                <div class="ide-section">
+                    <div class="ide-section-title">
+                        <i class="fas fa-sliders"></i>
+                        <span>Опции среды</span>
+                    </div>
+                    <div class="toggle-control-row">
+                        <span data-i18n="grid_overlay_label">Сетка координатора</span>
+                        <label class="switch-toggle">
+                            <input type="checkbox" id="toggle-grid">
+                            <span class="slider-round"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-control-row">
+                        <span data-i18n="cursor_glow_label">Неоновый курсор</span>
+                        <label class="switch-toggle">
+                            <input type="checkbox" id="toggle-cursor" checked>
+                            <span class="slider-round"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-control-row">
+                        <span data-i18n="audio_fx_label">Звуковой отклик</span>
+                        <label class="switch-toggle">
+                            <input type="checkbox" id="toggle-audio" checked>
+                            <span class="slider-round"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -246,31 +248,32 @@
                 </div>
             </div>
 
-            <!-- Full Width Hero Metrics & Proof Banner -->
-            <div class="hero-metrics-bar full-width-metrics reveal">
-                <div class="metric-item">
-                    <span class="metric-value"><i class="fas fa-server metric-icon"></i> 99.99%</span>
-                    <span class="metric-label">Надежность систем (Uptime)</span>
-                </div>
-                <div class="metric-divider"></div>
-                <div class="metric-item">
-                    <span class="metric-value"><i class="fas fa-bolt metric-icon"></i> &lt; 20ms</span>
-                    <span class="metric-label">Время отклика API</span>
-                </div>
-                <div class="metric-divider"></div>
-                <div class="metric-item">
-                    <span class="metric-value"><i class="fas fa-cubes metric-icon"></i> 50+</span>
-                    <span class="metric-label">Сложных проектов</span>
-                </div>
-                <div class="metric-divider"></div>
-                <div class="metric-item">
-                    <span class="metric-value"><i class="fas fa-shield-halved metric-icon"></i> 100%</span>
-                    <span class="metric-label">Без конструкторов</span>
-                </div>
-                <div class="metric-divider"></div>
-                <div class="metric-item">
-                    <span class="metric-value"><i class="fas fa-chart-line metric-icon"></i> 10M+</span>
-                    <span class="metric-label">Запросов / сутки</span>
+            <div class="container hero-metrics-wrapper">
+                <div class="hero-metrics-bar full-width-metrics reveal">
+                    <div class="metric-item">
+                        <span class="metric-value"><i class="fas fa-server metric-icon"></i> 99.99%</span>
+                        <span class="metric-label">Надежность систем (Uptime)</span>
+                    </div>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item">
+                        <span class="metric-value"><i class="fas fa-bolt metric-icon"></i> &lt; 20ms</span>
+                        <span class="metric-label">Время отклика API</span>
+                    </div>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item">
+                        <span class="metric-value"><i class="fas fa-cubes metric-icon"></i> 50+</span>
+                        <span class="metric-label">Сложных проектов</span>
+                    </div>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item">
+                        <span class="metric-value"><i class="fas fa-shield-halved metric-icon"></i> 100%</span>
+                        <span class="metric-label">Без конструкторов</span>
+                    </div>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item">
+                        <span class="metric-value"><i class="fas fa-chart-line metric-icon"></i> 10M+</span>
+                        <span class="metric-label">Запросов / сутки</span>
+                    </div>
                 </div>
             </div>
         </section>
