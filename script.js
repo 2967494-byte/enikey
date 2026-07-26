@@ -92,11 +92,19 @@ const IDESettings = {
         const gridOverlay = document.getElementById('dev-grid-overlay');
         const cursorGlow = document.getElementById('cursor-glow-follower');
         
-        // Toggle Sidebar
+        // Toggle Sidebar & Outside Click Close
         if (toggleBtn && panel) {
-            toggleBtn.addEventListener('click', () => {
+            toggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 panel.classList.toggle('open');
                 AudioFX.playClick(600);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (panel.classList.contains('open') && !panel.contains(e.target)) {
+                    panel.classList.remove('open');
+                    AudioFX.playClick(500);
+                }
             });
         }
 
