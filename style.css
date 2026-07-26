@@ -428,6 +428,47 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--text-primary);
 }
 
+/* Premium Glass Segmented Language Switcher */
+.lang-switcher {
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 30px;
+    padding: 3px;
+    gap: 2px;
+}
+
+body[data-theme="light"] .lang-switcher {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.lang-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 6px 13px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    letter-spacing: 0.5px;
+}
+
+.lang-btn:hover {
+    color: var(--text-primary);
+}
+
+.lang-btn.active {
+    background: var(--accent-gradient);
+    color: #ffffff;
+    box-shadow: 0 2px 10px rgba(var(--accent-rgb), 0.45);
+}
+
 /* Pinned Left IDE Settings Panel */
 .ide-panel {
     position: fixed;

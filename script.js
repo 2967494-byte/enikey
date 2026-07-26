@@ -81,6 +81,51 @@ const ThemeEngine = {
     }
 };
 
+// Internationalization Engine
+const I18nEngine = {
+    currentLang: 'ru',
+    init: function() {
+        const savedLang = localStorage.getItem('enikey_lang') || 'ru';
+        this.setLanguage(savedLang);
+
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const lang = e.currentTarget.dataset.lang;
+                if (lang) {
+                    this.setLanguage(lang);
+                    AudioFX.playClick(900);
+                }
+            });
+        });
+    },
+    setLanguage: function(lang) {
+        if (typeof translations === 'undefined' || !translations[lang]) return;
+        this.currentLang = lang;
+        localStorage.setItem('enikey_lang', lang);
+        document.documentElement.lang = lang;
+
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            if (btn.dataset.lang === lang) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        const dict = translations[lang];
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (dict[key]) {
+                if (el.getAttribute('data-i18n-html') === 'true') {
+                    el.innerHTML = dict[key];
+                } else {
+                    el.textContent = dict[key];
+                }
+            }
+        });
+    }
+};
+
 // IDE Control Panel & Interaction Engine
 const IDESettings = {
     particleDensity: 90,
@@ -461,6 +506,7 @@ function initScrollEngine() {
 document.addEventListener('DOMContentLoaded', () => {
     AudioFX.init();
     ThemeEngine.init();
+    I18nEngine.init();
     IDESettings.init();
     HeroWorkspace.init();
     initCanvasParticles();
