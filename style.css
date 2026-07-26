@@ -1508,13 +1508,26 @@ body[data-theme="light"] .tech-chip-item {
 .reveal-delay { transition-delay: 0.2s; }
 .reveal-delay-2 { transition-delay: 0.4s; }
 
-/* Responsive Rules */
+/* ==========================================================================
+   Comprehensive Mobile & Tablet Responsiveness (Pixel-Perfect Breakpoints)
+   ========================================================================== */
+
 @media (max-width: 992px) {
-    .hero-content, .project-layout, .about-content {
+    .hero-content {
         grid-template-columns: 1fr;
-        gap: 3rem;
+        gap: 2.5rem;
     }
-    
+
+    .about-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .project-layout {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
     .ide-panel {
         top: 70px;
         height: calc(100vh - 110px);
@@ -1525,81 +1538,127 @@ body[data-theme="light"] .tech-chip-item {
     }
 }
 
-/* Floating Glass Cookie Banner Widget */
-.cookie-banner {
-    position: fixed;
-    bottom: 48px;
-    right: 24px;
-    max-width: 440px;
-    z-index: 950;
-    padding: 1rem 1.4rem;
-    border-radius: 16px;
-    background: var(--bg-surface);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    transform: translateY(100px);
-    opacity: 0;
-    pointer-events: none;
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
-}
-
-body[data-theme="light"] .cookie-banner {
-    background: rgba(255, 255, 255, 0.9);
-}
-
-.cookie-banner.active {
-    transform: translateY(0);
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.cookie-icon {
-    font-size: 1.5rem;
-    color: var(--accent-primary);
-    flex-shrink: 0;
-}
-
-.cookie-text {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    line-height: 1.5;
-}
-
-.cookie-text a {
-    color: var(--accent-primary);
-    text-decoration: underline;
-    font-weight: 600;
-}
-
-.btn-small {
-    padding: 0.45rem 1.1rem;
-    font-size: 0.8rem;
-    height: 36px;
-    flex-shrink: 0;
-}
-
 @media (max-width: 768px) {
+    .navbar {
+        padding: 0.6rem 0;
+    }
+
     .nav-links {
         display: none;
     }
-    
+
     .hero {
-        padding-top: 6rem;
+        padding-top: 5.5rem;
+        padding-bottom: 2rem;
     }
-    
-    .hero-metrics-bar {
+
+    .hero-title {
+        font-size: clamp(1.8rem, 6vw, 2.4rem);
+    }
+
+    .hero-subtitle {
+        font-size: 0.95rem;
+        max-width: 100%;
+    }
+
+    .hero-actions {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.8rem;
+    }
+
+    .hero-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .full-width-metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.2rem;
+        padding: 1.2rem 1.5rem;
+    }
+
+    .metric-divider {
+        display: none;
+    }
+
+    .metric-item {
+        align-items: flex-start;
+    }
+
+    .principles-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .tech-stack-card {
+        padding: 1.5rem;
+    }
+
+    .tech-chips-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
+    }
+
+    .project-badge {
+        font-size: 0.75rem;
+    }
+
+    .project-title {
+        font-size: 1.5rem;
+    }
+
+    .cookie-banner {
+        left: 16px;
+        right: 16px;
+        bottom: 44px;
+        max-width: calc(100vw - 32px);
         flex-direction: column;
         align-items: flex-start;
-        width: 100%;
+        gap: 0.8rem;
+        padding: 1rem 1.2rem;
     }
-    
-    .metric-divider {
-        width: 100%;
-        height: 1px;
+
+    .cookie-banner .btn {
+        align-self: flex-end;
+    }
+
+    .ide-status-bar {
+        font-size: 0.68rem;
+        padding: 0 0.8rem;
+    }
+
+    .status-left, .status-right {
+        gap: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .full-width-metrics {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .tech-chips-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tech-stat-footer {
+        flex-wrap: wrap;
+        gap: 0.8rem;
+    }
+
+    .stat-mini .num {
+        font-size: 1.05rem;
+    }
+
+    .stat-mini .lbl {
+        font-size: 0.68rem;
+    }
+
+    .lang-btn {
+        padding: 4px 8px;
+        font-size: 0.7rem;
     }
 }
