@@ -3,23 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enikey Software | Разработка систем и сайтов</title>
-    <meta name="description" content="Современные веб-приложения и системные решения от опытного разработчика.">
+    <title>Enikey Software | Инженерная разработка систем и сайтов</title>
+    <meta name="description" content="Высоконагруженные системы, масштабируемые веб-приложения и премиальный UX от Enikey Software.">
     <!-- Google Fonts: Outfit and Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body data-theme="dark" data-palette="violet">
     <canvas id="particles-bg"></canvas>
+    
+    <div id="dev-grid-overlay" class="grid-overlay"></div>
+    <div id="cursor-glow-follower" class="cursor-glow"></div>
+
     <div class="blob-bg">
         <div class="blob shape-1"></div>
         <div class="blob shape-2"></div>
         <div class="blob shape-3"></div>
     </div>
 
+    <!-- Pinned Left IDE Control Panel -->
+    <aside id="ide-settings-panel" class="ide-panel glass-effect">
+        <button id="ide-toggle-btn" class="ide-toggle-btn" aria-label="Панель IDE">
+            <i class="fas fa-sliders"></i>
+            <span class="vertical-label">IDE CONFIG</span>
+        </button>
+
+        <div class="ide-panel-content">
+            <div class="ide-panel-header">
+                <div class="ide-title">
+                    <i class="fas fa-terminal"></i>
+                    <span data-i18n="ide_panel_title">Панель управления IDE</span>
+                </div>
+                <div class="ide-badge" data-i18n="ide_status">Система: 200 OK</div>
+            </div>
+
+            <div class="ide-section">
+                <div class="ide-section-title">
+                    <i class="fas fa-circle-half-stroke"></i>
+                    <span data-i18n="theme_label">Тема оформления</span>
+                </div>
+                <div class="theme-options-grid">
+                    <button class="theme-option-btn active" data-theme="dark">
+                        <i class="fas fa-moon"></i>
+                        <span data-i18n="theme_dark">Тёмная</span>
+                    </button>
+                    <button class="theme-option-btn" data-theme="light">
+                        <i class="fas fa-sun"></i>
+                        <span data-i18n="theme_light">Светлая</span>
+                    </button>
+                    <button class="theme-option-btn" data-theme="cyber">
+                        <i class="fas fa-bolt"></i>
+                        <span data-i18n="theme_cyber">Киберпанк</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="ide-section">
+                <div class="ide-section-title">
+                    <i class="fas fa-palette"></i>
+                    <span data-i18n="syntax_color_label">Цветовая гамма</span>
+                </div>
+                <div class="palette-swatches">
+                    <button class="palette-swatch active" data-palette="violet" title="Neon Violet">
+                        <span class="swatch-color violet"></span>
+                        <span class="swatch-name" data-i18n="palette_violet">Neon Violet</span>
+                    </button>
+                    <button class="palette-swatch" data-palette="emerald" title="Emerald Matrix">
+                        <span class="swatch-color emerald"></span>
+                        <span class="swatch-name" data-i18n="palette_emerald">Emerald Matrix</span>
+                    </button>
+                    <button class="palette-swatch" data-palette="cyan" title="Cyber Cyan">
+                        <span class="swatch-color cyan"></span>
+                        <span class="swatch-name" data-i18n="palette_cyan">Cyber Cyan</span>
+                    </button>
+                    <button class="palette-swatch" data-palette="amber" title="Solar Amber">
+                        <span class="swatch-color amber"></span>
+                        <span class="swatch-name" data-i18n="palette_amber">Solar Amber</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="ide-section">
+                <div class="ide-section-title">
+                    <i class="fas fa-wave-square"></i>
+                    <span data-i18n="canvas_settings_label">Фоновая анимация</span>
+                </div>
+                <div class="control-row">
+                    <label data-i18n="density_label">Плотность связей</label>
+                    <input type="range" id="density-slider" min="30" max="180" value="90">
+                </div>
+                <div class="control-row">
+                    <label data-i18n="speed_label">Скорость частиц</label>
+                    <input type="range" id="speed-slider" min="1" max="10" value="4">
+                </div>
+            </div>
+
+            <div class="ide-section">
+                <div class="ide-section-title">
+                    <i class="fas fa-sliders"></i>
+                    <span>Опции среды</span>
+                </div>
+                <div class="toggle-control-row">
+                    <span data-i18n="grid_overlay_label">Сетка координатора</span>
+                    <label class="switch-toggle">
+                        <input type="checkbox" id="toggle-grid">
+                        <span class="slider-round"></span>
+                    </label>
+                </div>
+                <div class="toggle-control-row">
+                    <span data-i18n="cursor_glow_label">Неоновый курсор</span>
+                    <label class="switch-toggle">
+                        <input type="checkbox" id="toggle-cursor" checked>
+                        <span class="slider-round"></span>
+                    </label>
+                </div>
+                <div class="toggle-control-row">
+                    <span data-i18n="audio_fx_label">Звуковой отклик</span>
+                    <label class="switch-toggle">
+                        <input type="checkbox" id="toggle-audio" checked>
+                        <span class="slider-round"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Header Navigation -->
     <nav class="navbar glass-effect">
         <div class="container nav-content">
             <a href="#" class="logo">
@@ -27,23 +139,19 @@
                 <span class="logo-text" data-i18n="logo_name">Enikey Software</span>
             </a>
             <ul class="nav-links">
-                <li><a href="#about" data-i18n="nav_about">Обо мне</a></li>
-                <li><a href="#services" data-i18n="nav_services">Услуги</a></li>
+                <li><a href="#about" data-i18n="nav_about">О компании</a></li>
                 <li><a href="#projects" data-i18n="nav_projects">Проекты</a></li>
+                <li><a href="#services" data-i18n="nav_services">Услуги</a></li>
+                <li><a href="#pulse" data-i18n="nav_pulse">Пульс</a></li>
                 <li><a href="#contact" class="btn btn-primary" data-i18n="nav_contact">Связаться</a></li>
             </ul>
-
-            <div class="theme-controller">
-                <i class="fas fa-moon"></i>
-                <input type="range" class="brightness-slider" min="0" max="100" value="0">
-                <i class="fas fa-sun"></i>
-            </div>
 
             <div class="lang-switcher">
                 <button class="lang-btn active" data-lang="ru">RU</button>
                 <button class="lang-btn" data-lang="en">EN</button>
                 <button class="lang-btn" data-lang="zh">ZH</button>
             </div>
+
             <button class="mobile-menu-btn" aria-label="Открыть меню">
                 <span></span>
                 <span></span>
@@ -53,57 +161,198 @@
     </nav>
 
     <main>
+        <!-- Hero Section -->
         <section class="hero" id="home">
             <div class="container hero-content">
                 <div class="hero-text reveal">
-                    <div class="badge" data-i18n="hero_badge">Доступен для новых проектов</div>
+                    <div class="badge-wrapper">
+                        <div class="badge" data-i18n="hero_badge"><i class="fas fa-code-branch"></i> Инженерная студия разработки</div>
+                    </div>
                     <h1 class="hero-title" data-i18n="hero_title" data-i18n-html="true">
-                        Создаю <span class="gradient-text">инновационные</span> системы и сайты
+                        Инженерная точность. <span class="gradient-text">Премиальный UX</span>. Системы нового поколения.
                     </h1>
                     <p class="hero-subtitle" data-i18n="hero_subtitle">
-                        Разработка масштабируемых веб-приложений, сложных корпоративных систем и креативных лендингов с акцентом на производительность и потрясающий дизайн.
+                        Проектируем высоконагруженные веб-платформы, корпоративные экосистемы и интерактивные сервисы с индивидуальной графикой, выдерживающие миллионы запросов.
                     </p>
                     <div class="hero-actions">
-                        <a href="#projects" class="btn btn-primary btn-lg shine-effect" data-i18n="hero_btn_work">Смотреть работы</a>
-                        <a href="#about" class="btn btn-outline btn-lg" data-i18n="hero_btn_more">Узнать больше</a>
+                        <a href="#projects" class="btn btn-primary btn-lg shine-effect" data-i18n="hero_btn_work">
+                            <i class="fas fa-folder-open icon-left"></i> Смотреть проекты
+                        </a>
+                        <a href="#about" class="btn btn-outline btn-lg" data-i18n="hero_btn_more">
+                            <i class="fas fa-microchip icon-left"></i> О компании
+                        </a>
                     </div>
                 </div>
-                <div class="hero-visual reveal reveal-delay">
-                    <div class="glass-card visual-card interactive-card">
-                        <div class="card-glow"></div>
-                        <div class="code-editor">
-                            <div class="editor-header">
-                                <span class="dot red"></span>
-                                <span class="dot yellow"></span>
-                                <span class="dot green"></span>
-                                <span class="file-name">agency.ts</span>
-                            </div>
-                            <pre><code class="language-js">
-const team = {
-    name: "Enikey",
-    role: "Digital Agency",
-    focus: ["Web Apps", "Systems", "Design"],
-    drive: ["Sleek UI", "Clean Code"],
-    buildFuture() {
-        return "Creating next-gen experiences";
-    }
-};
 
-team.buildFuture();
-                            </code></pre>
+                <!-- Modern Interactive IDE Workspace Component -->
+                <div class="hero-visual reveal reveal-delay">
+                    <div class="glass-card dev-workspace-card interactive-card">
+                        <div class="card-glow"></div>
+                        <div class="workspace-editor">
+                            <div class="workspace-header">
+                                <div class="window-controls">
+                                    <span class="dot red"></span>
+                                    <span class="dot yellow"></span>
+                                    <span class="dot green"></span>
+                                </div>
+                                <div class="workspace-tabs">
+                                    <button class="ws-tab active" data-tab="architecture">
+                                        <i class="fas fa-cube"></i> architecture.ts
+                                    </button>
+                                    <button class="ws-tab" data-tab="performance">
+                                        <i class="fas fa-bolt"></i> performance.rs
+                                    </button>
+                                    <button class="ws-tab" data-tab="crzrt">
+                                        <i class="fas fa-shield-halved"></i> crzrt_engine.ts
+                                    </button>
+                                </div>
+                                <div class="workspace-actions">
+                                    <button class="ws-action-btn" id="run-code-btn" title="Запустить сборку">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="code-viewport">
+                                <div class="line-numbers">
+                                    <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+                                </div>
+                                <div class="code-content">
+                                    <pre id="workspace-code"><code class="language-typescript"><span class="kwd">import</span> { <span class="type">Architect</span>, <span class="type">HighLoad</span> } <span class="kwd">from</span> <span class="str">'@enikey/core'</span>;
+
+<span class="kwd">export class</span> <span class="type">EnikeySystem</span> <span class="kwd">implements</span> <span class="type">Architect</span> {
+    <span class="kwd">readonly</span> UI = <span class="str">"Bespoke Glassmorphism 2.0"</span>;
+    <span class="kwd">readonly</span> Architecture = <span class="str">"Microservices & Async Workers"</span>;
+
+    <span class="kwd">async</span> <span class="func">deployFuture</span>() {
+        <span class="kwd">return await</span> <span class="type">HighLoad</span>.<span class="func">compile</span>({ speed: <span class="str">"60 FPS"</span>, latency: <span class="str">"&lt;20ms"</span> });
+    }
+}</code></pre>
+                                </div>
+                            </div>
+
+                            <div class="workspace-terminal">
+                                <div class="terminal-status">
+                                    <span class="status-dot green-pulse"></span>
+                                    <span class="status-text">[BUILD OK] Compiled in 24ms • All checks passed</span>
+                                </div>
+                                <div class="terminal-pills">
+                                    <span class="pill-tag"><i class="fas fa-microchip"></i> Node v20</span>
+                                    <span class="pill-tag"><i class="fas fa-gauge-high"></i> FPS: 60</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <!-- Floating elements -->
-                    <div class="floating-bubble bubble-1 glass-effect">
-                        <span data-i18n="bubble_perf">Высокая производительность</span>
-                    </div>
-                    <div class="floating-bubble bubble-2 glass-effect">
-                        <span data-i18n="bubble_design">Premium Design</span>
+                </div>
+            </div>
+
+            <!-- Full Width Hero Metrics & Proof Banner -->
+            <div class="hero-metrics-bar full-width-metrics reveal">
+                <div class="metric-item">
+                    <span class="metric-value"><i class="fas fa-server metric-icon"></i> 99.99%</span>
+                    <span class="metric-label">Надежность систем (Uptime)</span>
+                </div>
+                <div class="metric-divider"></div>
+                <div class="metric-item">
+                    <span class="metric-value"><i class="fas fa-bolt metric-icon"></i> &lt; 20ms</span>
+                    <span class="metric-label">Время отклика API</span>
+                </div>
+                <div class="metric-divider"></div>
+                <div class="metric-item">
+                    <span class="metric-value"><i class="fas fa-cubes metric-icon"></i> 50+</span>
+                    <span class="metric-label">Сложных проектов</span>
+                </div>
+                <div class="metric-divider"></div>
+                <div class="metric-item">
+                    <span class="metric-value"><i class="fas fa-shield-halved metric-icon"></i> 100%</span>
+                    <span class="metric-label">Без конструкторов</span>
+                </div>
+                <div class="metric-divider"></div>
+                <div class="metric-item">
+                    <span class="metric-value"><i class="fas fa-chart-line metric-icon"></i> 10M+</span>
+                    <span class="metric-label">Запросов / сутки</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Projects Showcase Section -->
+        <section class="projects" id="projects">
+            <div class="container">
+                <div class="section-header reveal">
+                    <h2 class="section-title" data-i18n="projects_title" data-i18n-html="true">
+                        Флагманские <span class="gradient-text">Проекты</span>
+                    </h2>
+                    <p class="section-subtitle" data-i18n="projects_subtitle">
+                        Реализованные высоконагруженные системы, цифровые платформы и сервисы
+                    </p>
+                </div>
+
+                <div class="projects-grid">
+                    <!-- Featured Project: CRZRT -->
+                    <div class="glass-card project-card featured-project interactive-card reveal active">
+                        <div class="card-glow"></div>
+                        <div class="project-badge">
+                            <i class="fas fa-star icon-left"></i> Наш последний проект
+                        </div>
+                        <div class="project-layout">
+                            <div class="project-info">
+                                <div class="project-tags">
+                                    <span class="tag" data-i18n="crzrt_tag1">High-Load Web</span>
+                                    <span class="tag" data-i18n="crzrt_tag2">Образовательная платформа</span>
+                                    <span class="tag" data-i18n="crzrt_tag3">Enterprise UI</span>
+                                </div>
+                                <h3 class="project-title" data-i18n="crzrt_title">Центр развития закупок (zakupki.tatar)</h3>
+                                <p class="project-description" data-i18n="crzrt_desc">
+                                    Флагманский портал и единая образовательная система тендерного сопровождения, подготовки экспертов по 44-ФЗ/223-ФЗ, юридического консалтинга и сервисов ЭТП.
+                                </p>
+
+                                <div class="project-highlights">
+                                    <div class="highlight-item">
+                                        <i class="fas fa-check-circle highlight-icon"></i>
+                                        <span>Тендерное сопровождение, Обучение, Консалтинг и ЭТП в единой экосистеме</span>
+                                    </div>
+                                    <div class="highlight-item">
+                                        <i class="fas fa-check-circle highlight-icon"></i>
+                                        <span>Расписание очных и дистанционных курсов повышения квалификации по 44-ФЗ</span>
+                                    </div>
+                                    <div class="highlight-item">
+                                        <i class="fas fa-check-circle highlight-icon"></i>
+                                        <span>Современная адаптированная дизайн-система и высокая скорость работы</span>
+                                    </div>
+                                </div>
+
+                                <div class="project-actions">
+                                    <a href="https://zakupki.tatar/" target="_blank" rel="noopener" class="btn btn-primary shine-effect" data-i18n="view_case">
+                                        <i class="fas fa-arrow-up-right-from-square icon-left"></i> Открыть zakupki.tatar
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="project-preview-wrapper">
+                                <div class="project-window-mockup">
+                                    <div class="mockup-header">
+                                        <span class="dot red"></span>
+                                        <span class="dot yellow"></span>
+                                        <span class="dot green"></span>
+                                        <span class="mockup-url">https://zakupki.tatar/</span>
+                                    </div>
+                                    <div class="mockup-body">
+                                        <img src="crzrt_ui_preview.png" alt="Центр развития закупок (zakupki.tatar)" class="project-img">
+                                        <div class="mockup-overlay">
+                                            <span class="tech-chip"><i class="fas fa-code"></i> 44-ФЗ / 223-ФЗ</span>
+                                            <span class="tech-chip"><i class="fas fa-graduation-cap"></i> Обучение</span>
+                                            <span class="tech-chip"><i class="fas fa-gavel"></i> Консалтинг</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
+        <!-- About Section -->
         <section class="about" id="about">
             <div class="container about-content">
                 <div class="about-text reveal">
@@ -111,8 +360,12 @@ team.buildFuture();
                         <img src="enikey_agency_logo.png" alt="Enikey Emblem" class="about-logo">
                     </div>
                     <h2 class="section-title" data-i18n="about_title" data-i18n-html="true">Мы — <span class="gradient-text">Enikey</span></h2>
-                    <p class="section-subtitle" style="text-align:left; margin-bottom:1.5rem; line-height: 1.8;" data-i18n="about_p1">Мы не просто пишем код и рисуем интерфейсы. Мы проектируем цифровое будущее вашего бизнеса. Enikey — это синергия бескомпромиссной инженерной точности и эстетики премиального дизайна.</p>
-                    <p data-i18n="about_p2" style="color:var(--text-secondary); margin-bottom:2rem;">Мы объединяем передовые технологии масштабируемой разработки с передовым визуальным опытом (WOW-эффектами), помогая вашему бизнесу выделяться и работать эффективнее на всех уровнях.</p>
+                    <p class="section-subtitle" style="text-align:left; margin-bottom:1.5rem; line-height: 1.8;" data-i18n="about_p1">
+                        Мы не используем шаблонные конструкторы. Enikey — это синергия бескомпромиссной инженерной точности, чистого кода и эстетики флагманского дизайна.
+                    </p>
+                    <p data-i18n="about_p2" style="color:var(--text-secondary); margin-bottom:2rem;">
+                        Мы проектируем цифровые архитектуры, которые работают без сбоев, выдерживают пиковые нагрузки и создают запоминающийся визуальный опыт для ваших пользователей.
+                    </p>
                 </div>
                 <div class="about-visual reveal reveal-delay">
                     <div class="glass-card image-card interactive-card">
@@ -123,11 +376,49 @@ team.buildFuture();
             </div>
         </section>
 
+        <!-- Services Section -->
+        <section class="services" id="services">
+            <div class="container">
+                <div class="section-header reveal">
+                    <h2 class="section-title" data-i18n="services_title" data-i18n-html="true">Что мы <span class="gradient-text">создаем</span></h2>
+                    <p class="section-subtitle" data-i18n="services_subtitle">Комплексный инженерный подход от системного ядра до последнего пикселя</p>
+                </div>
+                
+                <div class="services-grid">
+                    <div class="glass-card service-card interactive-card reveal scale-in">
+                        <div class="card-glow"></div>
+                        <div class="service-icon">
+                            <i class="fas fa-laptop-code"></i>
+                        </div>
+                        <h3 data-i18n="srv_web_title">High-Load Web & Apps</h3>
+                        <p data-i18n="srv_web_desc">Современные реактивные веб-приложения на React, Vue, Next.js. Высокая скорость загрузки и чистая архитектура.</p>
+                    </div>
+                    <div class="glass-card service-card interactive-card reveal scale-in reveal-delay">
+                        <div class="card-glow"></div>
+                        <div class="service-icon">
+                            <i class="fas fa-network-wired"></i>
+                        </div>
+                        <h3 data-i18n="srv_sys_title">Системная Архитектура</h3>
+                        <p data-i18n="srv_sys_desc">Проектирование высоконагруженных микросервисных систем, баз данных, REST/gRPC API и интеграций с ИИ.</p>
+                    </div>
+                    <div class="glass-card service-card interactive-card reveal scale-in reveal-delay-2">
+                        <div class="card-glow"></div>
+                        <div class="service-icon">
+                            <i class="fas fa-wand-magic-sparkles"></i>
+                        </div>
+                        <h3 data-i18n="srv_design_title">UI/UX & Interactive Design</h3>
+                        <p data-i18n="srv_design_desc">Создание премиальных интерфейсов, сложных микро-анимаций и 3D-графики, повышающих конверсию.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pulse Section (News & Articles) -->
         <section class="pulse" id="pulse">
             <div class="container">
                 <div class="section-header reveal">
                     <h2 class="section-title" data-i18n="pulse_title" data-i18n-html="true">Enikey <span class="gradient-text">Pulse</span></h2>
-                    <p class="section-subtitle" data-i18n="pulse_subtitle">Ежедневные новости технологий и глубокая аналитика от нашего ИИ-агента</p>
+                    <p class="section-subtitle" data-i18n="pulse_subtitle">Ежедневные новости технологий и глубокая аналитика от наших ИИ-агентов</p>
                 </div>
                 
                 <div class="pulse-grid">
@@ -137,11 +428,10 @@ team.buildFuture();
                             <span class="label neon-text" data-i18n="news_label">Новости</span>
                         </div>
                         <div id="news-container" class="posts-stack">
-                            <!-- News will be injected here -->
                             <div class="glass-card post-card mini-card">
                                 <div class="post-meta"><span>10:45</span> • <span data-i18n="ai_moderated">Модерируется ИИ</span></div>
-                                <h3 data-i18n="mock_news_title">ИИ-агенты Enikey теперь автоматизируют публикацию новостей</h3>
-                                <p data-i18n="mock_news_desc">Мы запустили систему автономного контента...</p>
+                                <h3 data-i18n="mock_news_title">ИИ-агенты Enikey автоматизируют сборку контента</h3>
+                                <p data-i18n="mock_news_desc">Мы запустили автономную микросервисную систему генерации новостей...</p>
                             </div>
                         </div>
                     </div>
@@ -170,54 +460,22 @@ team.buildFuture();
             </div>
         </section>
 
-        <section class="services" id="services">
-            <div class="container">
-                <div class="section-header reveal">
-                    <h2 class="section-title" data-i18n="services_title" data-i18n-html="true">Что я <span class="gradient-text">предлагаю</span></h2>
-                    <p class="section-subtitle" data-i18n="services_subtitle">Комплексный подход от архитектуры до финального пикселя</p>
-                </div>
-                
-                <div class="services-grid">
-                    <div class="glass-card service-card interactive-card reveal scale-in">
-                        <div class="card-glow"></div>
-                        <div class="service-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                        </div>
-                        <h3 data-i18n="srv_web_title">Web-Разработка</h3>
-                        <p data-i18n="srv_web_desc">Современные веб-приложения на базе React, Vue, Next.js. Сложные интерфейсы и потрясающая анимация.</p>
-                    </div>
-                    <div class="glass-card service-card interactive-card reveal scale-in reveal-delay">
-                        <div class="card-glow"></div>
-                        <div class="service-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                        </div>
-                        <h3 data-i18n="srv_sys_title">Системная Архитектура</h3>
-                        <p data-i18n="srv_sys_desc">Проектирование высоконагруженных отказоустойчивых систем. Микросервисы, базы данных, API.</p>
-                    </div>
-                    <div class="glass-card service-card interactive-card reveal scale-in reveal-delay-2">
-                        <div class="card-glow"></div>
-                        <div class="service-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                        </div>
-                        <h3 data-i18n="srv_design_title">UI/UX Дизайн</h3>
-                        <p data-i18n="srv_design_desc">Разработка интерфейсов, которые не только красивы, но и удобны. Внимание к мельчайшим деталям.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
+        <!-- CTA Section -->
         <section class="cta" id="contact">
             <div class="container">
                 <div class="glass-card cta-card reveal">
                     <div class="card-glow"></div>
-                    <h2 data-i18n="cta_title" data-i18n-html="true">Готовы начать <span class="gradient-text">проект</span>?</h2>
-                    <p data-i18n="cta_desc">Свяжитесь со мной для обсуждения вашей идеи и получения оценки</p>
-                    <a href="mailto:hello@example.com" class="btn btn-primary btn-lg shine-effect" data-i18n="cta_btn">Написать мне</a>
+                    <h2 data-i18n="cta_title" data-i18n-html="true">Готовы создать <span class="gradient-text">лидирующий продукт</span>?</h2>
+                    <p data-i18n="cta_desc">Свяжитесь с нами для проведения технического аудита и оценки вашего проекта</p>
+                    <a href="mailto:hello@example.com" class="btn btn-primary btn-lg shine-effect" data-i18n="cta_btn">
+                        <i class="fas fa-paper-plane icon-left"></i> Обсудить проект
+                    </a>
                 </div>
             </div>
         </section>
     </main>
 
+    <!-- Footer -->
     <footer class="footer">
         <div class="container footer-content">
             <div class="footer-brand">
@@ -225,24 +483,37 @@ team.buildFuture();
                     <img src="enikey_agency_logo.png" alt="Enikey Logo" class="logo-img">
                     <span class="logo-text">Enikey Software</span>
                 </a>
-                <p data-i18n="footer_desc">Создаю будущее систем и веба.</p>
+                <p data-i18n="footer_desc">Инженерные системы и веб-технологии нового поколения.</p>
             </div>
             <div class="footer-links">
                 <a href="#home" data-i18n="footer_nav_home">Главная</a>
-                <a href="#about" data-i18n="nav_about">Обо мне</a>
-                <a href="#services" data-i18n="nav_services">Услуги</a>
+                <a href="#about" data-i18n="nav_about">О компании</a>
                 <a href="#projects" data-i18n="nav_projects">Проекты</a>
+                <a href="#services" data-i18n="nav_services">Услуги</a>
             </div>
             <div class="footer-social">
-                <a href="#" class="social-icon">GH</a>
-                <a href="#" class="social-icon">LN</a>
-                <a href="#" class="social-icon">TG</a>
+                <a href="#" class="social-icon" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                <a href="#" class="social-icon" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="#" class="social-icon" aria-label="Telegram"><i class="fab fa-telegram"></i></a>
             </div>
         </div>
         <div class="container footer-bottom">
             <p data-i18n="footer_copy" data-i18n-html="true">&copy; 2026 Enikey Software. Все права защищены.</p>
         </div>
     </footer>
+
+    <!-- Fixed IDE Status Bar -->
+    <div id="ide-status-bar" class="ide-status-bar glass-effect">
+        <div class="status-left">
+            <span class="status-item"><i class="fas fa-terminal icon-left"></i> LN <span id="status-line">1</span>, COL <span id="status-col">12</span></span>
+            <span class="status-item"><i class="fas fa-folder-tree icon-left"></i> [SEC: <span id="status-section">HERO.TS</span>]</span>
+            <span class="status-item hide-mobile">UTF-8</span>
+        </div>
+        <div class="status-right">
+            <span class="status-item status-ok"><i class="fas fa-check-circle icon-left"></i> 200 OK</span>
+            <span class="status-item"><i class="fas fa-scroll icon-left"></i> <span id="status-scroll-pct">0%</span></span>
+        </div>
+    </div>
 
     <!-- Cookie Banner -->
     <div id="cookie-banner" class="glass-effect cookie-banner">
@@ -258,7 +529,6 @@ team.buildFuture();
     <script src="pulse-api.js"></script>
     <script src="script.js"></script>
     <script>
-        // Cookie Banner Logic
         document.addEventListener('DOMContentLoaded', () => {
             const banner = document.getElementById('cookie-banner');
             const acceptBtn = document.getElementById('accept-cookies');
