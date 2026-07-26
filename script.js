@@ -138,15 +138,20 @@ const IDESettings = {
         const cursorGlow = document.getElementById('cursor-glow-follower');
         
         // Toggle Sidebar & Outside Click Close
-        if (toggleBtn && panel) {
-            toggleBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                panel.classList.toggle('open');
-                AudioFX.playClick(600);
-            });
+        const ideNavToggle = document.getElementById('ide-nav-toggle');
 
+        const togglePanel = (e) => {
+            if (e) e.stopPropagation();
+            if (panel) panel.classList.toggle('open');
+            AudioFX.playClick(600);
+        };
+
+        if (toggleBtn) toggleBtn.addEventListener('click', togglePanel);
+        if (ideNavToggle) ideNavToggle.addEventListener('click', togglePanel);
+
+        if (panel) {
             document.addEventListener('click', (e) => {
-                if (panel.classList.contains('open') && !panel.contains(e.target)) {
+                if (panel.classList.contains('open') && !panel.contains(e.target) && (!ideNavToggle || !ideNavToggle.contains(e.target))) {
                     panel.classList.remove('open');
                     AudioFX.playClick(500);
                 }
