@@ -144,7 +144,6 @@
                 <li><a href="#about" data-i18n="nav_about">О компании</a></li>
                 <li><a href="#projects" data-i18n="nav_projects">Проекты</a></li>
                 <li><a href="#services" data-i18n="nav_services">Услуги</a></li>
-                <li><a href="#pulse" data-i18n="nav_pulse">Пульс</a></li>
                 <li><a href="#contact" class="btn btn-primary" data-i18n="nav_contact">Связаться</a></li>
             </ul>
 
@@ -357,23 +356,86 @@
 
         <!-- About Section -->
         <section class="about" id="about">
-            <div class="container about-content">
-                <div class="about-text reveal">
-                    <div class="about-logo-wrapper">
-                        <img src="enikey_agency_logo.png" alt="Enikey Emblem" class="about-logo">
+            <div class="container">
+                <div class="section-header reveal">
+                    <div class="badge-wrapper" style="display:flex; justify-content:center; margin-bottom:1rem;">
+                        <div class="badge" data-i18n="about_badge"><i class="fas fa-microchip"></i> Инженерная философия</div>
                     </div>
-                    <h2 class="section-title" data-i18n="about_title" data-i18n-html="true">Мы — <span class="gradient-text">Enikey</span></h2>
-                    <p class="section-subtitle" style="text-align:left; margin-bottom:1.5rem; line-height: 1.8;" data-i18n="about_p1">
-                        Мы не используем шаблонные конструкторы. Enikey — это синергия бескомпромиссной инженерной точности, чистого кода и эстетики флагманского дизайна.
-                    </p>
-                    <p data-i18n="about_p2" style="color:var(--text-secondary); margin-bottom:2rem;">
-                        Мы проектируем цифровые архитектуры, которые работают без сбоев, выдерживают пиковые нагрузки и создают запоминающийся визуальный опыт для ваших пользователей.
-                    </p>
+                    <h2 class="section-title" data-i18n="about_title" data-i18n-html="true">Инженерный подход к <span class="gradient-text">цифровой архитектуре</span></h2>
+                    <p class="section-subtitle" data-i18n="about_subtitle">Мы не используем шаблонные конструкторы. Каждая система Enikey создается с чистого листа для максимальной производительности.</p>
                 </div>
-                <div class="about-visual reveal reveal-delay">
-                    <div class="glass-card image-card interactive-card">
-                        <div class="card-glow"></div>
-                        <img src="agency_tech_abstract.png" alt="Agency Abstract Tech Background" class="feature-image">
+
+                <div class="about-grid">
+                    <div class="about-info-col reveal">
+                        <div class="about-story-card glass-card">
+                            <div class="card-glow"></div>
+                            <p data-i18n="about_p1">
+                                Enikey — это синергия бескомпромиссной инженерной точности, чистого кода и эстетики флагманского дизайна. Мы проектируем цифровые архитектуры, выдерживающие пиковые нагрузки и создающие запоминающийся визуальный опыт.
+                            </p>
+                        </div>
+
+                        <div class="principles-grid">
+                            <div class="glass-card principle-card interactive-card">
+                                <div class="principle-icon"><i class="fas fa-bolt"></i></div>
+                                <h4 data-i18n="principle_1_title">Zero-Lag Speed</h4>
+                                <p data-i18n="principle_1_desc">Реактивный чистый код без громоздких библиотек и шаблонов</p>
+                            </div>
+                            <div class="glass-card principle-card interactive-card">
+                                <div class="principle-icon"><i class="fas fa-shield-halved"></i></div>
+                                <h4 data-i18n="principle_2_title">Enterprise Security</h4>
+                                <p data-i18n="principle_2_desc">Изолированная микросервисная архитектура и защита данных</p>
+                            </div>
+                            <div class="glass-card principle-card interactive-card">
+                                <div class="principle-icon"><i class="fas fa-gem"></i></div>
+                                <h4 data-i18n="principle_3_title">Bespoke Design</h4>
+                                <p data-i18n="principle_3_desc">Авторский стеклянный UX/UI с плавными микро-анимациями 60 FPS</p>
+                            </div>
+                            <div class="glass-card principle-card interactive-card">
+                                <div class="principle-icon"><i class="fas fa-chart-pie"></i></div>
+                                <h4 data-i18n="principle_4_title">High-Load Scale</h4>
+                                <p data-i18n="principle_4_desc">Готовность систем к миллионам запросов в сутки без сбоев</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="about-visual-col reveal reveal-delay">
+                        <div class="glass-card tech-stack-card interactive-card">
+                            <div class="card-glow"></div>
+                            <div class="tech-card-header">
+                                <div class="logo-inline">
+                                    <img src="enikey_agency_logo.png" alt="Enikey Emblem" class="tech-card-logo">
+                                    <div class="tech-card-title">
+                                        <h3>Enikey Core Stack</h3>
+                                        <span>High-Performance Engine</span>
+                                    </div>
+                                </div>
+                                <span class="status-pill green-pulse">ONLINE</span>
+                            </div>
+
+                            <div class="tech-chips-grid">
+                                <div class="tech-chip-item"><i class="fab fa-js"></i> TypeScript 5.0</div>
+                                <div class="tech-chip-item"><i class="fab fa-rust"></i> Rust High-Load</div>
+                                <div class="tech-chip-item"><i class="fab fa-react"></i> Next.js App Router</div>
+                                <div class="tech-chip-item"><i class="fas fa-robot"></i> AI Microservices</div>
+                                <div class="tech-chip-item"><i class="fas fa-cubes"></i> Microservices</div>
+                                <div class="tech-chip-item"><i class="fas fa-wave-square"></i> Web Audio / WebGL</div>
+                            </div>
+
+                            <div class="tech-stat-footer">
+                                <div class="stat-mini">
+                                    <span class="num">0.00s</span>
+                                    <span class="lbl">Builder Overhead</span>
+                                </div>
+                                <div class="stat-mini">
+                                    <span class="num">100%</span>
+                                    <span class="lbl">Bespoke Code</span>
+                                </div>
+                                <div class="stat-mini">
+                                    <span class="num">60</span>
+                                    <span class="lbl">Target FPS</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -416,8 +478,8 @@
             </div>
         </section>
 
-        <!-- Pulse Section (News & Articles) -->
-        <section class="pulse" id="pulse">
+        <!-- Pulse Section (News & Articles) - Temporarily Disabled -->
+        <section class="pulse" id="pulse" style="display: none;">
             <div class="container">
                 <div class="section-header reveal">
                     <h2 class="section-title" data-i18n="pulse_title" data-i18n-html="true">Enikey <span class="gradient-text">Pulse</span></h2>
@@ -520,6 +582,7 @@
 
     <!-- Cookie Banner -->
     <div id="cookie-banner" class="glass-effect cookie-banner">
+        <i class="fas fa-cookie-bite cookie-icon"></i>
         <div class="cookie-text">
             <span data-i18n="cookie_text">Мы используем файлы cookie для улучшения работы сайта. Оставаясь с нами, вы соглашаетесь с нашей</span>
             <a href="privacy.html" data-i18n="privacy_policy">политикой конфиденциальности</a>.
