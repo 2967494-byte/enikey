@@ -87,8 +87,14 @@ db.serialize(() => {
         image_url TEXT NOT NULL DEFAULT '',
         is_published INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        publication_date TEXT NOT NULL DEFAULT ''
     )`);
+
+    // Совместимость с базами, созданными до появления даты публикации.
+    db.run(`ALTER TABLE news_posts ADD COLUMN publication_date TEXT NOT NULL DEFAULT ''`, (err) => {
+        if (err && !/duplicate column name/i.test(err.message)) console.error('News date migration error:', err);
+    });
 });
 
 function signAdminSession(payload) {
@@ -162,7 +168,8 @@ function newsRowToJson(row) {
         content: { ru: row.content_ru, en: row.content_en || row.content_ru },
         imageUrl: row.image_url || '',
         isPublished: Boolean(row.is_published),
-        createdAt: row.created_at,
+        createdAt: row.publication_date ? `${row.publication_date} 12:00:00` : row.created_at,
+        publicationDate: row.publication_date || String(row.created_at || '').slice(0, 10),
         updatedAt: row.updated_at
     };
 }
@@ -174,13 +181,15 @@ function newsListRowToJson(row) {
         summary: { ru: row.summary_ru, en: row.summary_en || row.summary_ru },
         imageUrl: row.image_url || '',
         isPublished: Boolean(row.is_published),
-        createdAt: row.created_at
+        createdAt: row.publication_date ? `${row.publication_date} 12:00:00` : row.created_at,
+        publicationDate: row.publication_date || String(row.created_at || '').slice(0, 10)
     };
 }
 
 function getPublishedNews(callback) {
-    db.all(`SELECT id, title_ru, title_en, summary_ru, summary_en, image_url, is_published, created_at
-        FROM news_posts WHERE is_published = 1 ORDER BY created_at DESC, id DESC`, [], callback);
+    db.all(`SELECT id, title_ru, title_en, summary_ru, summary_en, image_url, is_published, created_at, publication_date
+        FROM news_posts WHERE is_published = 1
+        ORDER BY COALESCE(NULLIF(publication_date, ''), substr(created_at, 1, 10)) DESC, created_at DESC, id DESC`, [], callback);
 }
 
 function cleanNewsInput(body) {
@@ -192,6 +201,7 @@ function cleanNewsInput(body) {
         summaryEn: String(value.summaryEn || '').trim().slice(0, 360),
         contentRu: String(value.contentRu || '').trim().slice(0, 100000),
         contentEn: String(value.contentEn || '').trim().slice(0, 100000),
+        publicationDate: String(value.publicationDate || '').trim().slice(0, 10),
         imageUrl: String(value.imageUrl || '').trim().slice(0, 500),
         isPublished: value.isPublished === true
     };
@@ -199,10 +209,33 @@ function cleanNewsInput(body) {
 
 function validateNewsInput(value) {
     if (!value.titleRu || !value.contentRu) return 'Заполните заголовок и текст на русском языке';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value.publicationDate)) return 'Укажите дату публикации';
+    const parsedDate = new Date(`${value.publicationDate}T00:00:00.000Z`);
+    if (!Number.isFinite(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== value.publicationDate) return 'Укажите корректную дату публикации';
     if (value.imageUrl && !/^\/uploads\/news\/[a-zA-Z0-9_-]+\.(?:jpg|png|webp)$/.test(value.imageUrl)) {
         return 'Изображение должно быть загружено через форму';
     }
     return '';
+}
+
+function ensurePublicationDateAvailable(date, exceptId, callback) {
+    const checkForConflict = () => {
+        const sql = `SELECT id FROM news_posts
+            WHERE COALESCE(NULLIF(publication_date, ''), substr(created_at, 1, 10)) = ?
+            AND (? IS NULL OR id != ?) LIMIT 1`;
+        db.get(sql, [date, exceptId, exceptId], (err, row) => {
+            if (err) return callback(err);
+            callback(row ? false : null);
+        });
+    };
+
+    if (exceptId === null) return checkForConflict();
+    db.get(`SELECT COALESCE(NULLIF(publication_date, ''), substr(created_at, 1, 10)) AS date
+        FROM news_posts WHERE id = ?`, [exceptId], (err, row) => {
+        if (err) return callback(err);
+        if (row && row.date === date) return callback(null);
+        checkForConflict();
+    });
 }
 
 app.get('/api/news', (req, res) => {
@@ -263,7 +296,7 @@ app.post('/api/admin/logout', sameOriginForAdmin, (req, res) => {
 });
 
 app.get('/api/admin/news', requireAdmin, (req, res) => {
-    db.all('SELECT * FROM news_posts ORDER BY created_at DESC, id DESC', [], (err, rows) => {
+    db.all(`SELECT * FROM news_posts ORDER BY COALESCE(NULLIF(publication_date, ''), substr(created_at, 1, 10)) DESC, created_at DESC, id DESC`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: 'Не удалось загрузить публикации' });
         res.json(rows.map(newsRowToJson));
     });
@@ -294,14 +327,18 @@ app.post('/api/admin/news', sameOriginForAdmin, requireAdmin, (req, res) => {
     const validationError = validateNewsInput(article);
     if (validationError) return res.status(400).json({ error: validationError });
     const sql = `INSERT INTO news_posts
-        (title_ru, title_en, summary_ru, summary_en, content_ru, content_en, image_url, is_published)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-    db.run(sql, [article.titleRu, article.titleEn, article.summaryRu, article.summaryEn,
-        article.contentRu, article.contentEn, article.imageUrl, article.isPublished ? 1 : 0], function(err) {
+        (title_ru, title_en, summary_ru, summary_en, content_ru, content_en, image_url, is_published, publication_date)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    ensurePublicationDateAvailable(article.publicationDate, null, (dateError) => {
+        if (dateError) return res.status(500).json({ error: 'Не удалось проверить дату публикации' });
+        if (dateError === false) return res.status(409).json({ error: 'На эту дату уже есть публикация. Выберите другой день.' });
+        db.run(sql, [article.titleRu, article.titleEn, article.summaryRu, article.summaryEn,
+            article.contentRu, article.contentEn, article.imageUrl, article.isPublished ? 1 : 0, article.publicationDate], function(err) {
         if (err) return res.status(500).json({ error: 'Не удалось сохранить публикацию' });
         db.get('SELECT * FROM news_posts WHERE id = ?', [this.lastID], (selectErr, row) => {
             if (selectErr) return res.status(500).json({ error: 'Публикация сохранена, но её не удалось загрузить' });
             res.status(201).json(newsRowToJson(row));
+        });
         });
     });
 });
@@ -311,15 +348,19 @@ app.put('/api/admin/news/:id', sameOriginForAdmin, requireAdmin, (req, res) => {
     const validationError = validateNewsInput(article);
     if (validationError) return res.status(400).json({ error: validationError });
     const sql = `UPDATE news_posts SET title_ru = ?, title_en = ?, summary_ru = ?, summary_en = ?,
-        content_ru = ?, content_en = ?, image_url = ?, is_published = ?, updated_at = CURRENT_TIMESTAMP
+        content_ru = ?, content_en = ?, image_url = ?, is_published = ?, publication_date = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?`;
-    db.run(sql, [article.titleRu, article.titleEn, article.summaryRu, article.summaryEn,
-        article.contentRu, article.contentEn, article.imageUrl, article.isPublished ? 1 : 0, req.params.id], function(err) {
+    ensurePublicationDateAvailable(article.publicationDate, req.params.id, (dateError) => {
+        if (dateError) return res.status(500).json({ error: 'Не удалось проверить дату публикации' });
+        if (dateError === false) return res.status(409).json({ error: 'На эту дату уже есть публикация. Выберите другой день.' });
+        db.run(sql, [article.titleRu, article.titleEn, article.summaryRu, article.summaryEn,
+            article.contentRu, article.contentEn, article.imageUrl, article.isPublished ? 1 : 0, article.publicationDate, req.params.id], function(err) {
         if (err) return res.status(500).json({ error: 'Не удалось обновить публикацию' });
         if (!this.changes) return res.status(404).json({ error: 'Публикация не найдена' });
         db.get('SELECT * FROM news_posts WHERE id = ?', [req.params.id], (selectErr, row) => {
             if (selectErr) return res.status(500).json({ error: 'Публикация обновлена, но её не удалось загрузить' });
             res.json(newsRowToJson(row));
+        });
         });
     });
 });

@@ -7,7 +7,7 @@
   <title>Управление публикациями — Enikey</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css?v=4.0">
-  <link rel="stylesheet" href="news-admin.css?v=1.0">
+  <link rel="stylesheet" href="news-admin.css?v=1.1">
 </head>
 <body class="admin-news-page">
   <header class="site-header">
@@ -46,6 +46,13 @@
             <h2 id="form-title">Новая публикация</h2>
             <button class="admin-text-button" id="new-post-button" type="button">Новая</button>
           </div>
+
+          <fieldset>
+            <legend>Дата публикации</legend>
+            <label for="publication-date">Дата, которая будет показана на сайте</label>
+            <input id="publication-date" type="date" required>
+            <p class="admin-field-hint">Для материалов из папки news-materials указаны отдельные даты.</p>
+          </fieldset>
 
           <fieldset>
             <legend>Русская версия</legend>
@@ -101,6 +108,6 @@
   </main>
 
   <script src="api-config.js?v=4.0"></script>
-  <script src="news-admin.js?v=1.0" defer></script>
+  <script src="news-admin.js?v=1.1" defer></script>
 </body>
 </html>

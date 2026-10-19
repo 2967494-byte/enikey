@@ -20,6 +20,8 @@
 }
 .admin-login-form input:focus, .admin-post-form input:focus, .admin-post-form textarea:focus { border-color: var(--signal); }
 .admin-post-form textarea { resize: vertical; line-height: 1.65; }
+.admin-post-form input[type="date"] { max-width: 230px; }
+.admin-field-hint { margin: -5px 0 12px; color: var(--muted); font-size: .72rem; line-height: 1.5; }
 .admin-primary-button, .admin-secondary-button, .admin-text-button, .post-action-button {
   min-height: 42px;
   padding: 10px 15px;

@@ -34,6 +34,13 @@
     }).format(date);
   }
 
+  function localDateValue(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   function setAuthenticated(authenticated) {
     loginSection.hidden = authenticated;
     workspace.hidden = !authenticated;
@@ -92,6 +99,7 @@
   function resetForm() {
     form.reset();
     document.getElementById('post-id').value = '';
+    document.getElementById('publication-date').value = localDateValue();
     imageUrlInput.value = '';
     imageInput.value = '';
     removeImage = false;
@@ -104,6 +112,7 @@
 
   function populateForm(post) {
     document.getElementById('post-id').value = post.id;
+    document.getElementById('publication-date').value = post.publicationDate || post.createdAt.slice(0, 10);
     document.getElementById('title-ru').value = post.title.ru || '';
     document.getElementById('title-en').value = post.title.en === post.title.ru ? '' : post.title.en || '';
     document.getElementById('summary-ru').value = post.summary.ru || '';
@@ -157,6 +166,7 @@
         summaryEn: document.getElementById('summary-en').value,
         contentRu: document.getElementById('content-ru').value,
         contentEn: document.getElementById('content-en').value,
+        publicationDate: document.getElementById('publication-date').value,
         imageUrl,
         isPublished: document.getElementById('is-published').checked
       };
