@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru" class="dark">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Второй Мозг — Персональный ERP / CRM{% endblock %}</title>
+    <title>{% block title %}Enikey — CRM{% endblock %}</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -32,55 +32,57 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales/ru.global.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #0b0f19;
-            color: #f1f5f9;
-        }
-        /* FullCalendar dark overrides */
-        .fc {
-            --fc-border-color: #334155;
-            --fc-page-bg-color: #1e293b;
-            --fc-neutral-bg-color: #0f172a;
-            --fc-today-bg-color: rgba(99, 102, 241, 0.08);
-            font-size: 0.85rem;
-        }
-        .fc .fc-toolbar-title {
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #f8fafc;
-        }
-        .fc .fc-button {
-            background-color: #334155;
-            border-color: #475569;
-            color: #e2e8f0;
-            font-weight: 500;
-            padding: 0.3rem 0.6rem;
-            border-radius: 0.375rem;
-        }
-        .fc .fc-button:hover {
-            background-color: #475569;
-        }
-        .fc .fc-button-primary:not(:disabled).fc-button-active,
-        .fc .fc-button-primary:not(:disabled):active {
-            background-color: #6366f1;
-            border-color: #6366f1;
-        }
-        .fc-timegrid-slot {
-            height: 2.2rem !important;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 3px;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+        :root { color-scheme:light; --paper:#f4f3ef; --surface:#fbfaf7; --ink:#171915; --muted:#777970; --line:#d5d5ce; --signal:#f05b36; --soft:#ecebe5; --mono:'DM Mono',monospace; --sans:'Manrope',Arial,sans-serif; }
+        * { box-sizing:border-box; }
+        body { min-width:320px; margin:0; background:var(--paper)!important; color:var(--ink)!important; font-family:var(--sans)!important; -webkit-font-smoothing:antialiased; }
+        aside { width:244px!important; background:var(--paper)!important; border-color:var(--line)!important; backdrop-filter:none!important; }
+        aside > div:first-child { min-height:82px; padding:20px 22px!important; border-color:var(--line)!important; }
+        aside a[href="{{ prefix }}/"] h1 { font-size:1.2rem!important; letter-spacing:-.08em; }
+        aside nav { padding:24px 16px!important; }
+        aside nav > a { min-height:42px; border-radius:2px!important; padding:10px 12px!important; transition:color .16s ease,background .16s ease!important; }
+        aside nav > a[class*="bg-indigo-"] { background:var(--soft)!important; color:var(--ink)!important; border:0!important; border-left:2px solid var(--signal)!important; }
+        aside nav > a[class*="text-slate-"] { color:var(--muted)!important; }
+        aside nav > a:hover { background:var(--soft)!important; color:var(--ink)!important; }
+        aside nav > div { border-color:var(--line)!important; }
+        aside nav > div > div { font:500 .62rem var(--mono)!important; letter-spacing:.12em!important; color:var(--muted)!important; }
+        aside nav > div a { border-radius:2px!important; }
+        aside > div:last-child { padding:16px!important; border-color:var(--line)!important; }
+        main { min-height:100vh; background:var(--paper)!important; }
+        main > div { max-width:1440px!important; padding:clamp(22px,4vw,56px)!important; }
+        main h1, main h2, main h3, main h4 { color:var(--ink)!important; letter-spacing:-.035em; }
+        main p { line-height:1.65; }
+        [class*="bg-slate-900"], [class*="bg-slate-800"], [class*="bg-slate-700"] { background-color:var(--surface)!important; background-image:none!important; }
+        [class*="bg-gradient-"] { background:var(--surface)!important; background-image:none!important; }
+        [class*="border-slate-"], [class*="border-indigo-"], [class*="border-emerald-"], [class*="border-amber-"], [class*="border-rose-"] { border-color:var(--line)!important; }
+        [class*="text-white"], [class*="text-slate-200"], [class*="text-slate-100"] { color:var(--ink)!important; }
+        [class*="text-slate-400"], [class*="text-slate-500"], [class*="text-slate-300"] { color:var(--muted)!important; }
+        [class*="text-indigo-"] { color:var(--signal)!important; }
+        [class*="text-emerald-"], [class*="text-amber-"], [class*="text-rose-"] { color:#765d46!important; }
+        [class*="bg-indigo-"], [class*="bg-emerald-"], [class*="bg-amber-"], [class*="bg-rose-"] { background-color:var(--soft)!important; background-image:none!important; }
+        [class*="rounded-"] { border-radius:3px!important; }
+        [class*="shadow-"] { box-shadow:none!important; }
+        [class*="backdrop-blur"] { backdrop-filter:none!important; }
+        button, input, select, textarea { font:inherit; }
+        button { transition:background-color .16s ease,color .16s ease,border-color .16s ease!important; }
+        button[class*="bg-indigo-"], aside button { background:var(--ink)!important; color:white!important; border:1px solid var(--ink)!important; border-radius:2px!important; box-shadow:none!important; }
+        button[class*="bg-indigo-"]:hover, aside button:hover { background:var(--signal)!important; border-color:var(--signal)!important; }
+        button[class*="bg-slate-"], button[class*="bg-rose-"], button[class*="bg-amber-"] { border-radius:2px!important; }
+        input, select, textarea { background:var(--surface)!important; color:var(--ink)!important; border-color:var(--line)!important; border-radius:2px!important; }
+        input::placeholder, textarea::placeholder { color:#a1a198!important; }
+        a { transition:color .16s ease; }
+        a:hover { color:var(--signal); }
+        .fc { --fc-border-color:var(--line); --fc-page-bg-color:var(--surface); --fc-neutral-bg-color:var(--paper); --fc-today-bg-color:rgba(240,91,54,.07); color:var(--ink); font: .82rem var(--sans); }
+        .fc .fc-toolbar-title { color:var(--ink); font-size:1rem; font-weight:700; }
+        .fc .fc-button { background:var(--surface); border-color:var(--line); color:var(--ink); border-radius:2px; box-shadow:none; }
+        .fc .fc-button:hover, .fc .fc-button-primary:not(:disabled).fc-button-active { background:var(--soft); border-color:var(--line); color:var(--ink); }
+        .fc-timegrid-slot { height:2.2rem!important; }
+        .custom-scrollbar::-webkit-scrollbar { width:6px;height:6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background:var(--paper); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background:#c6c5bd;border-radius:2px; }
+        #modal-quick-task { background:rgba(23,25,21,.48)!important; }
+        #modal-quick-task > div { background:var(--paper)!important; border:1px solid var(--line)!important; border-radius:3px!important; box-shadow:0 20px 60px rgba(23,25,21,.12)!important; }
+        @media(max-width:767px) { body { display:block!important; } aside { width:100%!important; border-right:0!important; border-bottom:1px solid var(--line)!important; } aside nav { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px!important; } aside nav > div { display:none; } aside > div:last-child { display:none; } main { min-height:calc(100vh - 180px); } }
     </style>
 </head>
 <body class="min-h-screen flex flex-col md:flex-row antialiased">
@@ -90,46 +92,43 @@
         <!-- Logo -->
         <div class="p-5 border-b border-slate-800 flex items-center justify-between">
             <a href="{{ prefix }}/" class="flex items-center gap-3 group">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition">
-                    <span class="text-xl">🧠</span>
-                </div>
                 <div>
-                    <h1 class="font-bold text-base tracking-tight text-white leading-tight">Второй Мозг</h1>
-                    <span class="text-xs text-indigo-400 font-medium">Personal ERP</span>
+                    <h1 class="font-bold text-base tracking-tight text-white leading-tight">ENIKEY<span style="color:var(--signal)">.</span></h1>
+                    <span class="text-xs text-indigo-400 font-medium">CRM / OPERATIONS</span>
                 </div>
             </a>
-            <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Stage 1</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">PRIVATE SYSTEM</span>
         </div>
 
         <!-- Navigation Links -->
         <nav class="p-4 space-y-1.5 flex-1">
             <a href="{{ prefix }}/" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition {% if request.url.path == prefix or request.url.path == prefix + '/' %}bg-indigo-600/20 text-indigo-300 border border-indigo-500/30{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}">
-                <span class="text-lg">⚡</span>
+
                 <span>Главный пульт</span>
             </a>
             <a href="{{ prefix }}/projects" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition {% if prefix + '/projects' in request.url.path %}bg-indigo-600/20 text-indigo-300 border border-indigo-500/30{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}">
-                <span class="text-lg">📁</span>
+
                 <span>Проекты и Квоты</span>
             </a>
             <a href="{{ prefix }}/logistics" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition {% if prefix + '/logistics' in request.url.path %}bg-indigo-600/20 text-indigo-300 border border-indigo-500/30{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}">
-                <span class="text-lg">📦</span>
+
                 <span>Логистика и Заказы</span>
             </a>
             <a href="{{ prefix }}/finance" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition {% if prefix + '/finance' in request.url.path %}bg-indigo-600/20 text-indigo-300 border border-indigo-500/30{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}">
-                <span class="text-lg">💳</span>
+
                 <span>Финансы и Радар</span>
             </a>
 
             <div class="pt-4 mt-4 border-t border-slate-800">
                 <div class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                    Интеграции и ИИ
+                    СЛУЖЕБНЫЕ РАЗДЕЛЫ
                 </div>
                 <a href="{{ prefix }}/docs" target="_blank" class="flex items-center justify-between px-3.5 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition">
-                    <span class="flex items-center gap-2"><span>🔌</span> Swagger API</span>
+                    <span class="flex items-center gap-2"> Swagger API</span>
                     <span class="text-[10px] text-slate-500">v1</span>
                 </a>
                 <a href="{{ prefix }}/api/v1/tools" target="_blank" class="flex items-center justify-between px-3.5 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition">
-                    <span class="flex items-center gap-2"><span>🤖</span> AI Tool Schemas</span>
+                    <span class="flex items-center gap-2"> Инструменты API</span>
                     <span class="text-[10px] text-indigo-400">JSON</span>
                 </a>
             </div>
@@ -138,7 +137,7 @@
         <!-- Quick Task Modal Button -->
         <div class="p-4 border-t border-slate-800">
             <button onclick="document.getElementById('modal-quick-task').classList.remove('hidden')" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 transition active:scale-98">
-                <span>➕</span> Новая задача
+                 Новая задача
             </button>
         </div>
     </aside>
@@ -151,8 +150,8 @@
     <!-- Quick Task Modal -->
     <div id="modal-quick-task" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
-            <button onclick="document.getElementById('modal-quick-task').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
-            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><span>📝</span> Быстрая задача</h3>
+            <button onclick="document.getElementById('modal-quick-task').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"></button>
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"> Быстрая задача</h3>
             <form action="{{ prefix }}/actions/quick-task" method="POST" class="space-y-4">
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Название задачи *</label>

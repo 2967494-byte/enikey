@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Финансы и Радар — Второй Мозг{% endblock %}
+{% block title %}Финансы и Радар — Enikey CRM{% endblock %}
 
 {% block content %}
 <div class="p-4 md:p-6 space-y-6 max-w-7xl mx-auto w-full">
@@ -8,15 +8,15 @@
     <!-- Header & Action -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
-            <h2 class="text-xl font-bold text-white flex items-center gap-2"><span>💳</span> Финансовый Радар и Бюджет</h2>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2"> Финансовый Радар и Бюджет</h2>
             <p class="text-xs text-slate-400 mt-1">Защита от кассовых разрывов на 14 и 30 дней вперед с учетом кредитов, серверов и дней рождений.</p>
         </div>
         <div class="flex items-center gap-2">
             <button onclick="document.getElementById('modal-update-wallet').classList.remove('hidden')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition">
-                <span>⚙️</span> Баланс кошелька
+                 Баланс кошелька
             </button>
             <button onclick="document.getElementById('modal-add-finance').classList.remove('hidden')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition flex items-center gap-2">
-                <span>➕</span> Запланировать трату
+                 Запланировать трату
             </button>
         </div>
     </div>
@@ -60,7 +60,7 @@
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
             <div>
-                <h3 class="font-bold text-base text-white flex items-center gap-2"><span>🛍️</span> Список желаемых покупок (Wishlist)</h3>
+                <h3 class="font-bold text-base text-white flex items-center gap-2"> Список желаемых покупок (Wishlist)</h3>
                 <span class="text-xs text-slate-400">Система автоматически проверяет, вызовет ли покупка кассовый разрыв</span>
             </div>
             <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">{{ wishlist|length }} желаний</span>
@@ -78,11 +78,11 @@
                 <div class="text-xs">
                     {% if will_cause_gap %}
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                        ⚠️ Вызовет дефицит бюджета!
+                         Вызовет дефицит бюджета!
                     </span>
                     {% else %}
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                        ✅ Безопасно для покупки
+                         Безопасно для покупки
                     </span>
                     {% endif %}
                 </div>
@@ -104,7 +104,7 @@
 
         <!-- Birthdays -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-            <h3 class="font-bold text-base text-white flex items-center gap-2"><span>🎉</span> Дни рождения и Подарки</h3>
+            <h3 class="font-bold text-base text-white flex items-center gap-2"> Дни рождения и Подарки</h3>
             <div class="space-y-2">
                 {% for b in birthdays %}
                 <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-between text-xs">
@@ -122,7 +122,7 @@
 
         <!-- Recurring payments -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-            <h3 class="font-bold text-base text-white flex items-center gap-2"><span>🔄</span> Регулярные обязательные платежи</h3>
+            <h3 class="font-bold text-base text-white flex items-center gap-2"> Регулярные обязательные платежи</h3>
             <div class="space-y-2">
                 {% for r in recurring %}
                 <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-between text-xs">
@@ -145,8 +145,8 @@
 <!-- Modal Update Wallet -->
 <div id="modal-update-wallet" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm p-6 shadow-2xl relative">
-        <button onclick="document.getElementById('modal-update-wallet').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
-        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><span>💰</span> Настройки кошелька</h3>
+        <button onclick="document.getElementById('modal-update-wallet').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"></button>
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"> Настройки кошелька</h3>
         <form action="{{ prefix }}/actions/update-wallet" method="POST" class="space-y-4">
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Фактический остаток средств (₽) *</label>
@@ -167,8 +167,8 @@
 <!-- Modal Add Finance Record -->
 <div id="modal-add-finance" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
-        <button onclick="document.getElementById('modal-add-finance').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
-        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><span>💳</span> Запланировать трату / доход</h3>
+        <button onclick="document.getElementById('modal-add-finance').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"></button>
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"> Запланировать трату / доход</h3>
         <form action="{{ prefix }}/actions/add-finance" method="POST" class="space-y-4">
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Название / Описание *</label>

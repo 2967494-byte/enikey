@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Каталог проектов — Второй Мозг{% endblock %}
+{% block title %}Каталог проектов — Enikey CRM{% endblock %}
 
 {% block content %}
 <div class="p-4 md:p-6 space-y-6 max-w-7xl mx-auto w-full">
@@ -8,11 +8,11 @@
     <!-- Header & Action -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
-            <h2 class="text-xl font-bold text-white flex items-center gap-2"><span>📁</span> Каталог проектов и Квоты</h2>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2"> Каталог проектов и Квоты</h2>
             <p class="text-xs text-slate-400 mt-1">Каждый проект имеет свой уникальный URL, индивидуальный шаблон данных и цветовую метку в календаре.</p>
         </div>
         <button onclick="document.getElementById('modal-create-project').classList.remove('hidden')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition flex items-center gap-2 shrink-0">
-            <span>➕</span> Новый проект
+             Новый проект
         </button>
     </div>
 
@@ -55,7 +55,7 @@
                     <!-- Quota & Alerts Footer -->
                     <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
                         <div class="flex items-center gap-1.5 text-slate-400">
-                            <span>⏱️ Квота:</span>
+                            <span> Квота:</span>
                             {% if p.weekly_quota_minutes > 0 %}
                             <span class="font-semibold text-indigo-400">{{ p.quota_done_hours }} / {{ p.quota_total_hours }} ч/нед</span>
                             {% else %}
@@ -82,8 +82,8 @@
 <!-- Create Project Modal -->
 <div id="modal-create-project" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
-        <button onclick="document.getElementById('modal-create-project').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
-        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><span>📁</span> Создать новый проект</h3>
+        <button onclick="document.getElementById('modal-create-project').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"></button>
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"> Создать новый проект</h3>
         <form action="{{ prefix }}/actions/create-project" method="POST" class="space-y-4">
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Название проекта *</label>

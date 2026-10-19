@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Главный пульт — Второй Мозг{% endblock %}
+{% block title %}Главный пульт — Enikey CRM{% endblock %}
 
 {% block content %}
 <div class="p-4 md:p-6 space-y-6 max-w-7xl mx-auto w-full">
@@ -9,7 +9,7 @@
     {% if radar.has_deficit_14d %}
     <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-center justify-between shadow-lg shadow-rose-950/20">
         <div class="flex items-center gap-3">
-            <span class="text-2xl">🚨</span>
+
             <div>
                 <h4 class="font-bold text-sm text-rose-200">Предупреждение: Кассовый разрыв в ближайшие 14 дней!</h4>
                 <p class="text-xs text-rose-400 mt-0.5">Обязательные платежи превышают прогнозируемый баланс на {{ (-radar.available_limit_14d)|round(0)|int }} ₽.</p>
@@ -20,7 +20,7 @@
     {% elif radar.is_below_safety_14d %}
     <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center justify-between shadow-lg shadow-amber-950/20">
         <div class="flex items-center gap-3">
-            <span class="text-2xl">⚠️</span>
+
             <div>
                 <h4 class="font-bold text-sm text-amber-200">Внимание: Снижение ниже порога безопасности</h4>
                 <p class="text-xs text-amber-400 mt-0.5">Через 14 дней остаток составит {{ radar.available_limit_14d|round(0)|int }} ₽ (порог: {{ radar.safety_threshold|round(0)|int }} ₽).</p>
@@ -36,7 +36,7 @@
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
             <div class="flex items-center justify-between text-slate-400 mb-2">
                 <span class="text-xs font-medium">Лимит на 14 дней</span>
-                <span class="text-base">🛡️</span>
+
             </div>
             <div class="text-2xl font-bold {% if radar.available_limit_14d >= radar.safety_threshold %}text-emerald-400{% elif radar.available_limit_14d > 0 %}text-amber-400{% else %}text-rose-400{% endif %}">
                 {{ radar.available_limit_14d|round(0)|int }} ₽
@@ -51,7 +51,7 @@
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
             <div class="flex items-center justify-between text-slate-400 mb-2">
                 <span class="text-xs font-medium">Посылки в ПВЗ</span>
-                <span class="text-base">📦</span>
+
             </div>
             <div class="text-2xl font-bold {% if pickup_count > 0 %}text-amber-400{% else %}text-slate-400{% endif %}">
                 {{ pickup_count }} <span class="text-xs font-normal text-slate-400">ждёт забора</span>
@@ -65,7 +65,7 @@
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
             <div class="flex items-center justify-between text-slate-400 mb-2">
                 <span class="text-xs font-medium">Направлений в работе</span>
-                <span class="text-base">🎯</span>
+
             </div>
             <div class="text-2xl font-bold text-white">
                 {{ projects|length }} <span class="text-xs font-normal text-slate-400">проектов</span>
@@ -79,14 +79,14 @@
         <div class="bg-gradient-to-br from-indigo-950/60 to-slate-900 border border-indigo-900/40 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
             <div class="flex items-center justify-between text-indigo-300 mb-1">
                 <span class="text-xs font-semibold">Умный планировщик</span>
-                <span class="text-base">⚡</span>
+
             </div>
             <p class="text-[11px] text-slate-400 leading-tight mb-2">
                 Распределит недельные квоты проектов в окне 09:00–22:00.
             </p>
             <form action="{{ prefix }}/actions/auto-schedule" method="POST" hx-boost="true">
                 <button type="submit" class="w-full py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-98 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/30">
-                    <span>🔄</span> Авто-распределить неделю
+                     Авто-распределить неделю
                 </button>
             </form>
         </div>
@@ -99,7 +99,7 @@
         <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div class="flex items-center gap-3">
-                    <span class="text-xl">📅</span>
+
                     <div>
                         <h2 class="font-bold text-base text-white">Сводный Календарь (09:00 – 22:00)</h2>
                         <span class="text-xs text-slate-400">Цвета соответствуют проектам, буфер 35% сохраняется</span>
@@ -115,7 +115,7 @@
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div class="flex items-center gap-2">
-                    <span class="text-xl">✅</span>
+
                     <h3 class="font-bold text-base text-white">Задачи на сегодня</h3>
                 </div>
                 <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-medium">
@@ -134,7 +134,7 @@
                 </a>
                 {% endfor %}
                 <a href="{{ prefix }}/?loc=pickup" class="px-2.5 py-1 rounded-lg text-xs font-medium transition {% if selected_loc == 'pickup' %}bg-amber-600 text-white{% else %}bg-slate-800 text-slate-400 hover:text-white{% endif %}">
-                    📦 ПВЗ
+                     ПВЗ
                 </a>
             </div>
 
@@ -166,13 +166,13 @@
                             </span>
                             {% endif %}
                             {% if t.location %}
-                            <span class="text-slate-400">📍 {{ t.location.name }}</span>
+                            <span class="text-slate-400"> {{ t.location.name }}</span>
                             {% endif %}
                             {% if t.scheduled_start %}
-                            <span class="text-indigo-300">⏰ {{ t.scheduled_start.strftime('%H:%M') }}</span>
+                            <span class="text-indigo-300"> {{ t.scheduled_start.strftime('%H:%M') }}</span>
                             {% endif %}
                             {% if t.status.value == 'BLOCKED' %}
-                            <span class="text-rose-400 font-medium">⚠️ Ждет деталь</span>
+                            <span class="text-rose-400 font-medium"> Ждет деталь</span>
                             {% endif %}
                         </div>
                     </div>
