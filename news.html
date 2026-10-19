@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f3ef">
+  <meta name="description" content="Новости и статьи Enikey.">
+  <title>Новости и статьи — Enikey</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css?v=4.0">
+</head>
+<body data-page="news">
+  <header class="site-header">
+    <a class="wordmark" href="index.html">ENIKEY<span class="wordmark-period">.</span></a>
+    <nav class="site-nav" aria-label="Основная навигация">
+      <a href="index.html#about" data-ru="О компании" data-en="About">О компании</a>
+      <a href="index.html#contact" data-ru="Контакты" data-en="Contact">Контакты</a>
+    </nav>
+    <div class="header-tools">
+      <div class="language-switch" aria-label="Выбор языка">
+        <button type="button" class="language-button is-active" data-language="ru" aria-pressed="true">RU</button><span aria-hidden="true">/</span><button type="button" class="language-button" data-language="en" aria-pressed="false">EN</button>
+      </div>
+      <a class="header-contact" href="index.html#contact" data-ru="Написать" data-en="Get in touch">Написать <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+
+  <main class="news-page">
+    <div class="news-page-heading">
+      <p class="section-kicker"><span>02</span><span data-ru="ПУБЛИКАЦИИ" data-en="JOURNAL">ПУБЛИКАЦИИ</span></p>
+      <a class="all-news-link" href="index.html"><span data-ru="На главную" data-en="Home">На главную</span><span aria-hidden="true">↗</span></a>
+    </div>
+    <h1 data-ru="Новости и статьи" data-en="News and articles">Новости и статьи</h1>
+    <div class="news-archive-list" id="news-archive-list"></div>
+    <p class="news-article-error" id="news-archive-empty" hidden data-ru="Публикаций пока нет." data-en="No posts yet.">Публикаций пока нет.</p>
+  </main>
+
+  <footer class="site-footer">
+    <a class="footer-wordmark" href="index.html">ENIKEY<span>.</span></a>
+    <p data-ru="Программные решения и цифровые продукты" data-en="Software solutions and digital products">Программные решения и цифровые продукты</p>
+    <span class="copyright">© <span id="current-year">2026</span> ENIKEY</span>
+  </footer>
+  <script src="site.js?v=1.0" defer></script>
+  <script src="api-config.js?v=4.0"></script>
+  <script src="news.js?v=1.0" defer></script>
+</body>
+</html>

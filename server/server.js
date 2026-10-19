@@ -2,13 +2,28 @@ const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 const DB_PATH = path.join(__dirname, 'database.sqlite');
+const NEWS_UPLOAD_DIR = path.join(__dirname, '..', 'uploads', 'news');
+const ADMIN_PASSWORD = process.env.ENIKEY_ADMIN_PASSWORD || '';
+const ADMIN_SECRET = process.env.ENIKEY_ADMIN_SECRET || '';
+const ADMIN_SESSION_COOKIE = 'enikey_news_session';
+const ADMIN_SESSION_TTL = 8 * 60 * 60 * 1000;
 
-app.use(cors());
-app.use(express.json());
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5500,http://127.0.0.1:5500,http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080,http://127.0.0.1:8080')
+    .split(',').map((origin) => origin.trim()).filter(Boolean);
+app.use(cors({
+    origin: (origin, callback) => callback(null, !origin || allowedOrigins.includes(origin)),
+    credentials: true
+}));
+app.use(express.json({ limit: '7mb' }));
+fs.mkdirSync(NEWS_UPLOAD_DIR, { recursive: true });
+app.use('/uploads/news', express.static(NEWS_UPLOAD_DIR, { maxAge: '7d', immutable: true }));
 
 // Инициализация базы данных
 const db = new sqlite3.Database(DB_PATH, (err) => {
@@ -60,6 +75,270 @@ db.serialize(() => {
         rework_reason TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS news_posts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title_ru TEXT NOT NULL,
+        title_en TEXT NOT NULL DEFAULT '',
+        summary_ru TEXT NOT NULL DEFAULT '',
+        summary_en TEXT NOT NULL DEFAULT '',
+        content_ru TEXT NOT NULL,
+        content_en TEXT NOT NULL DEFAULT '',
+        image_url TEXT NOT NULL DEFAULT '',
+        is_published INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`);
+});
+
+function signAdminSession(payload) {
+    return crypto.createHmac('sha256', ADMIN_SECRET).update(payload).digest('base64url');
+}
+
+function getAdminSession(req) {
+    if (!ADMIN_SECRET) return false;
+    const cookie = req.headers.cookie || '';
+    const entry = cookie.split(';').map((part) => part.trim()).find((part) => part.startsWith(`${ADMIN_SESSION_COOKIE}=`));
+    if (!entry) return false;
+    let value;
+    try {
+        value = decodeURIComponent(entry.slice(ADMIN_SESSION_COOKIE.length + 1));
+    } catch (error) {
+        return false;
+    }
+    const [payload, signature] = value.split('.');
+    if (!payload || !signature) return false;
+    const expected = signAdminSession(payload);
+    const providedBuffer = Buffer.from(signature);
+    const expectedBuffer = Buffer.from(expected);
+    if (providedBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(providedBuffer, expectedBuffer)) return false;
+    try {
+        const session = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+        return Number.isFinite(session.expiresAt) && session.expiresAt > Date.now();
+    } catch (error) {
+        return false;
+    }
+}
+
+function requireAdmin(req, res, next) {
+    if (!getAdminSession(req)) return res.status(401).json({ error: 'Требуется вход администратора' });
+    next();
+}
+
+function sameOriginForAdmin(req, res, next) {
+    const origin = req.get('origin');
+    if (origin) {
+        try {
+            if (new URL(origin).host !== req.get('host') && !allowedOrigins.includes(origin)) {
+                return res.status(403).json({ error: 'Запрос с другого сайта запрещён' });
+            }
+        } catch (error) {
+            return res.status(403).json({ error: 'Некорректный источник запроса' });
+        }
+    }
+    next();
+}
+
+const loginAttempts = new Map();
+function limitLoginAttempts(req, res, next) {
+    const key = req.ip || req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
+    const attempt = loginAttempts.get(key);
+    if (attempt && attempt.blockedUntil > now) {
+        return res.status(429).json({ error: 'Слишком много попыток. Попробуйте позже.' });
+    }
+    if (!attempt || attempt.windowStartedAt < now - 15 * 60 * 1000) {
+        loginAttempts.set(key, { count: 0, windowStartedAt: now, blockedUntil: 0 });
+    }
+    req.loginAttemptKey = key;
+    next();
+}
+
+function newsRowToJson(row) {
+    return {
+        id: row.id,
+        title: { ru: row.title_ru, en: row.title_en || row.title_ru },
+        summary: { ru: row.summary_ru, en: row.summary_en || row.summary_ru },
+        content: { ru: row.content_ru, en: row.content_en || row.content_ru },
+        imageUrl: row.image_url || '',
+        isPublished: Boolean(row.is_published),
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+    };
+}
+
+function newsListRowToJson(row) {
+    return {
+        id: row.id,
+        title: { ru: row.title_ru, en: row.title_en || row.title_ru },
+        summary: { ru: row.summary_ru, en: row.summary_en || row.summary_ru },
+        imageUrl: row.image_url || '',
+        isPublished: Boolean(row.is_published),
+        createdAt: row.created_at
+    };
+}
+
+function getPublishedNews(callback) {
+    db.all(`SELECT id, title_ru, title_en, summary_ru, summary_en, image_url, is_published, created_at
+        FROM news_posts WHERE is_published = 1 ORDER BY created_at DESC, id DESC`, [], callback);
+}
+
+function cleanNewsInput(body) {
+    const value = body || {};
+    return {
+        titleRu: String(value.titleRu || '').trim().slice(0, 220),
+        titleEn: String(value.titleEn || '').trim().slice(0, 220),
+        summaryRu: String(value.summaryRu || '').trim().slice(0, 360),
+        summaryEn: String(value.summaryEn || '').trim().slice(0, 360),
+        contentRu: String(value.contentRu || '').trim().slice(0, 100000),
+        contentEn: String(value.contentEn || '').trim().slice(0, 100000),
+        imageUrl: String(value.imageUrl || '').trim().slice(0, 500),
+        isPublished: value.isPublished === true
+    };
+}
+
+function validateNewsInput(value) {
+    if (!value.titleRu || !value.contentRu) return 'Заполните заголовок и текст на русском языке';
+    if (value.imageUrl && !/^\/uploads\/news\/[a-zA-Z0-9_-]+\.(?:jpg|png|webp)$/.test(value.imageUrl)) {
+        return 'Изображение должно быть загружено через форму';
+    }
+    return '';
+}
+
+app.get('/api/news', (req, res) => {
+    getPublishedNews((err, rows) => {
+        if (err) return res.status(500).json({ error: 'Не удалось загрузить новости' });
+        res.json(rows.map(newsListRowToJson));
+    });
+});
+
+app.get('/api/news/:id', (req, res) => {
+    db.get('SELECT * FROM news_posts WHERE id = ? AND is_published = 1', [req.params.id], (err, row) => {
+        if (err) return res.status(500).json({ error: 'Не удалось загрузить публикацию' });
+        if (!row) return res.status(404).json({ error: 'Публикация не найдена' });
+        res.json(newsRowToJson(row));
+    });
+});
+
+app.post('/api/admin/login', sameOriginForAdmin, limitLoginAttempts, (req, res) => {
+    if (!ADMIN_PASSWORD || !ADMIN_SECRET) {
+        return res.status(503).json({ error: 'Админка не настроена. Задайте ENIKEY_ADMIN_PASSWORD и ENIKEY_ADMIN_SECRET на сервере.' });
+    }
+    const provided = Buffer.from(String(req.body && req.body.password || ''));
+    const expected = Buffer.from(ADMIN_PASSWORD);
+    const valid = provided.length === expected.length && crypto.timingSafeEqual(provided, expected);
+    const attempt = loginAttempts.get(req.loginAttemptKey);
+    if (!valid) {
+        attempt.count += 1;
+        if (attempt.count >= 5) attempt.blockedUntil = Date.now() + 15 * 60 * 1000;
+        return res.status(401).json({ error: 'Неверный пароль' });
+    }
+    loginAttempts.delete(req.loginAttemptKey);
+    const payload = Buffer.from(JSON.stringify({ expiresAt: Date.now() + ADMIN_SESSION_TTL })).toString('base64url');
+    const signature = signAdminSession(payload);
+    const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+    res.cookie(ADMIN_SESSION_COOKIE, `${payload}.${signature}`, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: isHttps,
+        maxAge: ADMIN_SESSION_TTL,
+        path: '/'
+    });
+    res.json({ success: true });
+});
+
+app.get('/api/admin/session', (req, res) => {
+    res.json({ authenticated: getAdminSession(req) });
+});
+
+app.post('/api/admin/logout', sameOriginForAdmin, (req, res) => {
+    const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+    res.clearCookie(ADMIN_SESSION_COOKIE, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: isHttps,
+        path: '/'
+    });
+    res.json({ success: true });
+});
+
+app.get('/api/admin/news', requireAdmin, (req, res) => {
+    db.all('SELECT * FROM news_posts ORDER BY created_at DESC, id DESC', [], (err, rows) => {
+        if (err) return res.status(500).json({ error: 'Не удалось загрузить публикации' });
+        res.json(rows.map(newsRowToJson));
+    });
+});
+
+app.post('/api/admin/upload', sameOriginForAdmin, requireAdmin, (req, res) => {
+    const dataUrl = String(req.body && req.body.imageData || '');
+    const match = dataUrl.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/);
+    if (!match) return res.status(400).json({ error: 'Загрузите изображение JPG, PNG или WebP' });
+    const buffer = Buffer.from(match[2], 'base64');
+    if (!buffer.length || buffer.length > 5 * 1024 * 1024) return res.status(400).json({ error: 'Размер изображения — до 5 МБ' });
+    const signatures = {
+        jpeg: buffer.length > 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff,
+        png: buffer.length > 8 && buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
+        webp: buffer.length > 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP'
+    };
+    if (!signatures[match[1]]) return res.status(400).json({ error: 'Файл не соответствует формату изображения' });
+    const extension = match[1] === 'jpeg' ? 'jpg' : match[1];
+    const filename = `${crypto.randomUUID()}.${extension}`;
+    fs.writeFile(path.join(NEWS_UPLOAD_DIR, filename), buffer, (err) => {
+        if (err) return res.status(500).json({ error: 'Не удалось сохранить изображение' });
+        res.json({ imageUrl: `/uploads/news/${filename}` });
+    });
+});
+
+app.post('/api/admin/news', sameOriginForAdmin, requireAdmin, (req, res) => {
+    const article = cleanNewsInput(req.body);
+    const validationError = validateNewsInput(article);
+    if (validationError) return res.status(400).json({ error: validationError });
+    const sql = `INSERT INTO news_posts
+        (title_ru, title_en, summary_ru, summary_en, content_ru, content_en, image_url, is_published)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    db.run(sql, [article.titleRu, article.titleEn, article.summaryRu, article.summaryEn,
+        article.contentRu, article.contentEn, article.imageUrl, article.isPublished ? 1 : 0], function(err) {
+        if (err) return res.status(500).json({ error: 'Не удалось сохранить публикацию' });
+        db.get('SELECT * FROM news_posts WHERE id = ?', [this.lastID], (selectErr, row) => {
+            if (selectErr) return res.status(500).json({ error: 'Публикация сохранена, но её не удалось загрузить' });
+            res.status(201).json(newsRowToJson(row));
+        });
+    });
+});
+
+app.put('/api/admin/news/:id', sameOriginForAdmin, requireAdmin, (req, res) => {
+    const article = cleanNewsInput(req.body);
+    const validationError = validateNewsInput(article);
+    if (validationError) return res.status(400).json({ error: validationError });
+    const sql = `UPDATE news_posts SET title_ru = ?, title_en = ?, summary_ru = ?, summary_en = ?,
+        content_ru = ?, content_en = ?, image_url = ?, is_published = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?`;
+    db.run(sql, [article.titleRu, article.titleEn, article.summaryRu, article.summaryEn,
+        article.contentRu, article.contentEn, article.imageUrl, article.isPublished ? 1 : 0, req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: 'Не удалось обновить публикацию' });
+        if (!this.changes) return res.status(404).json({ error: 'Публикация не найдена' });
+        db.get('SELECT * FROM news_posts WHERE id = ?', [req.params.id], (selectErr, row) => {
+            if (selectErr) return res.status(500).json({ error: 'Публикация обновлена, но её не удалось загрузить' });
+            res.json(newsRowToJson(row));
+        });
+    });
+});
+
+app.delete('/api/admin/news/:id', sameOriginForAdmin, requireAdmin, (req, res) => {
+    db.get('SELECT image_url FROM news_posts WHERE id = ?', [req.params.id], (selectErr, row) => {
+        if (selectErr) return res.status(500).json({ error: 'Не удалось найти публикацию' });
+        if (!row) return res.status(404).json({ error: 'Публикация не найдена' });
+        db.run('DELETE FROM news_posts WHERE id = ?', [req.params.id], function(deleteErr) {
+            if (deleteErr) return res.status(500).json({ error: 'Не удалось удалить публикацию' });
+            const filename = path.basename(row.image_url || '');
+            if (filename) {
+                db.get('SELECT COUNT(*) AS count FROM news_posts WHERE image_url = ?', [row.image_url], (countErr, countRow) => {
+                    if (!countErr && countRow.count === 0) fs.unlink(path.join(NEWS_UPLOAD_DIR, filename), () => {});
+                });
+            }
+            res.json({ success: true });
+        });
+    });
 });
 
 // API Эндпоинты

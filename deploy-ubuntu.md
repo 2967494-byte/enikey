@@ -70,6 +70,12 @@ npm install
 # Глобальная установка PM2
 sudo npm install pm2 -g
 
+# Настройка закрытого редактора новостей
+# Используйте собственный длинный пароль и случайный секрет. Не сохраняйте их в Git.
+export ENIKEY_ADMIN_PASSWORD='ЗАДАЙТЕ_ДЛИННЫЙ_УНИКАЛЬНЫЙ_ПАРОЛЬ'
+export ENIKEY_ADMIN_SECRET="$(openssl rand -hex 32)"
+export NODE_ENV=production
+
 # Запуск сервера
 pm2 start server.js --name "enikey-api"
 
@@ -107,6 +113,14 @@ server {
         try_files $uri $uri/ =404;
     }
 
+    # Исходники API и база данных не должны отдаваться как статические файлы
+    location ^~ /server/ {
+        return 404;
+    }
+    location ~* \.(sqlite|db|env)$ {
+        return 404;
+    }
+
     # Проксирование запросов к API
     location /api/ {
         proxy_pass http://localhost:3000/api/;
@@ -114,6 +128,8 @@ server {
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_cache_bypass $http_upgrade;
     }
 }
@@ -163,4 +179,8 @@ sudo ufw enable
 Ваша платформа Enikey Pulse теперь успешно развернута на сервере Ubuntu. 
 - Фронтенд доступен по вашему IP или домену.
 - API запросы маршрутизируются сервером Nginx на внутренний Node.js процесс.
-- Все данные безопасно сохраняются в локальной базе `database.sqlite`.
+- Публикации хранятся в локальной базе `database.sqlite`.
+- Редактор публикаций доступен по адресу `https://ВАШ_ДОМЕН/news-admin.html` после ввода заданного пароля.
+- Загруженные обложки сохраняются в `uploads/news/`; убедитесь, что пользователь Node.js может записывать в эту папку.
+
+Для добавления публикации откройте редактор, заполните заголовок и текст на русском языке, при необходимости добавьте английский вариант и обложку, затем оставьте материал черновиком или опубликуйте. Русский текст обязателен; при пустом английском варианте сайт покажет русский текст.

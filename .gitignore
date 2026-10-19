@@ -1,0 +1,10 @@
+.env
+.env.*
+!*.env.example
+/server/database.sqlite
+/server/database.sqlite-shm
+/server/database.sqlite-wal
+/uploads/news/*
+!/uploads/news/.gitkeep
+node_modules/
+server/node_modules/
