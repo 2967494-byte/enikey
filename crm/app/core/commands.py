@@ -99,6 +99,10 @@ class ExecuteFinanceRecordCmd(BaseModel):
     """Команда подтверждения фактического проведения платежа/поступления"""
     record_id: int = Field(..., description="ID финансовой записи")
 
+class DeleteFinanceRecordCmd(BaseModel):
+    """Команда удаления финансовой записи"""
+    record_id: int = Field(..., description="ID финансовой записи")
+
 class UpdateWalletCmd(BaseModel):
     """Команда обновления фактического остатка кошелька и порога безопасности"""
     current_balance: float = Field(..., description="Текущий баланс средств")

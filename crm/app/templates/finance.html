@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Финансы и Радар — Enikey CRM{% endblock %}
+{% block title %}Финансы, Доходы и Радар — Enikey CRM{% endblock %}
 
 {% block content %}
 <div class="p-4 md:p-6 space-y-6 max-w-7xl mx-auto w-full">
@@ -8,15 +8,20 @@
     <!-- Header & Action -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
-            <h2 class="text-xl font-bold text-white flex items-center gap-2"> Финансовый Радар и Бюджет</h2>
-            <p class="text-xs text-slate-400 mt-1">Защита от кассовых разрывов на 14 и 30 дней вперед с учетом кредитов, серверов и дней рождений.</p>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <span>📊</span> Финансовый Радар, Доходы и Бюджет
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Управление поступлениями (будущие, периодические, прошлые) и защита от кассовых разрывов на 14 и 30 дней.</p>
         </div>
-        <div class="flex items-center gap-2">
-            <button onclick="document.getElementById('modal-update-wallet').classList.remove('hidden')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition">
-                 Баланс кошелька
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="document.getElementById('modal-update-wallet').classList.remove('hidden')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5">
+                <span>⚙️</span> Баланс кошелька
             </button>
-            <button onclick="document.getElementById('modal-add-finance').classList.remove('hidden')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition flex items-center gap-2">
-                 Запланировать трату
+            <button onclick="document.getElementById('modal-add-finance').classList.remove('hidden')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-300 hover:text-white text-xs font-semibold border border-rose-500/30 transition flex items-center gap-1.5">
+                <span>➖</span> Запланировать расход
+            </button>
+            <button onclick="document.getElementById('modal-add-income').classList.remove('hidden')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-600/20 transition flex items-center gap-2">
+                <span>➕</span> Добавить поступление
             </button>
         </div>
     </div>
@@ -56,12 +61,185 @@
         </div>
     </div>
 
+    <!-- MAIN SECTION: ПОСТУПЛЕНИЯ И ДОХОДЫ -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+                <h3 class="font-bold text-base text-white flex items-center gap-2">
+                    <span>💰</span> Поступления и Доходы
+                </h3>
+                <span class="text-xs text-slate-400">Учет будущих ожидаемых сумм, периодических регулярных выплат (ЗП, аренда, VPN) и истории зачислений</span>
+            </div>
+            <button type="button" onclick="document.getElementById('modal-add-income').classList.remove('hidden')" class="px-3.5 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 hover:text-emerald-200 text-xs font-semibold border border-emerald-500/30 transition flex items-center gap-1.5 shrink-0">
+                <span>➕</span> Новое поступление
+            </button>
+        </div>
+
+        <!-- Income Tabs Navigation -->
+        <div class="flex flex-wrap items-center gap-2 border-b border-slate-800/80 pb-2">
+            <button id="tab-btn-future" onclick="switchIncomeTab('future')" class="income-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 transition flex items-center gap-2">
+                <span>📅 Будущие поступления</span>
+                <span class="px-1.5 py-0.2 rounded-full bg-emerald-950/60 text-[10px]">{{ planned_incomes|length }}</span>
+            </button>
+            <button id="tab-btn-recurring" onclick="switchIncomeTab('recurring')" class="income-tab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 border border-transparent hover:text-slate-200 transition flex items-center gap-2">
+                <span>🔄 Периодические поступления</span>
+                <span class="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px]">{{ recurring_incomes|length }}</span>
+            </button>
+            <button id="tab-btn-history" onclick="switchIncomeTab('history')" class="income-tab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 border border-transparent hover:text-slate-200 transition flex items-center gap-2">
+                <span>📋 Прошлые поступления</span>
+                <span class="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px]">{{ executed_incomes|length }}</span>
+            </button>
+        </div>
+
+        <!-- Tab 1: Будущие разовые поступления -->
+        <div id="tab-content-future" class="income-tab-content space-y-3">
+            <div class="flex items-center justify-between text-xs text-slate-400 px-1">
+                <span>Ожидаемые разовые доходы (аванс, остаток по контракту, возврат долга):</span>
+                <span class="text-emerald-400 font-semibold">Итого ожидается: +{{ total_planned_incomes|round(0)|int }} ₽</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {% for inc in planned_incomes %}
+                {% set days_left = (inc.planned_date - today).days %}
+                <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-emerald-500/40 space-y-3 transition flex flex-col justify-between">
+                    <div class="space-y-1.5">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="font-bold text-sm text-white leading-snug">{{ inc.title }}</div>
+                            <span class="text-sm font-bold text-emerald-400 shrink-0">+{{ inc.amount|round(0)|int }} ₽</span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+                            <span>📅 {{ inc.planned_date }}</span>
+                            {% if days_left > 0 %}
+                            <span class="px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300">через {{ days_left }} дн.</span>
+                            {% elif days_left == 0 %}
+                            <span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold">Сегодня!</span>
+                            {% else %}
+                            <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">Просрочено на {{ -days_left }} дн.</span>
+                            {% endif %}
+                            {% if inc.project %}
+                            <span class="px-1.5 py-0.5 rounded text-[10px] bg-indigo-500/20 text-indigo-300">{{ inc.project.title }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-700/40">
+                        <form action="{{ prefix }}/actions/execute-finance/{{ inc.id }}" method="POST" class="grow">
+                            <button type="submit" class="w-full py-1.5 px-3 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs font-semibold border border-emerald-500/40 transition flex items-center justify-center gap-1.5" title="Зачислить сумму на фактический баланс кошелька">
+                                <span>📥</span> Зачислить на баланс
+                            </button>
+                        </form>
+                        <form action="{{ prefix }}/actions/delete-finance/{{ inc.id }}" method="POST" onsubmit="return confirm('Удалить это запланированное поступление?');">
+                            <button type="submit" class="p-1.5 rounded-lg bg-slate-700/40 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 transition" title="Удалить">
+                                ✕
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-span-3 text-center py-8 rounded-xl bg-slate-800/30 border border-dashed border-slate-800 text-xs text-slate-400 space-y-2">
+                    <div>Нет запланированных разовых поступлений.</div>
+                    <button type="button" onclick="document.getElementById('modal-add-income').classList.remove('hidden')" class="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 text-xs font-semibold transition">
+                        + Запланировать будущее поступление
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Tab 2: Периодические регулярные поступления -->
+        <div id="tab-content-recurring" class="income-tab-content space-y-3 hidden">
+            <div class="flex items-center justify-between text-xs text-slate-400 px-1">
+                <span>Регулярные доходы (Зарплата, абонентские платы за VPN, пассивный доход):</span>
+                <span class="text-emerald-400 font-semibold">Ежемесячный поток: +{{ total_recurring_incomes|round(0)|int }} ₽/мес</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {% for inc in recurring_incomes %}
+                <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-emerald-500/40 space-y-3 transition flex flex-col justify-between">
+                    <div class="space-y-1.5">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="font-bold text-sm text-white leading-snug">{{ inc.title }}</div>
+                            <span class="text-sm font-bold text-emerald-400 shrink-0">+{{ inc.amount|round(0)|int }} ₽</span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+                            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-[10px] font-medium">
+                                🔄 {{ inc.is_annual_or_monthly.value }}
+                            </span>
+                            <span>Ближайшая дата: {{ inc.planned_date }}</span>
+                            {% if inc.project %}
+                            <span class="px-1.5 py-0.5 rounded text-[10px] bg-indigo-500/20 text-indigo-300">{{ inc.project.title }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-700/40">
+                        <form action="{{ prefix }}/actions/execute-finance/{{ inc.id }}" method="POST" class="grow">
+                            <button type="submit" class="w-full py-1.5 px-3 rounded-lg bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white text-xs font-semibold border border-indigo-500/40 transition flex items-center justify-center gap-1.5" title="Зачислить за текущий месяц и автоматически запланировать следующий">
+                                <span>📥</span> Зачислить (текущий период)
+                            </button>
+                        </form>
+                        <form action="{{ prefix }}/actions/delete-finance/{{ inc.id }}" method="POST" onsubmit="return confirm('Удалить эту периодическую запись поступления?');">
+                            <button type="submit" class="p-1.5 rounded-lg bg-slate-700/40 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 transition" title="Удалить">
+                                ✕
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-span-3 text-center py-8 rounded-xl bg-slate-800/30 border border-dashed border-slate-800 text-xs text-slate-400 space-y-2">
+                    <div>Периодические регулярные поступления еще не настроены.</div>
+                    <button type="button" onclick="document.getElementById('modal-add-income').classList.remove('hidden')" class="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 text-xs font-semibold transition">
+                        + Добавить регулярный доход (ЗП / Абонплата)
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Tab 3: Прошлые поступления (История) -->
+        <div id="tab-content-history" class="income-tab-content space-y-3 hidden">
+            <div class="flex items-center justify-between text-xs text-slate-400 px-1">
+                <span>Фактически полученные и зачисленные средства на баланс:</span>
+                <span class="text-emerald-400 font-semibold">Всего зачислено: +{{ total_past_incomes|round(0)|int }} ₽</span>
+            </div>
+
+            <div class="space-y-2 max-h-80 overflow-y-auto pr-1">
+                {% for inc in executed_incomes %}
+                <div class="p-3 rounded-xl bg-slate-800/40 border border-slate-700/50 flex items-center justify-between text-xs hover:bg-slate-800/70 transition">
+                    <div class="space-y-0.5">
+                        <div class="font-bold text-white flex items-center gap-2">
+                            <span>{{ inc.title }}</span>
+                            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-medium">✓ Зачислено</span>
+                            {% if inc.project %}
+                            <span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-700 text-slate-300">{{ inc.project.title }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="text-[11px] text-slate-400">Дата зачисления: {{ inc.planned_date }}</div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-emerald-400 text-sm">+{{ inc.amount|round(0)|int }} ₽</span>
+                        <form action="{{ prefix }}/actions/delete-finance/{{ inc.id }}" method="POST" onsubmit="return confirm('Удалить эту запись из истории?');">
+                            <button type="submit" class="p-1 rounded bg-slate-700/30 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 text-xs transition" title="Удалить из истории">
+                                ✕
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-xs text-slate-500">История зачисленных поступлений пока пуста.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
     <!-- Wishlist & Gap Checker -->
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
             <div>
-                <h3 class="font-bold text-base text-white flex items-center gap-2"> Список желаемых покупок (Wishlist)</h3>
-                <span class="text-xs text-slate-400">Система автоматически проверяет, вызовет ли покупка кассовый разрыв</span>
+                <h3 class="font-bold text-base text-white flex items-center gap-2">
+                    <span>🛒</span> Список желаемых покупок (Wishlist)
+                </h3>
+                <span class="text-xs text-slate-400">Система автоматически проверяет, вызовет ли покупка кассовый разрыв с учетом всех поступлений и расходов</span>
             </div>
             <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">{{ wishlist|length }} желаний</span>
         </div>
@@ -69,29 +247,38 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {% for w in wishlist %}
             {% set will_cause_gap = w.amount > radar.available_limit_14d %}
-            <div class="p-4 rounded-xl border {% if will_cause_gap %}bg-rose-950/20 border-rose-900/40{% else %}bg-slate-800/60 border-slate-700/60{% endif %} space-y-3">
-                <div class="flex items-start justify-between gap-2">
-                    <div class="font-bold text-sm text-white">{{ w.title }}</div>
-                    <span class="text-sm font-bold text-slate-200 shrink-0">{{ w.amount|round(0)|int }} ₽</span>
+            <div class="p-4 rounded-xl border {% if will_cause_gap %}bg-rose-950/20 border-rose-900/40{% else %}bg-slate-800/60 border-slate-700/60{% endif %} space-y-3 flex flex-col justify-between">
+                <div class="space-y-1.5">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="font-bold text-sm text-white">{{ w.title }}</div>
+                        <span class="text-sm font-bold text-slate-200 shrink-0">{{ w.amount|round(0)|int }} ₽</span>
+                    </div>
+
+                    <div class="text-xs">
+                        {% if will_cause_gap %}
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                            🚨 Вызовет дефицит бюджета!
+                        </span>
+                        {% else %}
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            ✓ Безопасно для покупки
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
 
-                <div class="text-xs">
-                    {% if will_cause_gap %}
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                         Вызовет дефицит бюджета!
-                    </span>
-                    {% else %}
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                         Безопасно для покупки
-                    </span>
-                    {% endif %}
+                <div class="flex items-center gap-2 pt-2 border-t border-slate-700/40">
+                    <form action="{{ prefix }}/actions/execute-finance/{{ w.id }}" method="POST" class="grow">
+                        <button type="submit" class="w-full py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition">
+                            Куплено (списать баланс)
+                        </button>
+                    </form>
+                    <form action="{{ prefix }}/actions/delete-finance/{{ w.id }}" method="POST" onsubmit="return confirm('Удалить эту покупку из Wishlist?');">
+                        <button type="submit" class="p-1.5 rounded-lg bg-slate-700/40 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 transition" title="Удалить">
+                            ✕
+                        </button>
+                    </form>
                 </div>
-
-                <form action="{{ prefix }}/actions/execute-finance/{{ w.id }}" method="POST">
-                    <button type="submit" class="w-full py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition">
-                        Куплено (списать баланс)
-                    </button>
-                </form>
             </div>
             {% else %}
             <div class="col-span-3 text-center py-6 text-xs text-slate-500">Список покупок пуст.</div>
@@ -99,12 +286,14 @@
         </div>
     </div>
 
-    <!-- Birthdays & Recurring Grid -->
+    <!-- Birthdays & Recurring Expenses Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
         <!-- Birthdays -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-            <h3 class="font-bold text-base text-white flex items-center gap-2"> Дни рождения и Подарки</h3>
+            <h3 class="font-bold text-base text-white flex items-center gap-2">
+                <span>🎉</span> Дни рождения и Подарки
+            </h3>
             <div class="space-y-2">
                 {% for b in birthdays %}
                 <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-between text-xs">
@@ -112,7 +301,12 @@
                         <div class="font-bold text-white">{{ b.title }}</div>
                         <div class="text-slate-400 mt-0.5">Дата: {{ b.planned_date }}</div>
                     </div>
-                    <span class="font-bold text-indigo-300">{{ b.amount|round(0)|int }} ₽</span>
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-indigo-300">{{ b.amount|round(0)|int }} ₽</span>
+                        <form action="{{ prefix }}/actions/delete-finance/{{ b.id }}" method="POST" onsubmit="return confirm('Удалить эту запись?');">
+                            <button type="submit" class="p-1 rounded bg-slate-700/30 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 text-xs transition" title="Удалить">✕</button>
+                        </form>
+                    </div>
                 </div>
                 {% else %}
                 <div class="text-center py-6 text-xs text-slate-500">Дни рождения не добавлены.</div>
@@ -120,20 +314,27 @@
             </div>
         </div>
 
-        <!-- Recurring payments -->
+        <!-- Recurring mandatory expenses -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-            <h3 class="font-bold text-base text-white flex items-center gap-2"> Регулярные обязательные платежи</h3>
+            <h3 class="font-bold text-base text-white flex items-center gap-2">
+                <span>🔄</span> Регулярные обязательные расходы
+            </h3>
             <div class="space-y-2">
                 {% for r in recurring %}
                 <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-between text-xs">
                     <div>
                         <div class="font-bold text-white">{{ r.title }}</div>
-                        <div class="text-slate-400 mt-0.5">Периодичность: {{ r.is_annual_or_monthly.value }}</div>
+                        <div class="text-slate-400 mt-0.5">Периодичность: {{ r.is_annual_or_monthly.value }} • {{ r.planned_date }}</div>
                     </div>
-                    <span class="font-bold text-rose-400">{{ r.amount|round(0)|int }} ₽</span>
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-rose-400">-{{ r.amount|round(0)|int }} ₽</span>
+                        <form action="{{ prefix }}/actions/delete-finance/{{ r.id }}" method="POST" onsubmit="return confirm('Удалить этот регулярный расход?');">
+                            <button type="submit" class="p-1 rounded bg-slate-700/30 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 text-xs transition" title="Удалить">✕</button>
+                        </form>
+                    </div>
                 </div>
                 {% else %}
-                <div class="text-center py-6 text-xs text-slate-500">Регулярные платежи не настроены.</div>
+                <div class="text-center py-6 text-xs text-slate-500">Регулярные обязательные расходы не настроены.</div>
                 {% endfor %}
             </div>
         </div>
@@ -142,11 +343,13 @@
 
 </div>
 
-<!-- Modal Update Wallet -->
+<!-- Modal 1: Update Wallet -->
 <div id="modal-update-wallet" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm p-6 shadow-2xl relative">
-        <button onclick="document.getElementById('modal-update-wallet').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"></button>
-        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"> Настройки кошелька</h3>
+        <button onclick="document.getElementById('modal-update-wallet').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <span>⚙️</span> Настройки кошелька
+        </h3>
         <form action="{{ prefix }}/actions/update-wallet" method="POST" class="space-y-4">
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Фактический остаток средств (₽) *</label>
@@ -156,7 +359,7 @@
                 <label class="block text-xs font-medium text-slate-400 mb-1">Неснижаемый порог безопасности (₽)</label>
                 <input type="number" name="safety_threshold" value="{{ radar.safety_threshold|round(0)|int }}" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
             </div>
-            <div class="flex justify-end gap-2 pt-2">
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
                 <button type="button" onclick="document.getElementById('modal-update-wallet').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
                 <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition">Сохранить</button>
             </div>
@@ -164,34 +367,95 @@
     </div>
 </div>
 
-<!-- Modal Add Finance Record -->
+<!-- Modal 2: Add Income (Dedicated) -->
+<div id="modal-add-income" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+        <button onclick="document.getElementById('modal-add-income').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+        <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
+            <span>💰</span> Добавить поступление / доход
+        </h3>
+        <p class="text-xs text-slate-400 mb-4">Внесите разовый или регулярный доход для расчета финансового радара.</p>
+
+        <form action="{{ prefix }}/actions/add-finance" method="POST" class="space-y-4">
+            <input type="hidden" name="record_type" value="INCOME_EXPECTED">
+            <input type="hidden" name="redirect_to" value="{{ prefix }}/finance">
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Источник / Описание дохода *</label>
+                <input type="text" name="title" required placeholder="Например: Зарплата (аванс), Оплата VPN от клиента, Возврат долга" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Сумма (₽) *</label>
+                    <input type="number" name="amount" required step="100" min="1" placeholder="50000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-emerald-400 font-bold focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Ожидаемая дата *</label>
+                    <input type="date" name="planned_date" value="{{ today.isoformat() }}" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Периодичность</label>
+                    <select name="is_annual_or_monthly" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        <option value="NONE" selected>Разовое поступление</option>
+                        <option value="MONTHLY">Ежемесячно (ЗП, абонплата)</option>
+                        <option value="YEARLY">Ежегодно (дивиденды, бонус)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Привязка к проекту</label>
+                    <select name="project_id" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        <option value="">Без проекта (Личное)</option>
+                        {% for p in projects %}
+                        <option value="{{ p.id }}">{{ p.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button type="button" onclick="document.getElementById('modal-add-income').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
+                <button type="submit" class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-600/20 transition flex items-center gap-1.5">
+                    <span>💾</span> Сохранить доход
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal 3: Add Expense / Birthday / Wishlist -->
 <div id="modal-add-finance" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
-        <button onclick="document.getElementById('modal-add-finance').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"></button>
-        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"> Запланировать трату / доход</h3>
+        <button onclick="document.getElementById('modal-add-finance').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <span>💸</span> Запланировать расход / покупку
+        </h3>
         <form action="{{ prefix }}/actions/add-finance" method="POST" class="space-y-4">
+            <input type="hidden" name="redirect_to" value="{{ prefix }}/finance">
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Название / Описание *</label>
-                <input type="text" name="title" required placeholder="Например: Подарок брату, Оплата сервера, Покупка SSD" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <input type="text" name="title" required placeholder="Например: Подарок брату, Оплата хостинга, Покупка SSD" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Сумма (₽) *</label>
-                    <input type="number" name="amount" required step="100" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <input type="number" name="amount" required step="100" min="1" placeholder="5000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Дата события *</label>
-                    <input type="date" name="planned_date" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <input type="date" name="planned_date" value="{{ today.isoformat() }}" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Тип записи</label>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Категория расхода</label>
                     <select name="record_type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                         <option value="EXPENSE_MANDATORY">Обязательный расход</option>
                         <option value="EXPENSE_BIRTHDAY">День рождения / Подарок</option>
                         <option value="EXPENSE_WISHLIST">Хотелка / Покупка (Wishlist)</option>
-                        <option value="INCOME_EXPECTED">Ожидаемый доход</option>
                     </select>
                 </div>
                 <div>
@@ -203,11 +467,40 @@
                     </select>
                 </div>
             </div>
-            <div class="flex justify-end gap-2 pt-2">
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Привязка к проекту (опционально)</label>
+                <select name="project_id" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <option value="">Без проекта</option>
+                    {% for p in projects %}
+                    <option value="{{ p.id }}">{{ p.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
                 <button type="button" onclick="document.getElementById('modal-add-finance').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
-                <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition">Запланировать</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition">Запланировать расход</button>
             </div>
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function switchIncomeTab(tabName) {
+        document.querySelectorAll('.income-tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.income-tab-btn').forEach(btn => {
+            btn.classList.remove('bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/40');
+            btn.classList.add('text-slate-400', 'border-transparent', 'hover:text-slate-200');
+        });
+
+        const activeContent = document.getElementById('tab-content-' + tabName);
+        const activeBtn = document.getElementById('tab-btn-' + tabName);
+        if (activeContent) activeContent.classList.remove('hidden');
+        if (activeBtn) {
+            activeBtn.classList.add('bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/40');
+            activeBtn.classList.remove('text-slate-400', 'border-transparent', 'hover:text-slate-200');
+        }
+    }
+</script>
 {% endblock %}

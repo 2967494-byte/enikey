@@ -22,7 +22,7 @@ from app.core.commands import (
     AddSupplyItemCmd, UpdateSupplyStatusCmd,
     CreateTaskCmd, UpdateTaskStatusCmd, DeleteTaskCmd,
     CreateProjectCmd, UpdateProjectCmd, DeleteProjectCmd,
-    AddFinanceRecordCmd, ExecuteFinanceRecordCmd,
+    AddFinanceRecordCmd, ExecuteFinanceRecordCmd, DeleteFinanceRecordCmd,
     UpdateWalletCmd, UpdateCarMileageCmd, PayLoanInstallmentCmd,
     AutoScheduleWeekCmd
 )
@@ -262,14 +262,52 @@ def finance_page(request: Request, db: Session = Depends(get_db)):
     # All records
     records = db.query(FinanceRecord).order_by(FinanceRecord.planned_date.asc()).all()
 
+    # Incomes Breakdown:
+    # 1. Planned future one-time incomes (status=PLANNED, recurrence=NONE)
+    planned_incomes = [
+        r for r in records
+        if r.record_type == FinanceRecordType.INCOME_EXPECTED
+        and r.status == FinanceStatus.PLANNED
+        and r.is_annual_or_monthly == RecurrenceType.NONE
+    ]
+
+    # 2. Recurring incomes (status=PLANNED, recurrence!=NONE)
+    recurring_incomes = [
+        r for r in records
+        if r.record_type == FinanceRecordType.INCOME_EXPECTED
+        and r.is_annual_or_monthly != RecurrenceType.NONE
+        and r.status == FinanceStatus.PLANNED
+    ]
+
+    # 3. Executed / Past incomes (status=EXECUTED)
+    executed_incomes = [
+        r for r in records
+        if r.record_type == FinanceRecordType.INCOME_EXPECTED
+        and r.status == FinanceStatus.EXECUTED
+    ]
+    executed_incomes.sort(key=lambda x: x.planned_date, reverse=True)
+
     # Wishlist
     wishlist = [r for r in records if r.record_type == FinanceRecordType.EXPENSE_WISHLIST and r.status == FinanceStatus.PLANNED]
 
-    # Birthdays & Recurring
-    birthdays = [r for r in records if r.record_type == FinanceRecordType.EXPENSE_BIRTHDAY]
-    recurring = [r for r in records if r.is_annual_or_monthly != RecurrenceType.NONE]
+    # Birthdays & Recurring Expenses
+    birthdays = [r for r in records if r.record_type == FinanceRecordType.EXPENSE_BIRTHDAY and r.status == FinanceStatus.PLANNED]
+    recurring_expenses = [r for r in records if r.record_type != FinanceRecordType.INCOME_EXPECTED and r.is_annual_or_monthly != RecurrenceType.NONE and r.status == FinanceStatus.PLANNED]
+
+    # Past Expenses (history)
+    executed_expenses = [
+        r for r in records
+        if r.record_type != FinanceRecordType.INCOME_EXPECTED
+        and r.status == FinanceStatus.EXECUTED
+    ]
+    executed_expenses.sort(key=lambda x: x.planned_date, reverse=True)
 
     projects = db.query(Project).all()
+
+    # Sum totals for UI badges
+    total_planned_incomes = sum(float(r.amount) for r in planned_incomes)
+    total_recurring_incomes = sum(float(r.amount) for r in recurring_incomes)
+    total_past_incomes = sum(float(r.amount) for r in executed_incomes)
 
     return templates.TemplateResponse(
         request=request,
@@ -277,12 +315,20 @@ def finance_page(request: Request, db: Session = Depends(get_db)):
         context=template_context(request, {
             "radar": radar,
             "records": records,
+            "planned_incomes": planned_incomes,
+            "recurring_incomes": recurring_incomes,
+            "executed_incomes": executed_incomes,
+            "total_planned_incomes": total_planned_incomes,
+            "total_recurring_incomes": total_recurring_incomes,
+            "total_past_incomes": total_past_incomes,
             "wishlist": wishlist,
             "birthdays": birthdays,
-            "recurring": recurring,
+            "recurring": recurring_expenses,
+            "executed_expenses": executed_expenses,
             "projects": projects
         })
     )
+
 
 # -------------------------------------------------------------
 # 6. HTMX Action Endpoints
@@ -463,6 +509,13 @@ def action_execute_finance(record_id: int, request: Request, db: Session = Depen
     if request.headers.get("HX-Request"):
         return Response(headers={"HX-Refresh": "true"})
     return RedirectResponse(f"{settings.APP_PREFIX}/finance", status_code=303)
+
+@router.post("/actions/delete-finance/{record_id}")
+def action_delete_finance(record_id: int, redirect_to: Optional[str] = Form(None), db: Session = Depends(get_db)):
+    cmd = DeleteFinanceRecordCmd(record_id=record_id)
+    CommandExecutor.execute(cmd, db)
+    return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance", status_code=303)
+
 
 @router.post("/actions/update-wallet")
 def action_update_wallet(

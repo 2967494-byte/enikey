@@ -13,7 +13,7 @@ from app.core.commands import (
     AddSupplyItemCmd, UpdateSupplyStatusCmd,
     CreateTaskCmd, UpdateTaskStatusCmd, DeleteTaskCmd,
     CreateProjectCmd, UpdateProjectCmd, DeleteProjectCmd,
-    AddFinanceRecordCmd, ExecuteFinanceRecordCmd,
+    AddFinanceRecordCmd, ExecuteFinanceRecordCmd, DeleteFinanceRecordCmd,
     UpdateWalletCmd, UpdateCarMileageCmd, PayLoanInstallmentCmd,
     AutoScheduleWeekCmd
 )
@@ -47,6 +47,8 @@ class CommandExecutor:
             return cls._handle_add_finance_record(cmd, db)
         elif isinstance(cmd, ExecuteFinanceRecordCmd):
             return cls._handle_execute_finance_record(cmd, db)
+        elif isinstance(cmd, DeleteFinanceRecordCmd):
+            return cls._handle_delete_finance_record(cmd, db)
         elif isinstance(cmd, UpdateWalletCmd):
             return cls._handle_update_wallet(cmd, db)
         elif isinstance(cmd, UpdateCarMileageCmd):
@@ -590,12 +592,52 @@ class CommandExecutor:
         else:
             wallet.current_balance = float(wallet.current_balance) - amount
 
+        # Auto-spawn next occurrence for recurring records (incomes or expenses)
+        if rec.is_annual_or_monthly == RecurrenceType.MONTHLY:
+            try:
+                next_date = (rec.planned_date.replace(day=1) + timedelta(days=32)).replace(day=min(28, rec.planned_date.day))
+                db.add(FinanceRecord(
+                    project_id=rec.project_id,
+                    title=rec.title,
+                    record_type=rec.record_type,
+                    amount=rec.amount,
+                    planned_date=next_date,
+                    is_annual_or_monthly=rec.is_annual_or_monthly,
+                    status=FinanceStatus.PLANNED
+                ))
+            except Exception:
+                pass
+        elif rec.is_annual_or_monthly == RecurrenceType.YEARLY:
+            try:
+                next_date = rec.planned_date.replace(year=rec.planned_date.year + 1)
+                db.add(FinanceRecord(
+                    project_id=rec.project_id,
+                    title=rec.title,
+                    record_type=rec.record_type,
+                    amount=rec.amount,
+                    planned_date=next_date,
+                    is_annual_or_monthly=rec.is_annual_or_monthly,
+                    status=FinanceStatus.PLANNED
+                ))
+            except Exception:
+                pass
+
         db.commit()
         return {
             "success": True,
             "record_id": rec.id,
             "new_wallet_balance": float(wallet.current_balance)
         }
+
+    @classmethod
+    def _handle_delete_finance_record(cls, cmd: DeleteFinanceRecordCmd, db: Session) -> Dict[str, Any]:
+        rec = db.query(FinanceRecord).filter(FinanceRecord.id == cmd.record_id).first()
+        if not rec:
+            raise ValueError(f"Финансовая запись ID={cmd.record_id} не найдена")
+        db.delete(rec)
+        db.commit()
+        return {"success": True, "record_id": cmd.record_id}
+
 
     @classmethod
     def _handle_update_wallet(cls, cmd: UpdateWalletCmd, db: Session) -> Dict[str, Any]:
