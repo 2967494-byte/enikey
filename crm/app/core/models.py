@@ -127,6 +127,7 @@ class Task(Base):
     project = relationship("Project", back_populates="tasks")
     location = relationship("Location", back_populates="tasks")
     depends_on_supply = relationship("SupplyItem", back_populates="dependent_tasks", foreign_keys=[depends_on_supply_id])
+    depends_on_task = relationship("Task", remote_side=[id], foreign_keys=[depends_on_task_id], backref="subtasks")
 
 class WalletState(Base):
     __tablename__ = "wallet_state"

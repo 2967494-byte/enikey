@@ -11,8 +11,8 @@ from app.core.models import (
 )
 from app.core.commands import (
     AddSupplyItemCmd, UpdateSupplyStatusCmd,
-    CreateTaskCmd, UpdateTaskStatusCmd,
-    CreateProjectCmd, UpdateProjectCmd,
+    CreateTaskCmd, UpdateTaskStatusCmd, DeleteTaskCmd,
+    CreateProjectCmd, UpdateProjectCmd, DeleteProjectCmd,
     AddFinanceRecordCmd, ExecuteFinanceRecordCmd,
     UpdateWalletCmd, UpdateCarMileageCmd, PayLoanInstallmentCmd,
     AutoScheduleWeekCmd
@@ -35,10 +35,14 @@ class CommandExecutor:
             return cls._handle_create_task(cmd, db)
         elif isinstance(cmd, UpdateTaskStatusCmd):
             return cls._handle_update_task_status(cmd, db)
+        elif isinstance(cmd, DeleteTaskCmd):
+            return cls._handle_delete_task(cmd, db)
         elif isinstance(cmd, CreateProjectCmd):
             return cls._handle_create_project(cmd, db)
         elif isinstance(cmd, UpdateProjectCmd):
             return cls._handle_update_project(cmd, db)
+        elif isinstance(cmd, DeleteProjectCmd):
+            return cls._handle_delete_project(cmd, db)
         elif isinstance(cmd, AddFinanceRecordCmd):
             return cls._handle_add_finance_record(cmd, db)
         elif isinstance(cmd, ExecuteFinanceRecordCmd):
@@ -221,6 +225,12 @@ class CommandExecutor:
             if supply and supply.status not in [SupplyStatus.IN_STOCK, SupplyStatus.USED_OR_HANDED_OVER]:
                 initial_status = TaskStatus.BLOCKED
 
+        # Also check parent task dependency: if parent task not DONE, set BLOCKED
+        if cmd.depends_on_task_id:
+            parent = db.query(Task).filter(Task.id == cmd.depends_on_task_id).first()
+            if parent and parent.status != TaskStatus.DONE:
+                initial_status = TaskStatus.BLOCKED
+
         if cmd.scheduled_start and initial_status != TaskStatus.BLOCKED:
             initial_status = TaskStatus.SCHEDULED
 
@@ -240,6 +250,7 @@ class CommandExecutor:
             scheduled_end=scheduled_end,
             is_auto_placed=False,
             depends_on_supply_id=cmd.depends_on_supply_id,
+            depends_on_task_id=cmd.depends_on_task_id,
             notes=cmd.notes or ""
         )
         db.add(task)
@@ -258,6 +269,8 @@ class CommandExecutor:
         task.status = new_status
 
         auto_unblocked = []
+        auto_blocked = []
+
         if new_status == TaskStatus.DONE and old_status != TaskStatus.DONE:
             # Unblock any tasks that depend on this task
             dependent = db.query(Task).filter(
@@ -265,11 +278,53 @@ class CommandExecutor:
                 Task.status == TaskStatus.BLOCKED
             ).all()
             for dep in dependent:
-                dep.status = TaskStatus.TODO
-                auto_unblocked.append(dep.id)
+                # Ensure supply is also satisfied
+                supply_ok = True
+                if dep.depends_on_supply_id:
+                    s = db.query(SupplyItem).filter(SupplyItem.id == dep.depends_on_supply_id).first()
+                    if s and s.status not in [SupplyStatus.IN_STOCK, SupplyStatus.USED_OR_HANDED_OVER]:
+                        supply_ok = False
+                if supply_ok:
+                    dep.status = TaskStatus.TODO
+                    auto_unblocked.append(dep.id)
+
+        elif old_status == TaskStatus.DONE and new_status != TaskStatus.DONE:
+            # Re-block tasks that depend on this task
+            dependent = db.query(Task).filter(
+                Task.depends_on_task_id == task.id,
+                Task.status.in_([TaskStatus.TODO, TaskStatus.SCHEDULED])
+            ).all()
+            for dep in dependent:
+                dep.status = TaskStatus.BLOCKED
+                auto_blocked.append(dep.id)
 
         db.commit()
-        return {"success": True, "task_id": task.id, "new_status": new_status.value, "auto_unblocked": auto_unblocked}
+        return {
+            "success": True,
+            "task_id": task.id,
+            "new_status": new_status.value,
+            "auto_unblocked": auto_unblocked,
+            "auto_blocked": auto_blocked
+        }
+
+    @classmethod
+    def _handle_delete_task(cls, cmd: DeleteTaskCmd, db: Session) -> Dict[str, Any]:
+        task = db.query(Task).filter(Task.id == cmd.task_id).first()
+        if not task:
+            raise ValueError(f"Задача ID={cmd.task_id} не найдена")
+        project_id = task.project_id
+        db.delete(task)
+        db.commit()
+        return {"success": True, "deleted_task_id": cmd.task_id, "project_id": project_id}
+
+    @classmethod
+    def _handle_delete_project(cls, cmd: DeleteProjectCmd, db: Session) -> Dict[str, Any]:
+        proj = db.query(Project).filter(Project.id == cmd.project_id).first()
+        if not proj:
+            raise ValueError(f"Проект ID={cmd.project_id} не найден")
+        db.delete(proj)
+        db.commit()
+        return {"success": True, "deleted_project_id": cmd.project_id}
 
     # -------------------------------------------------------------
     # 3. Projects
@@ -381,6 +436,8 @@ class CommandExecutor:
                                 planned_date=planned,
                                 is_annual_or_monthly=RecurrenceType.MONTHLY
                             ))
+                        else:
+                            existing_rec.amount = cost
                     except Exception:
                         pass
 

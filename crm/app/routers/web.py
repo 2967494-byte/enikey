@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Request, Form, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import flag_modified
 import os
 
 from app.core.config import settings
@@ -19,8 +20,8 @@ from app.core.executor import CommandExecutor
 from app.core.budget_guard import BudgetGuard
 from app.core.commands import (
     AddSupplyItemCmd, UpdateSupplyStatusCmd,
-    CreateTaskCmd, UpdateTaskStatusCmd,
-    CreateProjectCmd, UpdateProjectCmd,
+    CreateTaskCmd, UpdateTaskStatusCmd, DeleteTaskCmd,
+    CreateProjectCmd, UpdateProjectCmd, DeleteProjectCmd,
     AddFinanceRecordCmd, ExecuteFinanceRecordCmd,
     UpdateWalletCmd, UpdateCarMileageCmd, PayLoanInstallmentCmd,
     AutoScheduleWeekCmd
@@ -472,3 +473,231 @@ def action_update_wallet(
     cmd = UpdateWalletCmd(current_balance=current_balance, safety_threshold=safety_threshold)
     CommandExecutor.execute(cmd, db)
     return RedirectResponse(f"{settings.APP_PREFIX}/finance", status_code=303)
+
+@router.post("/actions/add-project-task/{project_id}")
+def action_add_project_task(
+    project_id: int,
+    title: str = Form(...),
+    location_id: Optional[int] = Form(None),
+    location_name: Optional[str] = Form(None),
+    hard_due_date: Optional[str] = Form(None),
+    duration_minutes: int = Form(60),
+    priority: int = Form(3),
+    depends_on_task_id: Optional[int] = Form(None),
+    depends_on_supply_id: Optional[int] = Form(None),
+    notes: Optional[str] = Form(""),
+    db: Session = Depends(get_db)
+):
+    due = None
+    if hard_due_date:
+        try:
+            due = datetime.strptime(hard_due_date, "%Y-%m-%d").date()
+        except Exception:
+            pass
+
+    cmd = CreateTaskCmd(
+        title=title,
+        project_id=project_id,
+        location_id=location_id,
+        location_name=location_name,
+        hard_due_date=due,
+        duration_minutes=duration_minutes,
+        priority=priority,
+        depends_on_task_id=depends_on_task_id,
+        depends_on_supply_id=depends_on_supply_id,
+        notes=notes
+    )
+    CommandExecutor.execute(cmd, db)
+    return RedirectResponse(f"{settings.APP_PREFIX}/projects/{project_id}", status_code=303)
+
+@router.post("/actions/delete-task/{task_id}")
+def action_delete_task(task_id: int, redirect_to: Optional[str] = Form(None), db: Session = Depends(get_db)):
+    res = CommandExecutor.execute(DeleteTaskCmd(task_id=task_id), db)
+    proj_id = res.get("project_id")
+    if redirect_to:
+        return RedirectResponse(redirect_to, status_code=303)
+    if proj_id:
+        return RedirectResponse(f"{settings.APP_PREFIX}/projects/{proj_id}", status_code=303)
+    return RedirectResponse(f"{settings.APP_PREFIX}/", status_code=303)
+
+@router.post("/actions/edit-project/{project_id}")
+async def action_edit_project(
+    project_id: int,
+    request: Request,
+    title: str = Form(...),
+    description: Optional[str] = Form(""),
+    stage: str = Form("ACTIVE"),
+    priority: int = Form(3),
+    color_hex: str = Form("#3b82f6"),
+    weekly_quota_minutes: int = Form(0),
+    preferred_slot_minutes: int = Form(60),
+    db: Session = Depends(get_db)
+):
+    form_data = await request.form()
+    proj = db.query(Project).filter(Project.id == project_id).first()
+    if not proj:
+        return RedirectResponse(f"{settings.APP_PREFIX}/projects", status_code=303)
+
+    payload = dict(proj.template_payload or {})
+
+    # Extract template fields based on type
+    if proj.project_type == ProjectType.IT_SYSTEM:
+        if "ssl_expires_at" in form_data and form_data.get("ssl_expires_at"):
+            payload["ssl_expires_at"] = str(form_data.get("ssl_expires_at"))
+        if "access_notes" in form_data:
+            payload["access_notes"] = str(form_data.get("access_notes"))
+        if "backlog_notes" in form_data:
+            payload["backlog_notes"] = str(form_data.get("backlog_notes"))
+        if "domains" in form_data:
+            domains_raw = str(form_data.get("domains") or "")
+            payload["domains"] = [d.strip() for d in domains_raw.replace("\n", ",").split(",") if d.strip()]
+
+    elif proj.project_type == ProjectType.AUTO:
+        if "car_model" in form_data:
+            payload["car_model"] = str(form_data.get("car_model"))
+        if "current_mileage" in form_data and form_data.get("current_mileage"):
+            try:
+                payload["current_mileage"] = int(form_data.get("current_mileage"))
+            except Exception:
+                pass
+        if "last_to_mileage" in form_data and form_data.get("last_to_mileage"):
+            try:
+                payload["last_to_mileage"] = int(form_data.get("last_to_mileage"))
+            except Exception:
+                pass
+        if "to_interval_km" in form_data and form_data.get("to_interval_km"):
+            try:
+                payload["to_interval_km"] = int(form_data.get("to_interval_km"))
+            except Exception:
+                pass
+        if "insurance_until" in form_data and form_data.get("insurance_until"):
+            payload["insurance_until"] = str(form_data.get("insurance_until"))
+        if "service_log" in form_data:
+            payload["service_log"] = str(form_data.get("service_log"))
+
+    elif proj.project_type == ProjectType.LOAN:
+        if "bank_name" in form_data:
+            payload["bank_name"] = str(form_data.get("bank_name"))
+        if "total_loan_amount" in form_data and form_data.get("total_loan_amount"):
+            try:
+                payload["total_loan_amount"] = float(form_data.get("total_loan_amount"))
+            except Exception:
+                pass
+        if "remaining_balance" in form_data and form_data.get("remaining_balance"):
+            try:
+                payload["remaining_balance"] = float(form_data.get("remaining_balance"))
+            except Exception:
+                pass
+        if "interest_rate" in form_data and form_data.get("interest_rate"):
+            try:
+                payload["interest_rate"] = float(form_data.get("interest_rate"))
+            except Exception:
+                pass
+        if "monthly_payment" in form_data and form_data.get("monthly_payment"):
+            try:
+                payload["monthly_payment"] = float(form_data.get("monthly_payment"))
+            except Exception:
+                pass
+        if "payment_day" in form_data and form_data.get("payment_day"):
+            try:
+                payload["payment_day"] = int(form_data.get("payment_day"))
+            except Exception:
+                pass
+
+    elif proj.project_type == ProjectType.DIY_BUILD:
+        if "specs" in form_data:
+            payload["specs"] = str(form_data.get("specs"))
+        if "budget_limit" in form_data and form_data.get("budget_limit"):
+            try:
+                payload["budget_limit"] = float(form_data.get("budget_limit"))
+            except Exception:
+                pass
+
+    elif proj.project_type == ProjectType.NEW_IDEA:
+        if "concept_pitch" in form_data:
+            payload["concept_pitch"] = str(form_data.get("concept_pitch"))
+        if "estimated_budget" in form_data and form_data.get("estimated_budget"):
+            try:
+                payload["estimated_budget"] = float(form_data.get("estimated_budget"))
+            except Exception:
+                pass
+
+    cmd = UpdateProjectCmd(
+        project_id=project_id,
+        title=title,
+        description=description,
+        stage=stage,
+        priority=priority,
+        color_hex=color_hex,
+        weekly_quota_minutes=weekly_quota_minutes,
+        preferred_slot_minutes=preferred_slot_minutes,
+        template_payload=payload
+    )
+    CommandExecutor.execute(cmd, db)
+    return RedirectResponse(f"{settings.APP_PREFIX}/projects/{project_id}", status_code=303)
+
+@router.post("/actions/delete-project/{project_id}")
+def action_delete_project(project_id: int, db: Session = Depends(get_db)):
+    CommandExecutor.execute(DeleteProjectCmd(project_id=project_id), db)
+    return RedirectResponse(f"{settings.APP_PREFIX}/projects", status_code=303)
+
+
+@router.post("/actions/update-servers/{project_id}")
+async def action_update_servers(
+    project_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    form_data = await request.form()
+    proj = db.query(Project).filter(Project.id == project_id).first()
+    if not proj:
+        return RedirectResponse(f"{settings.APP_PREFIX}/projects", status_code=303)
+
+    ips = form_data.getlist("server_ip")
+    providers = form_data.getlist("server_provider")
+    costs = form_data.getlist("server_cost")
+    pay_days = form_data.getlist("server_pay_day")
+
+    new_servers = []
+    for i in range(len(ips)):
+        ip = str(ips[i]).strip()
+        if not ip:
+            continue
+        provider = str(providers[i]).strip() if i < len(providers) else ""
+        try:
+            cost = float(costs[i]) if i < len(costs) else 0.0
+        except Exception:
+            cost = 0.0
+        try:
+            p_day = int(pay_days[i]) if i < len(pay_days) else 15
+        except Exception:
+            p_day = 15
+
+        new_servers.append({
+            "ip": ip,
+            "provider": provider,
+            "monthly_cost": cost,
+            "pay_day": p_day
+        })
+
+    payload = dict(proj.template_payload or {})
+    payload["servers"] = new_servers
+    proj.template_payload = payload
+    flag_modified(proj, "template_payload")
+
+    # Clear old planned server records for this project so they accurately reflect the updated costs
+    db.query(FinanceRecord).filter(
+        FinanceRecord.project_id == proj.id,
+        FinanceRecord.status == FinanceStatus.PLANNED,
+        FinanceRecord.title.like("Сервер %")
+    ).delete(synchronize_session=False)
+
+    # Re-trigger creation/updating of mandatory recurring server records
+    CommandExecutor._process_project_triggers(proj, db)
+
+    db.commit()
+    db.refresh(proj)
+
+    return RedirectResponse(f"{settings.APP_PREFIX}/projects/{project_id}", status_code=303)
+
+

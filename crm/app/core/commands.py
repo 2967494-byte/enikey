@@ -38,6 +38,7 @@ class CreateTaskCmd(BaseModel):
     duration_minutes: int = Field(60, description="Оценка времени выполнения в минутах")
     priority: int = Field(3, description="Приоритет: 1 (критический) .. 4 (фоновый)")
     depends_on_supply_id: Optional[int] = Field(None, description="ID детали/шкафа, которую нужно дождаться")
+    depends_on_task_id: Optional[int] = Field(None, description="ID родительской задачи, после которой можно выполнять")
     scheduled_start: Optional[datetime] = Field(None, description="Точное время начала в календаре")
     notes: Optional[str] = Field(None, description="Дополнительные заметки к задаче")
 
@@ -45,6 +46,14 @@ class UpdateTaskStatusCmd(BaseModel):
     """Команда смены статуса задачи (TODO / DONE / BLOCKED / SCHEDULED)"""
     task_id: int = Field(..., description="ID задачи")
     status: Literal["BLOCKED", "TODO", "SCHEDULED", "DONE"] = Field(..., description="Новый статус задачи")
+
+class DeleteTaskCmd(BaseModel):
+    """Команда удаления задачи"""
+    task_id: int = Field(..., description="ID удаляемой задачи")
+
+class DeleteProjectCmd(BaseModel):
+    """Команда удаления проекта"""
+    project_id: int = Field(..., description="ID удаляемого проекта")
 
 class CreateProjectCmd(BaseModel):
     """Команда создания нового проекта"""

@@ -6,10 +6,24 @@
 <div class="p-4 md:p-6 space-y-6 max-w-7xl mx-auto w-full">
 
     <!-- Breadcrumb & Back -->
-    <div class="flex items-center gap-2 text-xs text-slate-400">
-        <a href="{{ prefix }}/projects" class="hover:text-white transition">Проекты</a>
-        <span>/</span>
-        <span class="text-white font-medium">{{ project.title }}</span>
+    <div class="flex items-center justify-between text-xs text-slate-400">
+        <div class="flex items-center gap-2">
+            <a href="{{ prefix }}/projects" class="hover:text-white transition flex items-center gap-1">
+                <span>←</span> Все проекты
+            </a>
+            <span>/</span>
+            <span class="text-white font-medium truncate max-w-xs sm:max-w-md">{{ project.title }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="document.getElementById('modal-edit-project').classList.remove('hidden')" class="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 font-medium text-xs transition flex items-center gap-1.5">
+                <span>✏️</span> Редактировать проект
+            </button>
+            <form action="{{ prefix }}/actions/delete-project/{{ project.id }}" method="POST" onsubmit="return confirm('Вы уверены, что хотите удалить проект «{{ project.title }}» со всеми связанными задачами?');">
+                <button type="submit" class="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-medium text-xs transition flex items-center gap-1">
+                    <span>🗑️</span>
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- Project Header Card -->
@@ -17,29 +31,29 @@
         <div class="absolute top-0 left-0 right-0 h-1.5" style="background-color: {{ project.color_hex }}"></div>
 
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div class="space-y-1">
-                <div class="flex items-center gap-2">
+            <div class="space-y-1.5">
+                <div class="flex items-center gap-2 flex-wrap">
                     <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                         {{ project.project_type.value }}
                     </span>
-                    <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-800 text-slate-300">
+                    <span class="px-2 py-0.5 rounded text-[11px] font-medium {% if project.stage.value == 'ACTIVE' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% elif project.stage.value == 'NOT_STARTED' %}bg-slate-800 text-slate-400{% else %}bg-blue-500/10 text-blue-400 border border-blue-500/20{% endif %}">
                         {{ project.stage.value }}
                     </span>
-                    <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-800 text-slate-400">
+                    <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-800 text-slate-300 border border-slate-700">
                         Приоритет: {{ project.priority }}
                     </span>
                 </div>
                 <h2 class="text-2xl font-bold text-white">{{ project.title }}</h2>
-                <p class="text-xs text-slate-400 max-w-3xl leading-relaxed">{{ project.description or "Нет описания." }}</p>
+                <p class="text-xs text-slate-400 max-w-3xl leading-relaxed whitespace-pre-line">{{ project.description or "Нет описания." }}</p>
             </div>
 
             <!-- Quota badge -->
-            <div class="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3 text-center shrink-0 min-w-[140px]">
+            <div class="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3.5 text-center shrink-0 min-w-[150px]">
                 <div class="text-[11px] text-slate-400 font-medium">Недельная квота</div>
-                <div class="text-lg font-bold text-indigo-400 mt-0.5">
+                <div class="text-xl font-bold text-indigo-400 mt-0.5">
                     {{ (project.weekly_quota_minutes / 60)|round(1) }} ч / нед
                 </div>
-                <div class="text-[10px] text-slate-500">Слоты по {{ project.preferred_slot_minutes }} мин</div>
+                <div class="text-[10px] text-slate-500 mt-0.5">Слоты по {{ project.preferred_slot_minutes }} мин</div>
             </div>
         </div>
     </div>
@@ -53,16 +67,19 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <!-- SSL & Domains -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-            <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>🔒</span> SSL и Домены</h3>
-            <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs space-y-1.5">
-                <div class="text-slate-400">SSL истекает:</div>
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>🔒</span> SSL и Домены</h3>
+                <button onclick="document.getElementById('modal-edit-project').classList.remove('hidden')" class="text-[11px] text-indigo-400 hover:underline">Изменить</button>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs space-y-1">
+                <div class="text-slate-400">SSL сертификат истекает:</div>
                 <div class="text-sm font-bold text-indigo-300">{{ payload.ssl_expires_at or "Не указано" }}</div>
             </div>
             <div>
-                <div class="text-xs font-semibold text-slate-400 mb-1">Домены:</div>
+                <div class="text-xs font-semibold text-slate-400 mb-1.5">Привязанные домены:</div>
                 <ul class="text-xs space-y-1">
                     {% for d in payload.domains or [] %}
-                    <li class="flex items-center justify-between text-slate-300 bg-slate-800/40 px-2.5 py-1.5 rounded-lg">
+                    <li class="flex items-center justify-between text-slate-300 bg-slate-800/40 px-2.5 py-1.5 rounded-lg border border-slate-800">
                         <span>🌐 {{ d.domain if d is mapping else d }}</span>
                     </li>
                     {% else %}
@@ -74,28 +91,47 @@
 
         <!-- Servers -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-            <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>🖥️</span> Серверы</h3>
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>🖥️</span> Серверы</h3>
+                <button type="button" onclick="document.getElementById('modal-edit-servers').classList.remove('hidden')" class="text-[11px] text-indigo-400 hover:text-indigo-300 font-medium hover:underline flex items-center gap-1 transition">
+                    <span>✏️</span> Изменить
+                </button>
+            </div>
             <div class="space-y-2">
                 {% for s in payload.servers or [] %}
-                <div class="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs flex items-center justify-between">
+                <div onclick="document.getElementById('modal-edit-servers').classList.remove('hidden')" class="p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 hover:border-indigo-500/50 text-xs flex items-center justify-between cursor-pointer transition group" title="Нажмите, чтобы изменить стоимость или параметры">
                     <div>
-                        <div class="font-bold text-white">{{ s.ip }} ({{ s.provider }})</div>
+                        <div class="font-bold text-white group-hover:text-indigo-300 transition">{{ s.ip }} <span class="text-slate-400 font-normal">({{ s.provider }})</span></div>
                         <div class="text-[11px] text-slate-400">Оплата: {{ s.pay_day }}-е число</div>
                     </div>
-                    <div class="font-bold text-emerald-400">{{ s.monthly_cost }} ₽/мес</div>
+                    <div class="text-right">
+                        <div class="font-bold text-emerald-400 text-sm">{{ s.monthly_cost }} ₽/мес</div>
+                        <div class="text-[10px] text-slate-500 group-hover:text-indigo-400 transition">изменить ✏️</div>
+                    </div>
                 </div>
                 {% else %}
                 <div class="text-slate-500 text-xs">Список серверов пуст.</div>
                 {% endfor %}
             </div>
+            <button type="button" onclick="document.getElementById('modal-edit-servers').classList.remove('hidden')" class="w-full py-2 rounded-xl bg-slate-800/30 hover:bg-slate-800/70 border border-dashed border-slate-700/80 hover:border-indigo-500/50 text-slate-400 hover:text-indigo-300 text-xs font-medium transition flex items-center justify-center gap-1.5">
+                <span>➕</span> Изменить серверы и стоимость
+            </button>
         </div>
 
         <!-- Access Notes & Backlog -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-            <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>🔑</span> Доступы и Памятка</h3>
-            <div class="text-xs text-slate-300 bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 leading-relaxed whitespace-pre-line">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>🔑</span> Доступы и Памятка</h3>
+                <button onclick="document.getElementById('modal-edit-project').classList.remove('hidden')" class="text-[11px] text-indigo-400 hover:underline">Изменить</button>
+            </div>
+            <div class="text-xs text-slate-300 bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 leading-relaxed whitespace-pre-line max-h-40 overflow-y-auto custom-scrollbar">
                 {{ payload.access_notes or "Памятка по ключам и доступам не заполнена." }}
             </div>
+            {% if payload.backlog_notes %}
+            <div class="text-xs text-slate-400 bg-slate-800/30 p-2.5 rounded-xl border border-slate-800">
+                <span class="font-semibold text-slate-300">Бэклог:</span> {{ payload.backlog_notes }}
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -104,15 +140,18 @@
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
             <div>
-                <h3 class="text-base font-bold text-white flex items-center gap-2"><span>🛠️</span> Прогресс сборки и комплектации</h3>
-                <span class="text-xs text-slate-400">Когда все детали переходят в статус «На руках», задачи сборки разблокируются</span>
+                <h3 class="text-base font-bold text-white flex items-center gap-2"><span>🛠️</span> Прогресс комплектации и сборки</h3>
+                <span class="text-xs text-slate-400">Когда все детали получают статус «На руках», задачи сборки разблокируются автоматически</span>
             </div>
-            {% if diy_stats %}
-            <div class="text-right">
-                <span class="text-lg font-bold text-indigo-400">{{ diy_stats.percent }}%</span>
-                <span class="text-xs text-slate-400">готово к сборке</span>
+            <div class="flex items-center gap-3">
+                {% if diy_stats %}
+                <div class="text-right">
+                    <span class="text-lg font-bold text-indigo-400">{{ diy_stats.percent }}%</span>
+                    <span class="text-xs text-slate-400">на руках</span>
+                </div>
+                {% endif %}
+                <button onclick="document.getElementById('modal-edit-project').classList.remove('hidden')" class="px-2.5 py-1 rounded bg-slate-800 text-xs text-slate-300 hover:text-white border border-slate-700">Изменить спецификацию</button>
             </div>
-            {% endif %}
         </div>
 
         {% if diy_stats %}
@@ -121,15 +160,15 @@
             <div class="bg-gradient-to-r from-indigo-500 to-emerald-400 h-3 transition-all duration-500" style="width: {{ diy_stats.percent }}%"></div>
         </div>
         <div class="grid grid-cols-3 gap-3 text-center text-xs">
-            <div class="p-2.5 rounded-xl bg-slate-800/60">
+            <div class="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
                 <div class="text-emerald-400 font-bold text-base">{{ diy_stats.in_stock }}</div>
                 <div class="text-slate-400 text-[11px]">На руках</div>
             </div>
-            <div class="p-2.5 rounded-xl bg-slate-800/60">
+            <div class="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
                 <div class="text-blue-400 font-bold text-base">{{ diy_stats.in_transit }}</div>
                 <div class="text-slate-400 text-[11px]">В пути / ПВЗ</div>
             </div>
-            <div class="p-2.5 rounded-xl bg-slate-800/60">
+            <div class="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
                 <div class="text-amber-400 font-bold text-base">{{ diy_stats.need_buy }}</div>
                 <div class="text-slate-400 text-[11px]">Осталось купить</div>
             </div>
@@ -137,7 +176,7 @@
         {% endif %}
 
         {% if payload.specs %}
-        <div class="text-xs text-slate-300 bg-slate-800/40 p-3 rounded-xl border border-slate-800">
+        <div class="text-xs text-slate-300 bg-slate-800/40 p-3.5 rounded-xl border border-slate-800 leading-relaxed whitespace-pre-line">
             <span class="font-semibold text-slate-400">Спецификация / Заметки:</span> {{ payload.specs }}
         </div>
         {% endif %}
@@ -146,10 +185,13 @@
     <!-- 3. AUTO Module -->
     {% elif p_type == 'AUTO' %}
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-        <h3 class="text-base font-bold text-white flex items-center gap-2"><span>🚗</span> Состояние автомобиля и ТО</h3>
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h3 class="text-base font-bold text-white flex items-center gap-2"><span>🚗</span> Состояние автомобиля и ТО</h3>
+            <button onclick="document.getElementById('modal-edit-project').classList.remove('hidden')" class="text-xs text-indigo-400 hover:underline">Изменить параметры авто</button>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
-                <div class="text-xs text-slate-400">Модель и номер</div>
+                <div class="text-xs text-slate-400">Модель и госномер</div>
                 <div class="text-lg font-bold text-white mt-1">{{ payload.car_model or "Автомобиль" }}</div>
                 <div class="text-xs text-slate-500 mt-1">Страховка до: {{ auto_stats.insurance_until if auto_stats else '—' }}</div>
             </div>
@@ -157,8 +199,8 @@
                 <div class="text-xs text-slate-400">Текущий пробег</div>
                 <div class="text-lg font-bold text-indigo-400 mt-1">{{ auto_stats.current_mileage if auto_stats else 0 }} км</div>
                 <form action="{{ prefix }}/actions/update-mileage/{{ project.id }}" method="POST" class="mt-2 flex gap-2">
-                    <input type="number" name="current_mileage" placeholder="Новый км" class="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white">
-                    <button type="submit" class="px-2 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium">Обновить</button>
+                    <input type="number" name="current_mileage" placeholder="Новый км" class="w-28 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <button type="submit" class="px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition">Обновить</button>
                 </form>
             </div>
             <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
@@ -166,7 +208,7 @@
                 <div class="text-lg font-bold {% if auto_stats and auto_stats.remaining_km <= 1000 %}text-rose-400{% else %}text-emerald-400{% endif %} mt-1">
                     {{ auto_stats.remaining_km if auto_stats else 0 }} км
                 </div>
-                <div class="text-xs text-slate-500 mt-1">Интервал: {{ payload.to_interval_km or 10000 }} км</div>
+                <div class="text-xs text-slate-500 mt-1">Регламент: {{ payload.to_interval_km or 10000 }} км</div>
             </div>
         </div>
     </div>
@@ -174,7 +216,10 @@
     <!-- 4. LOAN Module -->
     {% elif p_type == 'LOAN' %}
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-        <h3 class="text-base font-bold text-white flex items-center gap-2"><span>🏦</span> Кредитные обязательства и График</h3>
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h3 class="text-base font-bold text-white flex items-center gap-2"><span>🏦</span> Кредитные обязательства и График</h3>
+            <button onclick="document.getElementById('modal-edit-project').classList.remove('hidden')" class="text-xs text-indigo-400 hover:underline">Изменить условия</button>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
                 <div class="text-xs text-slate-400">Банк / Договор</div>
@@ -184,7 +229,7 @@
             <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
                 <div class="text-xs text-slate-400">Текущий остаток долга</div>
                 <div class="text-lg font-bold text-rose-400 mt-1">{{ payload.remaining_balance or 0 }} ₽</div>
-                <div class="text-xs text-slate-500 mt-1">Сумма кредита: {{ payload.total_loan_amount or 0 }} ₽</div>
+                <div class="text-xs text-slate-500 mt-1">Исходная сумма: {{ payload.total_loan_amount or 0 }} ₽</div>
             </div>
             <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
                 <div>
@@ -192,9 +237,11 @@
                     <div class="text-lg font-bold text-indigo-400 mt-1">{{ payload.monthly_payment or 0 }} ₽</div>
                     <div class="text-xs text-slate-500">{{ payload.payment_day or 15 }}-го числа месяца</div>
                 </div>
-                <form action="{{ prefix }}/actions/pay-loan/{{ project.id }}" method="POST" class="mt-2 flex gap-2">
+                <form action="{{ prefix }}/actions/pay-loan/{{ project.id }}" method="POST" class="mt-2">
                     <input type="hidden" name="amount_paid" value="{{ payload.monthly_payment or 0 }}">
-                    <button type="submit" class="w-full py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold">Внести платеж</button>
+                    <button type="submit" class="w-full py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition">
+                        Внести платеж (-{{ payload.monthly_payment or 0 }} ₽)
+                    </button>
                 </form>
             </div>
         </div>
@@ -203,63 +250,605 @@
     <!-- 5. NEW_IDEA Module -->
     {% elif p_type == 'NEW_IDEA' %}
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-        <h3 class="text-base font-bold text-white flex items-center gap-2"><span>💡</span> Концепция и Команда проекта</h3>
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h3 class="text-base font-bold text-white flex items-center gap-2"><span>💡</span> Концепция и Оценка запуска</h3>
+            <button onclick="document.getElementById('modal-edit-project').classList.remove('hidden')" class="text-xs text-indigo-400 hover:underline">Изменить</button>
+        </div>
         <div class="text-xs text-slate-300 bg-slate-800/40 p-4 rounded-xl border border-slate-800 leading-relaxed whitespace-pre-line">
             {{ payload.concept_pitch or "Питч и гипотеза пока не сформулированы." }}
         </div>
     </div>
     {% endif %}
 
-    <!-- Project Tasks & Project FullCalendar -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-
-        <!-- Tasks list -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-base text-white flex items-center gap-2"><span>📋</span> Задачи проекта</h3>
-                <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">{{ tasks|length }}</span>
+    <!-- TASKS & SUBTASKS SECTION -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+                <h3 class="font-bold text-lg text-white flex items-center gap-2">
+                    <span>📋</span> Задачи и Цепочки подзадач
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5">
+                    Задачи могут выполняться строго после завершения других задач или после доставки деталей.
+                </p>
             </div>
+            <button onclick="openAddTaskModal()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/20 transition flex items-center gap-2 shrink-0">
+                <span>➕</span> Добавить задачу в проект
+            </button>
+        </div>
 
-            <div class="space-y-2 max-h-[480px] overflow-y-auto custom-scrollbar pr-1">
-                {% for t in tasks %}
-                <div class="p-3 rounded-xl border {% if t.status.value == 'DONE' %}bg-slate-900/40 border-slate-800/40 opacity-60{% elif t.status.value == 'BLOCKED' %}bg-rose-950/20 border-rose-900/40{% else %}bg-slate-800/60 border-slate-700/60{% endif %} flex items-start gap-3">
-                    <form action="{{ prefix }}/actions/toggle-task/{{ t.id }}" method="POST">
-                        <button type="submit" class="w-5 h-5 rounded border {% if t.status.value == 'DONE' %}bg-indigo-600 border-indigo-500 text-white{% else %}border-slate-600 hover:border-indigo-400{% endif %} flex items-center justify-center transition">
-                            {% if t.status.value == 'DONE' %}✓{% endif %}
-                        </button>
-                    </form>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-sm font-semibold text-white {% if t.status.value == 'DONE' %}line-through text-slate-400{% endif %}">
-                            {{ t.title }}
-                        </div>
-                        <div class="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
-                            {% if t.location %}<span>📍 {{ t.location.name }}</span>{% endif %}
-                            {% if t.duration_minutes %}<span>⏱️ {{ t.duration_minutes }} мин</span>{% endif %}
-                            {% if t.status.value == 'BLOCKED' %}
-                            <span class="text-rose-400 font-semibold">🔒 Заблокирована (ожидает поставку)</span>
+        <!-- Task List with Subtasks and Dependencies -->
+        <div class="space-y-3">
+            {% if tasks|length == 0 %}
+            <div class="text-center py-10 bg-slate-800/20 rounded-xl border border-dashed border-slate-800">
+                <span class="text-3xl">📝</span>
+                <p class="text-sm font-semibold text-slate-300 mt-2">В этом проекте пока нет задач</p>
+                <p class="text-xs text-slate-500 mt-1">Добавьте первую задачу или подзадачу кнопкой выше</p>
+                <button onclick="openAddTaskModal()" class="mt-4 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium">Создать задачу</button>
+            </div>
+            {% endif %}
+
+            <!-- Separate Root Tasks and Subtasks -->
+            {% for t in tasks %}
+            <!-- Show Root Task or standalone task -->
+            {% if not t.depends_on_task_id %}
+            <div class="rounded-xl border {% if t.status.value == 'DONE' %}bg-slate-900/40 border-slate-800/60 opacity-60{% elif t.status.value == 'BLOCKED' %}bg-rose-950/20 border-rose-900/50{% else %}bg-slate-800/60 border-slate-700/70 hover:border-slate-600{% endif %} p-4 transition space-y-3">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-start gap-3 flex-1 min-w-0">
+                        <form action="{{ prefix }}/actions/toggle-task/{{ t.id }}" method="POST" class="mt-0.5">
+                            <button type="submit" class="w-5 h-5 rounded border {% if t.status.value == 'DONE' %}bg-indigo-600 border-indigo-500 text-white{% else %}border-slate-600 hover:border-indigo-400{% endif %} flex items-center justify-center transition">
+                                {% if t.status.value == 'DONE' %}✓{% endif %}
+                            </button>
+                        </form>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-bold text-white {% if t.status.value == 'DONE' %}line-through text-slate-400{% endif %}">
+                                {{ t.title }}
+                            </div>
+                            <div class="flex items-center gap-2 mt-1.5 flex-wrap text-xs">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold {% if t.status.value == 'DONE' %}bg-slate-800 text-slate-400{% elif t.status.value == 'BLOCKED' %}bg-rose-500/20 text-rose-300 border border-rose-500/30{% elif t.status.value == 'SCHEDULED' %}bg-indigo-500/20 text-indigo-300 border border-indigo-500/30{% else %}bg-blue-500/20 text-blue-300 border border-blue-500/30{% endif %}">
+                                    {{ t.status.value }}
+                                </span>
+                                {% if t.location %}
+                                <span class="text-slate-400 text-[11px]">📍 {{ t.location.name }}</span>
+                                {% endif %}
+                                <span class="text-slate-400 text-[11px]">⏱️ {{ t.duration_minutes }} мин</span>
+                                {% if t.hard_due_date %}
+                                <span class="text-indigo-300 text-[11px]">📅 До: {{ t.hard_due_date }}</span>
+                                {% endif %}
+                                {% if t.depends_on_supply %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                                    📦 Ждет деталь: «{{ t.depends_on_supply.item_name }}»
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% if t.notes %}
+                            <p class="text-[11px] text-slate-400 mt-1 italic">{{ t.notes }}</p>
                             {% endif %}
                         </div>
                     </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="openAddSubtaskModal({{ t.id }}, '{{ t.title|replace('\'', '\\\'') }}')" class="px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-[11px] font-medium transition flex items-center gap-1">
+                            <span>➕</span> Подзадача
+                        </button>
+                        <form action="{{ prefix }}/actions/delete-task/{{ t.id }}" method="POST" onsubmit="return confirm('Удалить задачу «{{ t.title }}»?');">
+                            <button type="submit" class="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-800 transition">
+                                🗑️
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                {% else %}
-                <div class="text-center py-6 text-xs text-slate-500">Задач по проекту пока нет.</div>
-                {% endfor %}
-            </div>
-        </div>
 
+                <!-- Subtasks Nested under this Task -->
+                {% set subtasks = t.subtasks or [] %}
+                {% if subtasks|length > 0 %}
+                <div class="mt-3 pl-4 border-l-2 border-indigo-500/30 space-y-2">
+                    <div class="text-[11px] font-semibold uppercase tracking-wider text-indigo-400">
+                        Подзадачи (выполняются после завершения):
+                    </div>
+                    {% for sub in subtasks %}
+                    <div class="p-3 rounded-xl border {% if sub.status.value == 'DONE' %}bg-slate-900/30 border-slate-800/40 opacity-60{% elif sub.status.value == 'BLOCKED' %}bg-rose-950/30 border-rose-900/50{% else %}bg-slate-800/80 border-slate-700/60{% endif %} flex items-start justify-between gap-3">
+                        <div class="flex items-start gap-2.5 flex-1 min-w-0">
+                            <span class="text-indigo-400 font-bold text-base mt-0.5">↳</span>
+                            <form action="{{ prefix }}/actions/toggle-task/{{ sub.id }}" method="POST" class="mt-0.5">
+                                <button type="submit" class="w-4 h-4 rounded border {% if sub.status.value == 'DONE' %}bg-indigo-600 border-indigo-500 text-white text-[10px]{% else %}border-slate-600 hover:border-indigo-400{% endif %} flex items-center justify-center transition">
+                                    {% if sub.status.value == 'DONE' %}✓{% endif %}
+                                </button>
+                            </form>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-bold text-white {% if sub.status.value == 'DONE' %}line-through text-slate-400{% endif %}">
+                                    {{ sub.title }}
+                                </div>
+                                <div class="flex items-center gap-2 mt-1 flex-wrap text-[10px]">
+                                    <span class="px-1.5 py-0.5 rounded font-semibold {% if sub.status.value == 'DONE' %}bg-slate-800 text-slate-400{% elif sub.status.value == 'BLOCKED' %}bg-rose-500/20 text-rose-300 border border-rose-500/30{% else %}bg-blue-500/20 text-blue-300{% endif %}">
+                                        {{ sub.status.value }}
+                                    </span>
+                                    {% if sub.status.value == 'BLOCKED' %}
+                                    <span class="text-rose-400 font-medium">🔒 Ждет завершения «{{ t.title }}»</span>
+                                    {% endif %}
+                                    {% if sub.depends_on_supply %}
+                                    <span class="text-amber-400">📦 Ждет «{{ sub.depends_on_supply.item_name }}»</span>
+                                    {% endif %}
+                                    <span class="text-slate-400">⏱️ {{ sub.duration_minutes }} мин</span>
+                                </div>
+                            </div>
+                        </div>
+                        <form action="{{ prefix }}/actions/delete-task/{{ sub.id }}" method="POST" onsubmit="return confirm('Удалить подзадачу «{{ sub.title }}»?');">
+                            <button type="submit" class="p-1 rounded text-slate-500 hover:text-rose-400 transition text-xs">
+                                🗑️
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Project Calendar & Finances Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         <!-- Project Calendar -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
             <h3 class="font-bold text-base text-white flex items-center gap-2"><span>📅</span> Расписание проекта</h3>
             <div id="project-calendar" class="w-full min-h-[440px] rounded-xl overflow-hidden"></div>
         </div>
 
+        <!-- Project Supplies & Finances -->
+        <div class="space-y-6">
+            <!-- Supplies -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-sm text-white flex items-center gap-2"><span>📦</span> Детали и закупки проекта</h3>
+                    <a href="{{ prefix }}/logistics" class="text-xs text-indigo-400 hover:underline">Вся логистика →</a>
+                </div>
+                <div class="space-y-2 max-h-52 overflow-y-auto custom-scrollbar">
+                    {% for s in supplies %}
+                    <div class="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-white">{{ s.item_name }}</div>
+                            <div class="text-[11px] text-slate-400">{{ s.vendor or 'ПВЗ' }} • {{ s.status.value }}</div>
+                        </div>
+                        <span class="font-semibold text-slate-300">{{ s.cost|round(0)|int }} ₽</span>
+                    </div>
+                    {% else %}
+                    <div class="text-xs text-slate-500 py-3 text-center">Нет привязанных закупок.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Finances -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-sm text-white flex items-center gap-2"><span>💳</span> Финансы проекта</h3>
+                    <a href="{{ prefix }}/finance" class="text-xs text-indigo-400 hover:underline">Вся касса →</a>
+                </div>
+                <div class="space-y-2 max-h-52 overflow-y-auto custom-scrollbar">
+                    {% for f in finances %}
+                    <div class="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-white">{{ f.title }}</div>
+                            <div class="text-[11px] text-slate-400">{{ f.planned_date }} • {{ f.status.value }}</div>
+                        </div>
+                        <span class="font-bold {% if f.record_type.value == 'INCOME_EXPECTED' %}text-emerald-400{% else %}text-rose-400{% endif %}">
+                            {{ f.amount|round(0)|int }} ₽
+                        </span>
+                    </div>
+                    {% else %}
+                    <div class="text-xs text-slate-500 py-3 text-center">Нет финансовых записей.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
 
 </div>
+
+<!-- MODAL: ADD TASK / SUBTASK TO PROJECT -->
+<div id="modal-add-project-task" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <button onclick="document.getElementById('modal-add-project-task').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <span>➕</span> <span id="modal-task-title-text">Новая задача в проект</span>
+        </h3>
+        
+        <form action="{{ prefix }}/actions/add-project-task/{{ project.id }}" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Название задачи *</label>
+                <input type="text" name="title" required placeholder="Например: Собрать раму или Настроить Nginx" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <!-- Parent Task Dependency (Subtask) -->
+            <div class="p-3 rounded-xl bg-indigo-950/20 border border-indigo-900/40 space-y-1.5">
+                <label class="block text-xs font-semibold text-indigo-300">
+                    🔗 Зависимость от другой задачи (Подзадача):
+                </label>
+                <p class="text-[11px] text-slate-400 leading-tight">
+                    Если указать родительскую задачу, эта задача будет заблокирована (<span class="text-rose-400">BLOCKED</span>) до тех пор, пока родительская не будет выполнена.
+                </p>
+                <select name="depends_on_task_id" id="task-parent-select" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <option value="">— Самостоятельная задача (без зависимости от других задач) —</option>
+                    {% for t in tasks %}
+                    <option value="{{ t.id }}">↳ Выполнять строго после: {{ t.title }} ({{ t.status.value }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Supply Item Dependency -->
+            <div class="p-3 rounded-xl bg-amber-950/20 border border-amber-900/40 space-y-1.5">
+                <label class="block text-xs font-semibold text-amber-300">
+                    📦 Зависимость от поставки детали:
+                </label>
+                <p class="text-[11px] text-slate-400 leading-tight">
+                    Задача останется заблокированной, пока деталь не перейдет в статус «На руках» (IN_STOCK).
+                </p>
+                <select name="depends_on_supply_id" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <option value="">— Не зависит от детали —</option>
+                    {% for s in supplies %}
+                    <option value="{{ s.id }}">📦 Ждет деталь: {{ s.item_name }} ({{ s.status.value }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Локация</label>
+                    <select name="location_id" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        <option value="">Без привязки к локации</option>
+                        {% for loc in locations %}
+                        <option value="{{ loc.id }}">{{ loc.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Жесткая дата (если есть)</label>
+                    <input type="date" name="hard_due_date" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Оценка времени (мин)</label>
+                    <input type="number" name="duration_minutes" value="60" min="15" step="15" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Приоритет</label>
+                    <select name="priority" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        <option value="1">1: Критический</option>
+                        <option value="2">2: Высокий</option>
+                        <option value="3" selected>3: Обычный</option>
+                        <option value="4">4: Фоновый</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Заметки / Инструкция к задаче</label>
+                <textarea name="notes" rows="2" placeholder="Что конкретно нужно сделать, какие инструменты нужны..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button type="button" onclick="document.getElementById('modal-add-project-task').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition">Создать задачу</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: EDIT PROJECT AND ALL FIELDS -->
+<div id="modal-edit-project" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <button onclick="document.getElementById('modal-edit-project').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <span>✏️</span> Редактирование проекта: {{ project.title }}
+        </h3>
+
+        <form action="{{ prefix }}/actions/edit-project/{{ project.id }}" method="POST" class="space-y-4">
+            <!-- Base fields -->
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Название проекта *</label>
+                <input type="text" name="title" value="{{ project.title }}" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Описание / Цели / Ссылки</label>
+                <textarea name="description" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">{{ project.description }}</textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Стадия</label>
+                    <select name="stage" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        <option value="NOT_STARTED" {% if project.stage.value == 'NOT_STARTED' %}selected{% endif %}>NOT_STARTED (Идея)</option>
+                        <option value="ACTIVE" {% if project.stage.value == 'ACTIVE' %}selected{% endif %}>ACTIVE (В работе)</option>
+                        <option value="MAINTENANCE" {% if project.stage.value == 'MAINTENANCE' %}selected{% endif %}>MAINTENANCE (Сопровождение)</option>
+                        <option value="ON_HOLD" {% if project.stage.value == 'ON_HOLD' %}selected{% endif %}>ON_HOLD (Пауза)</option>
+                        <option value="COMPLETED" {% if project.stage.value == 'COMPLETED' %}selected{% endif %}>COMPLETED (Завершен)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Приоритет (1..4)</label>
+                    <select name="priority" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        <option value="1" {% if project.priority == 1 %}selected{% endif %}>1: Критический</option>
+                        <option value="2" {% if project.priority == 2 %}selected{% endif %}>2: Высокий</option>
+                        <option value="3" {% if project.priority == 3 %}selected{% endif %}>3: Обычный</option>
+                        <option value="4" {% if project.priority == 4 %}selected{% endif %}>4: Фоновый</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Цвет в календаре</label>
+                    <input type="color" name="color_hex" value="{{ project.color_hex }}" class="w-full h-9 bg-slate-800 border border-slate-700 rounded-lg px-1 py-1 cursor-pointer">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Недельная квота (минут/неделю)</label>
+                    <input type="number" name="weekly_quota_minutes" value="{{ project.weekly_quota_minutes }}" step="30" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <span class="text-[10px] text-slate-500">120 = 2 часа в неделю</span>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Размер слота планировщика (мин)</label>
+                    <input type="number" name="preferred_slot_minutes" value="{{ project.preferred_slot_minutes }}" step="15" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <!-- Type-Specific Template Fields -->
+            <div class="border-t border-slate-800 pt-4 space-y-4">
+                <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-wider">
+                    Специфические поля шаблона ({{ p_type }})
+                </h4>
+
+                {% if p_type == 'IT_SYSTEM' %}
+                <div class="bg-indigo-950/40 p-3 rounded-xl border border-indigo-800/40 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-semibold text-white flex items-center gap-1.5"><span>🖥️</span> Серверы и стоимость (₽/мес)</div>
+                        <div class="text-[11px] text-slate-400">Настройка тарифов, IP и дат списания</div>
+                    </div>
+                    <button type="button" onclick="document.getElementById('modal-edit-project').classList.add('hidden'); document.getElementById('modal-edit-servers').classList.remove('hidden');" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition">
+                        Настроить серверы ➔
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">SSL дата окончания</label>
+                        <input type="date" name="ssl_expires_at" value="{{ payload.ssl_expires_at or '' }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Домены (через запятую)</label>
+                        <input type="text" name="domains" value="{% if payload.domains %}{{ payload.domains|join(', ') }}{% endif %}" placeholder="enikey.tech, site.ru" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Памятка по ключам и доступам</label>
+                    <textarea name="access_notes" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">{{ payload.access_notes or '' }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">План доработок / Бэклог</label>
+                    <textarea name="backlog_notes" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">{{ payload.backlog_notes or '' }}</textarea>
+                </div>
+
+                {% elif p_type == 'AUTO' %}
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Модель авто и номер</label>
+                        <input type="text" name="car_model" value="{{ payload.car_model or '' }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Страховка до</label>
+                        <input type="date" name="insurance_until" value="{{ payload.insurance_until or '' }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Текущий пробег (км)</label>
+                        <input type="number" name="current_mileage" value="{{ payload.current_mileage or '' }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Пробег прошлого ТО</label>
+                        <input type="number" name="last_to_mileage" value="{{ payload.last_to_mileage or '' }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Интервал ТО (км)</label>
+                        <input type="number" name="to_interval_km" value="{{ payload.to_interval_km or 10000 }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Журнал обслуживания</label>
+                    <textarea name="service_log" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">{{ payload.service_log or '' }}</textarea>
+                </div>
+
+                {% elif p_type == 'LOAN' %}
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Банк / Кредитор</label>
+                        <input type="text" name="bank_name" value="{{ payload.bank_name or '' }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Ставка (%)</label>
+                        <input type="number" step="0.1" name="interest_rate" value="{{ payload.interest_rate or '' }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Исходная сумма кредита (₽)</label>
+                        <input type="number" name="total_loan_amount" value="{{ payload.total_loan_amount or '' }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Остаток долга (₽)</label>
+                        <input type="number" name="remaining_balance" value="{{ payload.remaining_balance or '' }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Ежемесячный платеж (₽)</label>
+                        <input type="number" name="monthly_payment" value="{{ payload.monthly_payment or '' }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">День месяца (1..31)</label>
+                        <input type="number" name="payment_day" value="{{ payload.payment_day or 15 }}" min="1" max="31" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                {% elif p_type == 'DIY_BUILD' %}
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Лимит бюджета сборки (₽)</label>
+                    <input type="number" name="budget_limit" value="{{ payload.budget_limit or '' }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Спецификация и заметки сборки</label>
+                    <textarea name="specs" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">{{ payload.specs or '' }}</textarea>
+                </div>
+
+                {% elif p_type == 'NEW_IDEA' %}
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Оценка бюджета запуска (₽)</label>
+                    <input type="number" name="estimated_budget" value="{{ payload.estimated_budget or '' }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Концепция и питч задумки</label>
+                    <textarea name="concept_pitch" rows="4" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">{{ payload.concept_pitch or '' }}</textarea>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                <button type="button" onclick="document.getElementById('modal-edit-project').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition">Сохранить изменения</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Servers & Costs -->
+<div id="modal-edit-servers" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/60">
+            <div>
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <span>🖥️</span> Серверы и ежемесячные расходы
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5">Укажите IP, провайдера, день списания и стоимость (₽/мес). Финансовый радар обновится сразу.</p>
+            </div>
+            <button type="button" onclick="document.getElementById('modal-edit-servers').classList.add('hidden')" class="text-slate-400 hover:text-white text-lg">✕</button>
+        </div>
+
+        <form action="{{ prefix }}/actions/update-servers/{{ project.id }}" method="POST" class="p-6 space-y-4">
+            <div id="server-rows-container" class="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+                {% for s in payload.servers or [] %}
+                <div class="server-row bg-slate-800/50 border border-slate-700/60 rounded-xl p-3.5 space-y-2 relative">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-indigo-300">Сервер #<span class="row-index">{{ loop.index }}</span></span>
+                        <button type="button" onclick="removeServerRow(this)" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-0.5 rounded bg-rose-500/10 hover:bg-rose-500/20 transition">Удалить</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                        <div class="sm:col-span-1">
+                            <label class="block text-[11px] text-slate-400 mb-1">IP адрес</label>
+                            <input type="text" name="server_ip" value="{{ s.ip }}" required placeholder="95.163.229.153" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div class="sm:col-span-1">
+                            <label class="block text-[11px] text-slate-400 mb-1">Провайдер / Имя</label>
+                            <input type="text" name="server_provider" value="{{ s.provider }}" required placeholder="Reg.ru МСК" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div class="sm:col-span-1">
+                            <label class="block text-[11px] text-slate-400 mb-1">Стоимость (₽/мес)</label>
+                            <div class="relative">
+                                <input type="number" step="1" min="0" name="server_cost" value="{{ s.monthly_cost }}" required placeholder="450" class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-2.5 pr-7 py-1.5 text-xs text-emerald-400 font-bold focus:outline-none focus:border-indigo-500">
+                                <span class="absolute right-2 top-1.5 text-[11px] text-slate-500 font-normal">₽</span>
+                            </div>
+                        </div>
+                        <div class="sm:col-span-1">
+                            <label class="block text-[11px] text-slate-400 mb-1">День оплаты (1-31)</label>
+                            <input type="number" min="1" max="31" name="server_pay_day" value="{{ s.pay_day }}" required placeholder="15" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+                <button type="button" onclick="addServerRow()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-400 hover:text-indigo-300 text-xs font-medium border border-indigo-500/30 transition flex items-center gap-1.5">
+                    <span>➕</span> Добавить сервер
+                </button>
+                <div class="flex gap-2">
+                    <button type="button" onclick="document.getElementById('modal-edit-servers').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-600/20 transition flex items-center gap-1.5">
+                        <span>💾</span> Сохранить стоимость
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
+    function openAddTaskModal() {
+        document.getElementById('task-parent-select').value = "";
+        document.getElementById('modal-task-title-text').innerText = "Новая задача в проект";
+        document.getElementById('modal-add-project-task').classList.remove('hidden');
+    }
+
+    function openAddSubtaskModal(parentId, parentTitle) {
+        document.getElementById('task-parent-select').value = parentId;
+        document.getElementById('modal-task-title-text').innerText = "Подзадача для: «" + parentTitle + "»";
+        document.getElementById('modal-add-project-task').classList.remove('hidden');
+    }
+
+    function addServerRow() {
+        const container = document.getElementById('server-rows-container');
+        const count = container.querySelectorAll('.server-row').length + 1;
+        const row = document.createElement('div');
+        row.className = 'server-row bg-slate-800/50 border border-slate-700/60 rounded-xl p-3.5 space-y-2 relative';
+        row.innerHTML = `
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-indigo-300">Сервер #<span class="row-index">${count}</span></span>
+                <button type="button" onclick="removeServerRow(this)" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-0.5 rounded bg-rose-500/10 hover:bg-rose-500/20 transition">Удалить</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                <div class="sm:col-span-1">
+                    <label class="block text-[11px] text-slate-400 mb-1">IP адрес</label>
+                    <input type="text" name="server_ip" required placeholder="95.163.229.153" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div class="sm:col-span-1">
+                    <label class="block text-[11px] text-slate-400 mb-1">Провайдер / Имя</label>
+                    <input type="text" name="server_provider" required placeholder="Reg.ru МСК" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div class="sm:col-span-1">
+                    <label class="block text-[11px] text-slate-400 mb-1">Стоимость (₽/мес)</label>
+                    <div class="relative">
+                        <input type="number" step="1" min="0" name="server_cost" required placeholder="450" class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-2.5 pr-7 py-1.5 text-xs text-emerald-400 font-bold focus:outline-none focus:border-indigo-500">
+                        <span class="absolute right-2 top-1.5 text-[11px] text-slate-500 font-normal">₽</span>
+                    </div>
+                </div>
+                <div class="sm:col-span-1">
+                    <label class="block text-[11px] text-slate-400 mb-1">День оплаты (1-31)</label>
+                    <input type="number" min="1" max="31" name="server_pay_day" value="15" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+        `;
+        container.appendChild(row);
+        reindexServerRows();
+    }
+
+    function removeServerRow(btn) {
+        const row = btn.closest('.server-row');
+        if (row) {
+            row.remove();
+            reindexServerRows();
+        }
+    }
+
+    function reindexServerRows() {
+        const rows = document.querySelectorAll('#server-rows-container .server-row');
+        rows.forEach((r, idx) => {
+            const span = r.querySelector('.row-index');
+            if (span) span.innerText = idx + 1;
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         var calEl = document.getElementById('project-calendar');
         if (calEl) {
