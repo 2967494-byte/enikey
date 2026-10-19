@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Каталог проектов — Второй Мозг{% endblock %}
+
+{% block content %}
+<div class="p-4 md:p-6 space-y-6 max-w-7xl mx-auto w-full">
+
+    <!-- Header & Action -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+        <div>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2"><span>📁</span> Каталог проектов и Квоты</h2>
+            <p class="text-xs text-slate-400 mt-1">Каждый проект имеет свой уникальный URL, индивидуальный шаблон данных и цветовую метку в календаре.</p>
+        </div>
+        <button onclick="document.getElementById('modal-create-project').classList.remove('hidden')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition flex items-center gap-2 shrink-0">
+            <span>➕</span> Новый проект
+        </button>
+    </div>
+
+    <!-- Category Groups -->
+    <div class="space-y-8">
+        {% for cat_key, cat in categories.items() %}
+        {% if cat['items']|length > 0 %}
+        <div class="space-y-3">
+            <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                {{ cat.title }}
+                <span class="text-xs font-normal text-slate-500">({{ cat['items']|length }})</span>
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for p in cat['items'] %}
+                <a href="{{ prefix }}/projects/{{ p.id }}" class="block group bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 transition shadow-sm hover:shadow-md relative overflow-hidden">
+                    <!-- Project Color Top Strip -->
+                    <div class="absolute top-0 left-0 right-0 h-1" style="background-color: {{ p.color_hex }}"></div>
+
+                    <!-- Header -->
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                {{ p.project_type.value }}
+                            </span>
+                            <h4 class="font-bold text-base text-white group-hover:text-indigo-300 transition truncate mt-0.5">
+                                {{ p.title }}
+                            </h4>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[11px] font-medium shrink-0 {% if p.stage.value == 'ACTIVE' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% elif p.stage.value == 'NOT_STARTED' %}bg-slate-800 text-slate-400{% elif p.stage.value == 'MAINTENANCE' %}bg-blue-500/10 text-blue-400 border border-blue-500/20{% else %}bg-amber-500/10 text-amber-400{% endif %}">
+                            {{ p.stage.value }}
+                        </span>
+                    </div>
+
+                    <!-- Description -->
+                    <p class="text-xs text-slate-400 line-clamp-2 mt-2 leading-relaxed">
+                        {{ p.description or "Без описания" }}
+                    </p>
+
+                    <!-- Quota & Alerts Footer -->
+                    <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-1.5 text-slate-400">
+                            <span>⏱️ Квота:</span>
+                            {% if p.weekly_quota_minutes > 0 %}
+                            <span class="font-semibold text-indigo-400">{{ p.quota_done_hours }} / {{ p.quota_total_hours }} ч/нед</span>
+                            {% else %}
+                            <span class="text-slate-500">—</span>
+                            {% endif %}
+                        </div>
+
+                        {% if p.alert_badge %}
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 animate-pulse">
+                            {{ p.alert_badge }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- Create Project Modal -->
+<div id="modal-create-project" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+        <button onclick="document.getElementById('modal-create-project').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><span>📁</span> Создать новый проект</h3>
+        <form action="{{ prefix }}/actions/create-project" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Название проекта *</label>
+                <input type="text" name="title" required placeholder="Например: 3D-принтер Voron 2.4 или Сайт компании" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Описание / Заметки</label>
+                <textarea name="description" rows="2" placeholder="Краткие цели, ссылки или описание" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Тип проекта</label>
+                    <select name="project_type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <option value="IT_SYSTEM">IT_SYSTEM (Сайт, серверы, SSL)</option>
+                        <option value="NEW_IDEA">NEW_IDEA (Идея, стартап, R&D)</option>
+                        <option value="DIY_BUILD">DIY_BUILD (3D-принтер, сборка)</option>
+                        <option value="AUTO">AUTO (Автомобиль, ТО, пробег)</option>
+                        <option value="LOAN">LOAN (Кредит, банк, график)</option>
+                        <option value="HOUSEHOLD" selected>HOUSEHOLD (Бытовые и офисные дела)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Стадия</label>
+                    <select name="stage" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <option value="NOT_STARTED">NOT_STARTED (Идея)</option>
+                        <option value="ACTIVE" selected>ACTIVE (В разработке/сборке)</option>
+                        <option value="MAINTENANCE">MAINTENANCE (Сопровождение)</option>
+                        <option value="ON_HOLD">ON_HOLD (Пауза)</option>
+                        <option value="COMPLETED">COMPLETED (Завершен)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Приоритет</label>
+                    <select name="priority" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <option value="1">1: Критический</option>
+                        <option value="2">2: Высокий</option>
+                        <option value="3" selected>3: Обычный</option>
+                        <option value="4">4: Фоновый</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Квота (мин/нед)</label>
+                    <input type="number" name="weekly_quota_minutes" value="120" step="30" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Цвет в календаре</label>
+                    <input type="color" name="color_hex" value="#6366f1" class="w-full h-9 bg-slate-800 border border-slate-700 rounded-lg px-1 py-1 cursor-pointer">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="document.getElementById('modal-create-project').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition">Создать проект</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

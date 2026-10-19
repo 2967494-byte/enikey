@@ -8,3 +8,9 @@
 !/uploads/news/.gitkeep
 node_modules/
 server/node_modules/
+__pycache__/
+*.pyc
+crm/venv/
+crm/brain.db
+crm/brain.db-shm
+crm/brain.db-wal

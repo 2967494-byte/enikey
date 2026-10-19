@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Финансы и Радар — Второй Мозг{% endblock %}
+
+{% block content %}
+<div class="p-4 md:p-6 space-y-6 max-w-7xl mx-auto w-full">
+
+    <!-- Header & Action -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+        <div>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2"><span>💳</span> Финансовый Радар и Бюджет</h2>
+            <p class="text-xs text-slate-400 mt-1">Защита от кассовых разрывов на 14 и 30 дней вперед с учетом кредитов, серверов и дней рождений.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="document.getElementById('modal-update-wallet').classList.remove('hidden')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition">
+                <span>⚙️</span> Баланс кошелька
+            </button>
+            <button onclick="document.getElementById('modal-add-finance').classList.remove('hidden')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition flex items-center gap-2">
+                <span>➕</span> Запланировать трату
+            </button>
+        </div>
+    </div>
+
+    <!-- Top Radar Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- 1. Actual balance -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+            <span class="text-xs text-slate-400 font-medium">Фактический баланс</span>
+            <div class="text-2xl font-bold text-white">{{ radar.current_balance|round(0)|int }} ₽</div>
+            <div class="text-[11px] text-slate-500">Порог безопасности: {{ radar.safety_threshold|round(0)|int }} ₽</div>
+        </div>
+
+        <!-- 2. 14d limit -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+            <span class="text-xs text-slate-400 font-medium">Доступно через 14 дней</span>
+            <div class="text-2xl font-bold {% if radar.available_limit_14d >= radar.safety_threshold %}text-emerald-400{% elif radar.available_limit_14d > 0 %}text-amber-400{% else %}text-rose-400{% endif %}">
+                {{ radar.available_limit_14d|round(0)|int }} ₽
+            </div>
+            <div class="text-[11px] text-slate-500">Обязательные: {{ radar.mandatory_14d|round(0)|int }} ₽</div>
+        </div>
+
+        <!-- 3. 30d limit -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+            <span class="text-xs text-slate-400 font-medium">Доступно через 30 дней</span>
+            <div class="text-2xl font-bold text-indigo-300">
+                {{ radar.available_limit_30d|round(0)|int }} ₽
+            </div>
+            <div class="text-[11px] text-slate-500">Траты за месяц: {{ radar.mandatory_30d|round(0)|int }} ₽</div>
+        </div>
+
+        <!-- 4. Income forecast -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+            <span class="text-xs text-slate-400 font-medium">Ожидаемые поступления</span>
+            <div class="text-2xl font-bold text-emerald-400">+{{ radar.income_30d|round(0)|int }} ₽</div>
+            <div class="text-[11px] text-slate-500">в течение 30 дней</div>
+        </div>
+    </div>
+
+    <!-- Wishlist & Gap Checker -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+                <h3 class="font-bold text-base text-white flex items-center gap-2"><span>🛍️</span> Список желаемых покупок (Wishlist)</h3>
+                <span class="text-xs text-slate-400">Система автоматически проверяет, вызовет ли покупка кассовый разрыв</span>
+            </div>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">{{ wishlist|length }} желаний</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {% for w in wishlist %}
+            {% set will_cause_gap = w.amount > radar.available_limit_14d %}
+            <div class="p-4 rounded-xl border {% if will_cause_gap %}bg-rose-950/20 border-rose-900/40{% else %}bg-slate-800/60 border-slate-700/60{% endif %} space-y-3">
+                <div class="flex items-start justify-between gap-2">
+                    <div class="font-bold text-sm text-white">{{ w.title }}</div>
+                    <span class="text-sm font-bold text-slate-200 shrink-0">{{ w.amount|round(0)|int }} ₽</span>
+                </div>
+
+                <div class="text-xs">
+                    {% if will_cause_gap %}
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                        ⚠️ Вызовет дефицит бюджета!
+                    </span>
+                    {% else %}
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        ✅ Безопасно для покупки
+                    </span>
+                    {% endif %}
+                </div>
+
+                <form action="{{ prefix }}/actions/execute-finance/{{ w.id }}" method="POST">
+                    <button type="submit" class="w-full py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition">
+                        Куплено (списать баланс)
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <div class="col-span-3 text-center py-6 text-xs text-slate-500">Список покупок пуст.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Birthdays & Recurring Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+
+        <!-- Birthdays -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <h3 class="font-bold text-base text-white flex items-center gap-2"><span>🎉</span> Дни рождения и Подарки</h3>
+            <div class="space-y-2">
+                {% for b in birthdays %}
+                <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-between text-xs">
+                    <div>
+                        <div class="font-bold text-white">{{ b.title }}</div>
+                        <div class="text-slate-400 mt-0.5">Дата: {{ b.planned_date }}</div>
+                    </div>
+                    <span class="font-bold text-indigo-300">{{ b.amount|round(0)|int }} ₽</span>
+                </div>
+                {% else %}
+                <div class="text-center py-6 text-xs text-slate-500">Дни рождения не добавлены.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recurring payments -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <h3 class="font-bold text-base text-white flex items-center gap-2"><span>🔄</span> Регулярные обязательные платежи</h3>
+            <div class="space-y-2">
+                {% for r in recurring %}
+                <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-between text-xs">
+                    <div>
+                        <div class="font-bold text-white">{{ r.title }}</div>
+                        <div class="text-slate-400 mt-0.5">Периодичность: {{ r.is_annual_or_monthly.value }}</div>
+                    </div>
+                    <span class="font-bold text-rose-400">{{ r.amount|round(0)|int }} ₽</span>
+                </div>
+                {% else %}
+                <div class="text-center py-6 text-xs text-slate-500">Регулярные платежи не настроены.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Modal Update Wallet -->
+<div id="modal-update-wallet" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm p-6 shadow-2xl relative">
+        <button onclick="document.getElementById('modal-update-wallet').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><span>💰</span> Настройки кошелька</h3>
+        <form action="{{ prefix }}/actions/update-wallet" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Фактический остаток средств (₽) *</label>
+                <input type="number" name="current_balance" value="{{ radar.current_balance|round(0)|int }}" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Неснижаемый порог безопасности (₽)</label>
+                <input type="number" name="safety_threshold" value="{{ radar.safety_threshold|round(0)|int }}" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="document.getElementById('modal-update-wallet').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Add Finance Record -->
+<div id="modal-add-finance" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+        <button onclick="document.getElementById('modal-add-finance').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><span>💳</span> Запланировать трату / доход</h3>
+        <form action="{{ prefix }}/actions/add-finance" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Название / Описание *</label>
+                <input type="text" name="title" required placeholder="Например: Подарок брату, Оплата сервера, Покупка SSD" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Сумма (₽) *</label>
+                    <input type="number" name="amount" required step="100" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Дата события *</label>
+                    <input type="date" name="planned_date" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Тип записи</label>
+                    <select name="record_type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <option value="EXPENSE_MANDATORY">Обязательный расход</option>
+                        <option value="EXPENSE_BIRTHDAY">День рождения / Подарок</option>
+                        <option value="EXPENSE_WISHLIST">Хотелка / Покупка (Wishlist)</option>
+                        <option value="INCOME_EXPECTED">Ожидаемый доход</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Периодичность</label>
+                    <select name="is_annual_or_monthly" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <option value="NONE" selected>Разово</option>
+                        <option value="MONTHLY">Ежемесячно</option>
+                        <option value="YEARLY">Ежегодно (ДР)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="document.getElementById('modal-add-finance').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition">Запланировать</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
