@@ -11,7 +11,7 @@ from app.core.models import (
 )
 from app.core.commands import (
     AddSupplyItemCmd, UpdateSupplyStatusCmd,
-    CreateTaskCmd, UpdateTaskStatusCmd, DeleteTaskCmd,
+    CreateTaskCmd, UpdateTaskCmd, UpdateTaskStatusCmd, DeleteTaskCmd,
     CreateProjectCmd, UpdateProjectCmd, DeleteProjectCmd,
     AddFinanceRecordCmd, ExecuteFinanceRecordCmd, DeleteFinanceRecordCmd,
     UpdateWalletCmd, UpdateCarMileageCmd, PayLoanInstallmentCmd,
@@ -33,6 +33,8 @@ class CommandExecutor:
             return cls._handle_update_supply_status(cmd, db)
         elif isinstance(cmd, CreateTaskCmd):
             return cls._handle_create_task(cmd, db)
+        elif isinstance(cmd, UpdateTaskCmd):
+            return cls._handle_update_task(cmd, db)
         elif isinstance(cmd, UpdateTaskStatusCmd):
             return cls._handle_update_task_status(cmd, db)
         elif isinstance(cmd, DeleteTaskCmd):
@@ -251,6 +253,7 @@ class CommandExecutor:
             scheduled_start=cmd.scheduled_start,
             scheduled_end=scheduled_end,
             is_auto_placed=False,
+            is_urgent=bool(getattr(cmd, "is_urgent", False)),
             depends_on_supply_id=cmd.depends_on_supply_id,
             depends_on_task_id=cmd.depends_on_task_id,
             notes=cmd.notes or ""
@@ -259,6 +262,27 @@ class CommandExecutor:
         db.commit()
         db.refresh(task)
         return {"success": True, "task_id": task.id, "status": task.status.value}
+
+    @classmethod
+    def _handle_update_task(cls, cmd: UpdateTaskCmd, db: Session) -> Dict[str, Any]:
+        task = db.query(Task).filter(Task.id == cmd.task_id).first()
+        if not task:
+            raise ValueError(f"Задача ID={cmd.task_id} не найдена")
+        if cmd.title is not None:
+            task.title = cmd.title
+        if cmd.duration_minutes is not None:
+            task.duration_minutes = cmd.duration_minutes
+        if hasattr(cmd, "hard_due_date"):
+            task.hard_due_date = cmd.hard_due_date
+        if cmd.priority is not None:
+            task.priority = cmd.priority
+        if cmd.is_urgent is not None:
+            task.is_urgent = cmd.is_urgent
+        if cmd.notes is not None:
+            task.notes = cmd.notes
+        db.commit()
+        db.refresh(task)
+        return {"success": True, "task_id": task.id, "project_id": task.project_id}
 
     @classmethod
     def _handle_update_task_status(cls, cmd: UpdateTaskStatusCmd, db: Session) -> Dict[str, Any]:

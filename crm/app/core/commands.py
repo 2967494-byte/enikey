@@ -40,7 +40,18 @@ class CreateTaskCmd(BaseModel):
     depends_on_supply_id: Optional[int] = Field(None, description="ID детали/шкафа, которую нужно дождаться")
     depends_on_task_id: Optional[int] = Field(None, description="ID родительской задачи, после которой можно выполнять")
     scheduled_start: Optional[datetime] = Field(None, description="Точное время начала в календаре")
+    is_urgent: bool = Field(False, description="Отметка Срочная (выделяется красным)")
     notes: Optional[str] = Field(None, description="Дополнительные заметки к задаче")
+
+class UpdateTaskCmd(BaseModel):
+    """Команда обновления полей задачи"""
+    task_id: int = Field(..., description="ID задачи")
+    title: Optional[str] = Field(None, description="Название задачи")
+    duration_minutes: Optional[int] = Field(None, description="Длительность в минутах")
+    hard_due_date: Optional[date] = Field(None, description="Жесткая дата")
+    priority: Optional[int] = Field(None, description="Приоритет")
+    is_urgent: Optional[bool] = Field(None, description="Отметка Срочная")
+    notes: Optional[str] = Field(None, description="Заметки")
 
 class UpdateTaskStatusCmd(BaseModel):
     """Команда смены статуса задачи (TODO / DONE / BLOCKED / SCHEDULED)"""

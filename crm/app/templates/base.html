@@ -233,6 +233,17 @@
                         </select>
                     </div>
                 </div>
+                <!-- Urgent Checkbox -->
+                <div class="p-2.5 rounded-xl bg-rose-950/20 border border-rose-500/30 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-rose-300">Отметка «Срочная»</div>
+                        <div class="text-[10px] text-slate-400">Выделит задачу красным цветом</div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_urgent" value="true" class="sr-only peer">
+                        <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-600"></div>
+                    </label>
+                </div>
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" onclick="document.getElementById('modal-quick-task').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
                     <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition">Создать</button>

@@ -20,7 +20,7 @@ from app.core.executor import CommandExecutor
 from app.core.budget_guard import BudgetGuard
 from app.core.commands import (
     AddSupplyItemCmd, UpdateSupplyStatusCmd,
-    CreateTaskCmd, UpdateTaskStatusCmd, DeleteTaskCmd,
+    CreateTaskCmd, UpdateTaskCmd, UpdateTaskStatusCmd, DeleteTaskCmd,
     CreateProjectCmd, UpdateProjectCmd, DeleteProjectCmd,
     AddFinanceRecordCmd, ExecuteFinanceRecordCmd, DeleteFinanceRecordCmd,
     UpdateWalletCmd, UpdateCarMileageCmd, PayLoanInstallmentCmd,
@@ -70,7 +70,8 @@ def get_categories_catalog(db: Optional[Session]) -> list:
         {"slug": "it_system", "title": "IT и Цифровые Системы", "icon": "server", "projects": [], "items": []},
         {"slug": "new_idea", "title": "Новые Идеи и Стартапы", "icon": "lightbulb", "projects": [], "items": []},
         {"slug": "diy_build", "title": "Сборка и Оборудование (DIY)", "icon": "wrench", "projects": [], "items": []},
-        {"slug": "auto_loan", "title": "Автомобиль и Кредиты", "icon": "credit-card", "projects": [], "items": []},
+        {"slug": "auto", "title": "Автомобили и Мотоциклы", "icon": "car", "projects": [], "items": []},
+        {"slug": "loan", "title": "Кредиты и Обязательства", "icon": "credit-card", "projects": [], "items": []},
         {"slug": "household", "title": "Быт, Офисы и Поручения", "icon": "home", "projects": [], "items": []},
     ]
     if not db:
@@ -132,20 +133,28 @@ def get_categories_catalog(db: Optional[Session]) -> list:
         target_entry = None
         if c_slug and c_slug in cat_map:
             target_entry = cat_map[c_slug]
+        elif c_slug == "auto_loan":
+            if p.project_type == ProjectType.LOAN:
+                target_entry = cat_map.get("loan")
+            else:
+                target_entry = cat_map.get("auto")
         else:
             if p.project_type == ProjectType.IT_SYSTEM:
-                target_entry = cat_map["it_system"]
+                target_entry = cat_map.get("it_system")
             elif p.project_type == ProjectType.NEW_IDEA:
-                target_entry = cat_map["new_idea"]
+                target_entry = cat_map.get("new_idea")
             elif p.project_type == ProjectType.DIY_BUILD:
-                target_entry = cat_map["diy_build"]
-            elif p.project_type in [ProjectType.AUTO, ProjectType.LOAN]:
-                target_entry = cat_map["auto_loan"]
+                target_entry = cat_map.get("diy_build")
+            elif p.project_type == ProjectType.AUTO:
+                target_entry = cat_map.get("auto")
+            elif p.project_type == ProjectType.LOAN:
+                target_entry = cat_map.get("loan")
             else:
-                target_entry = cat_map["household"]
+                target_entry = cat_map.get("household")
 
-        target_entry["projects"].append(p)
-        target_entry["items"].append(p)
+        if target_entry:
+            target_entry["projects"].append(p)
+            target_entry["items"].append(p)
 
     for c in defaults:
         c["count"] = len(c["projects"])
@@ -422,6 +431,7 @@ def action_quick_task(
     hard_due_date: Optional[str] = Form(None),
     duration_minutes: int = Form(60),
     priority: int = Form(3),
+    is_urgent: bool = Form(False),
     redirect_to: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
@@ -438,7 +448,8 @@ def action_quick_task(
         location_name=location_name,
         hard_due_date=due,
         duration_minutes=duration_minutes,
-        priority=priority
+        priority=priority,
+        is_urgent=is_urgent
     )
     CommandExecutor.execute(cmd, db)
     return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/", status_code=303)
@@ -665,6 +676,7 @@ def action_add_project_task(
     hard_due_date: Optional[str] = Form(None),
     duration_minutes: int = Form(60),
     priority: int = Form(3),
+    is_urgent: bool = Form(False),
     depends_on_task_id: Optional[int] = Form(None),
     depends_on_supply_id: Optional[int] = Form(None),
     notes: Optional[str] = Form(""),
@@ -685,12 +697,49 @@ def action_add_project_task(
         hard_due_date=due,
         duration_minutes=duration_minutes,
         priority=priority,
+        is_urgent=is_urgent,
         depends_on_task_id=depends_on_task_id,
         depends_on_supply_id=depends_on_supply_id,
         notes=notes
     )
     CommandExecutor.execute(cmd, db)
     return RedirectResponse(f"{settings.APP_PREFIX}/projects/{project_id}", status_code=303)
+
+@router.post("/actions/edit-task/{task_id}")
+def action_edit_task(
+    task_id: int,
+    title: str = Form(...),
+    duration_minutes: int = Form(60),
+    hard_due_date: Optional[str] = Form(None),
+    priority: int = Form(3),
+    is_urgent: bool = Form(False),
+    notes: Optional[str] = Form(""),
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    due = None
+    if hard_due_date and hard_due_date.strip():
+        try:
+            due = datetime.strptime(hard_due_date.strip(), "%Y-%m-%d").date()
+        except Exception:
+            pass
+
+    cmd = UpdateTaskCmd(
+        task_id=task_id,
+        title=title,
+        duration_minutes=duration_minutes,
+        hard_due_date=due,
+        priority=priority,
+        is_urgent=is_urgent,
+        notes=notes or ""
+    )
+    res = CommandExecutor.execute(cmd, db)
+    proj_id = res.get("project_id")
+    if redirect_to:
+        return RedirectResponse(redirect_to, status_code=303)
+    if proj_id:
+        return RedirectResponse(f"{settings.APP_PREFIX}/projects/{proj_id}", status_code=303)
+    return RedirectResponse(f"{settings.APP_PREFIX}/", status_code=303)
 
 @router.post("/actions/delete-task/{task_id}")
 def action_delete_task(task_id: int, redirect_to: Optional[str] = Form(None), db: Session = Depends(get_db)):

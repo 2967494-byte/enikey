@@ -147,15 +147,20 @@
                 {% endif %}
 
                 {% for t in today_tasks %}
-                <div class="p-3 rounded-xl border {% if t.status.value == 'DONE' %}bg-slate-900/50 border-slate-800/50 opacity-60{% elif t.status.value == 'BLOCKED' %}bg-rose-950/20 border-rose-900/40{% else %}bg-slate-800/60 border-slate-700/60 hover:border-slate-600{% endif %} transition flex items-start gap-3">
+                <div class="p-3 rounded-xl border {% if t.is_urgent and t.status.value != 'DONE' %}bg-rose-950/30 border-rose-500/70 text-rose-100 shadow-sm shadow-rose-950/30 hover:border-rose-400{% elif t.status.value == 'DONE' %}bg-slate-900/50 border-slate-800/50 opacity-60{% elif t.status.value == 'BLOCKED' %}bg-rose-950/20 border-rose-900/40{% else %}bg-slate-800/60 border-slate-700/60 hover:border-slate-600{% endif %} transition flex items-start gap-3">
                     <form action="{{ prefix }}/actions/toggle-task/{{ t.id }}" method="POST" hx-post="{{ prefix }}/actions/toggle-task/{{ t.id }}" hx-swap="none" class="mt-0.5">
-                        <button type="submit" class="w-5 h-5 rounded border {% if t.status.value == 'DONE' %}bg-indigo-600 border-indigo-500 text-white{% else %}border-slate-600 hover:border-indigo-400{% endif %} flex items-center justify-center transition">
+                        <button type="submit" class="w-5 h-5 rounded border {% if t.status.value == 'DONE' %}bg-indigo-600 border-indigo-500 text-white{% elif t.is_urgent %}border-rose-500 bg-rose-950/40{% else %}border-slate-600 hover:border-indigo-400{% endif %} flex items-center justify-center transition">
                             {% if t.status.value == 'DONE' %}✓{% endif %}
                         </button>
                     </form>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2">
-                            <span class="text-sm font-semibold text-white {% if t.status.value == 'DONE' %}line-through text-slate-400{% endif %} truncate">
+                            {% if t.is_urgent %}
+                            <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-rose-600 text-white shrink-0 tracking-wide uppercase">
+                                Срочно
+                            </span>
+                            {% endif %}
+                            <span class="text-sm font-semibold text-white {% if t.status.value == 'DONE' %}line-through text-slate-400{% elif t.is_urgent %}text-rose-100 font-bold{% endif %} truncate">
                                 {{ t.title }}
                             </span>
                         </div>

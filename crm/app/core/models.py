@@ -131,6 +131,7 @@ class Task(Base):
     scheduled_start = Column(DateTime, nullable=True)
     scheduled_end = Column(DateTime, nullable=True)
     is_auto_placed = Column(Boolean, default=False)
+    is_urgent = Column(Boolean, default=False)
     depends_on_supply_id = Column(Integer, ForeignKey("supply_items.id", ondelete="SET NULL"), nullable=True)
     depends_on_task_id = Column(Integer, ForeignKey("tasks.id", ondelete="SET NULL"), nullable=True)
     notes = Column(Text, default="")

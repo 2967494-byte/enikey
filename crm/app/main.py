@@ -21,6 +21,17 @@ async def lifespan(app: FastAPI):
             conn.commit()
         except Exception:
             pass
+        try:
+            conn.execute(text("ALTER TABLE tasks ADD COLUMN is_urgent BOOLEAN DEFAULT 0"))
+            conn.commit()
+        except Exception:
+            pass
+        try:
+            conn.execute(text("UPDATE projects SET category_slug = 'auto' WHERE category_slug = 'auto_loan' AND project_type = 'AUTO'"))
+            conn.execute(text("UPDATE projects SET category_slug = 'loan' WHERE category_slug = 'auto_loan' AND project_type = 'LOAN'"))
+            conn.commit()
+        except Exception:
+            pass
     db = SessionLocal()
     try:
         seed_initial_data(db)
