@@ -1341,12 +1341,17 @@
                         <span>{{ g.description or 'Без описания' }}</span>
                     </div>
                 </div>
-                <form action="{{ prefix }}/actions/delete-ip-ground/{{ g.id }}" method="POST" onsubmit="return confirm('Удалить это основание из справочника?');">
-                    <input type="hidden" name="redirect_to" value="{{ prefix }}/finance?tab=ip_incomes">
-                    <button type="submit" class="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-700 transition" title="Удалить">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                <div class="flex items-center gap-1">
+                    <button type="button" onclick="openEditGroundModal('{{ g.id }}', '{{ g.name|e }}', '{{ g.counterparty_id or '' }}', '{{ (g.default_account or '')|e }}', '{{ (g.description or '' )|e }}')" class="p-1.5 text-slate-400 hover:text-indigo-400 rounded-lg hover:bg-slate-700 transition" title="Редактировать">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     </button>
-                </form>
+                    <form action="{{ prefix }}/actions/delete-ip-ground/{{ g.id }}" method="POST" onsubmit="return confirm('Удалить это основание из справочника?');">
+                        <input type="hidden" name="redirect_to" value="{{ prefix }}/finance?tab=ip_incomes">
+                        <button type="submit" class="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-700 transition" title="Удалить">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </form>
+                </div>
             </div>
             {% else %}
             <div class="text-center py-6 text-slate-500 text-xs">В справочнике пока нет оснований. Добавьте ниже.</div>
@@ -1390,6 +1395,54 @@
                 </div>
             </form>
         </div>
+    </div>
+</div>
+
+
+<!-- ============================================================= -->
+<!-- MODAL: EDIT GROUND -->
+<!-- ============================================================= -->
+<div id="modal-edit-ground" class="hidden fixed inset-0 z-[60] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+        <button type="button" onclick="document.getElementById('modal-edit-ground').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <h3 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            <span>Редактировать основание</span>
+        </h3>
+        <p class="text-xs text-slate-400 mb-4">Изменение названия договора, привязки к контрагенту и счета.</p>
+
+        <form id="form-edit-ground" action="" method="POST" class="space-y-3">
+            <input type="hidden" name="redirect_to" value="{{ prefix }}/finance?tab=ip_incomes">
+            <div>
+                <label class="block text-[11px] text-slate-400 mb-0.5">Название договора / Основания *</label>
+                <input type="text" id="edit-ground-name" name="name" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+            </div>
+            <div>
+                <label class="block text-[11px] text-slate-400 mb-0.5">Привязать контрагента</label>
+                <select id="edit-ground-counterparty" name="counterparty_id" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <option value="">— Без привязки —</option>
+                    {% for cp in counterparties %}
+                    <option value="{{ cp.id }}">{{ cp.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-0.5">Счет по умолчанию</label>
+                    <input type="text" id="edit-ground-account" name="default_account" placeholder="Основной счет ИП" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-0.5">Краткое описание</label>
+                    <input type="text" id="edit-ground-desc" name="description" placeholder="Ежемесячная поддержка и разработка" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button type="button" onclick="document.getElementById('modal-edit-ground').classList.add('hidden')" class="px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
+                <button type="submit" class="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/20 transition">Сохранить</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -1783,6 +1836,15 @@
     }
 
     // Modal Edit Counterparty
+    function openEditGroundModal(id, name, cpId, account, desc) {
+        document.getElementById('form-edit-ground').action = '{{ prefix }}/actions/edit-ip-ground/' + id;
+        document.getElementById('edit-ground-name').value = name || '';
+        document.getElementById('edit-ground-counterparty').value = cpId || '';
+        document.getElementById('edit-ground-account').value = account || '';
+        document.getElementById('edit-ground-desc').value = desc || '';
+        document.getElementById('modal-edit-ground').classList.remove('hidden');
+    }
+
     function openEditCounterpartyModal(id, name, fullName, inn, kpp, ogrn, legalAddr, actualAddr, bank, bik, corrAcc, checkAcc, contactPerson, phone, email, notes) {
         document.getElementById('form-edit-counterparty').action = '{{ prefix }}/actions/edit-counterparty/' + id;
         document.getElementById('edit-cp-name').value = name;
