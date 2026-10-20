@@ -54,9 +54,13 @@ def calculate_ip_taxes(db: Session, target_year: Optional[int] = None) -> Dict[s
     today = date.today()
     year = target_year or today.year
 
+    start_of_year = date(year, 1, 1)
+    end_of_year = date(year, 12, 31)
+
     # 1. Поступления за выбранный год
     year_incomes = db.query(IpIncome).filter(
-        extract('year', IpIncome.payment_date) == year
+        IpIncome.payment_date >= start_of_year,
+        IpIncome.payment_date <= end_of_year
     ).order_by(IpIncome.payment_date.asc()).all()
 
     # Разделение по кварталам
@@ -249,8 +253,8 @@ def calculate_ip_taxes(db: Session, target_year: Optional[int] = None) -> Dict[s
     upcoming_payments.sort(key=lambda x: x["deadline"])
 
     # Года, в которых есть поступления (для селектора)
-    years_db = db.query(extract('year', IpIncome.payment_date).label('y')).distinct().all()
-    available_years = sorted(list(set([int(y[0]) for y in years_db if y[0]] + [today.year, today.year - 1])), reverse=True)
+    dates_db = db.query(IpIncome.payment_date).all()
+    available_years = sorted(list(set([d[0].year for d in dates_db if d[0]] + [today.year, today.year - 1])), reverse=True)
 
     # Сводные показатели за все время
     all_time_income = db.query(func.coalesce(func.sum(IpIncome.amount), 0)).scalar() or 0.0
