@@ -52,6 +52,45 @@
                         {{ p.description or "Без описания" }}
                     </p>
 
+                    <!-- Specialized Card Info (LOAN, AUTO, IT_SYSTEM) -->
+                    {% if p.project_type.value == 'LOAN' and p.template_payload %}
+                    {% set loan = p.template_payload %}
+                    <div class="mt-3 p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 space-y-1.5 text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-400">Остаток долга:</span>
+                            <span class="font-bold text-rose-400">
+                                {% if loan.remaining_balance %}{{ loan.remaining_balance|round(0)|int }} ₽{% else %}—{% endif %}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-400">Платеж в месяц:</span>
+                            <span class="font-bold text-emerald-400">
+                                {% if loan.monthly_payment %}{{ loan.monthly_payment|round(0)|int }} ₽/мес{% else %}—{% endif %}
+                            </span>
+                        </div>
+                        {% if loan.payment_day %}
+                        <div class="text-[11px] text-slate-400 flex items-center justify-between pt-1 border-t border-slate-700/50">
+                            <span>День списания:</span>
+                            <span class="text-slate-300 font-medium">{{ loan.payment_day }}-е число</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% elif p.project_type.value == 'AUTO' and p.template_payload %}
+                    {% set car = p.template_payload %}
+                    <div class="mt-3 p-2 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-between text-xs">
+                        <span class="text-slate-400">Пробег:</span>
+                        <span class="font-bold text-amber-400">{{ car.current_mileage or '—' }} км</span>
+                    </div>
+                    {% elif p.project_type.value == 'IT_SYSTEM' and p.template_payload %}
+                    {% set it = p.template_payload %}
+                    {% if it.servers %}
+                    <div class="mt-3 p-2 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-between text-xs">
+                        <span class="text-slate-400">Серверы:</span>
+                        <span class="font-bold text-indigo-300">{{ it.servers|length }} ноды</span>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+
                     <!-- Quota & Alerts Footer -->
                     <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
                         <div class="flex items-center gap-1.5 text-slate-400">

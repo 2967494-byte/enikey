@@ -41,7 +41,7 @@
             <div class="text-2xl font-bold {% if radar.available_limit_14d >= radar.safety_threshold %}text-emerald-400{% elif radar.available_limit_14d > 0 %}text-amber-400{% else %}text-rose-400{% endif %}">
                 {{ radar.available_limit_14d|round(0)|int }} ₽
             </div>
-            <div class="text-[11px] text-slate-500">Обязательные: {{ radar.mandatory_14d|round(0)|int }} ₽</div>
+            <div class="text-[11px] text-slate-500">Обязательные за 14 дн: {{ radar.mandatory_14d|round(0)|int }} ₽</div>
         </div>
 
         <!-- 3. 30d limit -->
@@ -50,7 +50,7 @@
             <div class="text-2xl font-bold text-indigo-300">
                 {{ radar.available_limit_30d|round(0)|int }} ₽
             </div>
-            <div class="text-[11px] text-slate-500">Траты за месяц: {{ radar.mandatory_30d|round(0)|int }} ₽</div>
+            <div class="text-[11px] text-rose-400 font-medium">Расходы в месяц: -{{ total_recurring_expenses|round(0)|int }} ₽</div>
         </div>
 
         <!-- 4. Income forecast -->
@@ -128,6 +128,9 @@
                                 <span>📥</span> Зачислить на баланс
                             </button>
                         </form>
+                        <button type="button" onclick="openEditIncomeModal({{ inc.id }}, '{{ inc.title|escape }}', {{ inc.amount }}, '{{ inc.planned_date }}', '{{ inc.is_annual_or_monthly.value }}', '{{ inc.project_id or '' }}')" class="p-1.5 rounded-lg bg-slate-700/40 hover:bg-indigo-900/50 text-slate-400 hover:text-indigo-300 transition" title="Редактировать">
+                            ✏️
+                        </button>
                         <form action="{{ prefix }}/actions/delete-finance/{{ inc.id }}" method="POST" onsubmit="return confirm('Удалить это запланированное поступление?');">
                             <button type="submit" class="p-1.5 rounded-lg bg-slate-700/40 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 transition" title="Удалить">
                                 ✕
@@ -178,6 +181,9 @@
                                 <span>📥</span> Зачислить (текущий период)
                             </button>
                         </form>
+                        <button type="button" onclick="openEditIncomeModal({{ inc.id }}, '{{ inc.title|escape }}', {{ inc.amount }}, '{{ inc.planned_date }}', '{{ inc.is_annual_or_monthly.value }}', '{{ inc.project_id or '' }}')" class="p-1.5 rounded-lg bg-slate-700/40 hover:bg-indigo-900/50 text-slate-400 hover:text-indigo-300 transition" title="Редактировать">
+                            ✏️
+                        </button>
                         <form action="{{ prefix }}/actions/delete-finance/{{ inc.id }}" method="POST" onsubmit="return confirm('Удалить эту периодическую запись поступления?');">
                             <button type="submit" class="p-1.5 rounded-lg bg-slate-700/40 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 transition" title="Удалить">
                                 ✕
@@ -216,8 +222,11 @@
                         </div>
                         <div class="text-[11px] text-slate-400">Дата зачисления: {{ inc.planned_date }}</div>
                     </div>
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2">
                         <span class="font-bold text-emerald-400 text-sm">+{{ inc.amount|round(0)|int }} ₽</span>
+                        <button type="button" onclick="openEditIncomeModal({{ inc.id }}, '{{ inc.title|escape }}', {{ inc.amount }}, '{{ inc.planned_date }}', '{{ inc.is_annual_or_monthly.value }}', '{{ inc.project_id or '' }}')" class="p-1 rounded bg-slate-700/30 hover:bg-indigo-900/40 text-slate-400 hover:text-indigo-300 text-xs transition" title="Редактировать">
+                            ✏️
+                        </button>
                         <form action="{{ prefix }}/actions/delete-finance/{{ inc.id }}" method="POST" onsubmit="return confirm('Удалить эту запись из истории?');">
                             <button type="submit" class="p-1 rounded bg-slate-700/30 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 text-xs transition" title="Удалить из истории">
                                 ✕
@@ -273,6 +282,9 @@
                             Куплено (списать баланс)
                         </button>
                     </form>
+                    <button type="button" onclick="openEditIncomeModal({{ w.id }}, '{{ w.title|escape }}', {{ w.amount }}, '{{ w.planned_date }}', '{{ w.is_annual_or_monthly.value }}', '{{ w.project_id or '' }}')" class="p-1.5 rounded-lg bg-slate-700/40 hover:bg-indigo-900/50 text-slate-400 hover:text-indigo-300 transition" title="Редактировать">
+                        ✏️
+                    </button>
                     <form action="{{ prefix }}/actions/delete-finance/{{ w.id }}" method="POST" onsubmit="return confirm('Удалить эту покупку из Wishlist?');">
                         <button type="submit" class="p-1.5 rounded-lg bg-slate-700/40 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 transition" title="Удалить">
                             ✕
@@ -301,8 +313,11 @@
                         <div class="font-bold text-white">{{ b.title }}</div>
                         <div class="text-slate-400 mt-0.5">Дата: {{ b.planned_date }}</div>
                     </div>
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2">
                         <span class="font-bold text-indigo-300">{{ b.amount|round(0)|int }} ₽</span>
+                        <button type="button" onclick="openEditIncomeModal({{ b.id }}, '{{ b.title|escape }}', {{ b.amount }}, '{{ b.planned_date }}', '{{ b.is_annual_or_monthly.value }}', '{{ b.project_id or '' }}')" class="p-1 rounded bg-slate-700/30 hover:bg-indigo-900/40 text-slate-400 hover:text-indigo-300 text-xs transition" title="Редактировать">
+                            ✏️
+                        </button>
                         <form action="{{ prefix }}/actions/delete-finance/{{ b.id }}" method="POST" onsubmit="return confirm('Удалить эту запись?');">
                             <button type="submit" class="p-1 rounded bg-slate-700/30 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 text-xs transition" title="Удалить">✕</button>
                         </form>
@@ -316,9 +331,19 @@
 
         <!-- Recurring mandatory expenses -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-            <h3 class="font-bold text-base text-white flex items-center gap-2">
-                <span>🔄</span> Регулярные обязательные расходы
-            </h3>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                <div>
+                    <h3 class="font-bold text-base text-white flex items-center gap-2">
+                        <span>🔄</span> Регулярные обязательные расходы
+                    </h3>
+                    <span class="text-xs text-slate-400">Платежи по кредитам, серверам и подпискам</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-slate-400 block sm:inline">Сумма расходов: </span>
+                    <span class="font-bold text-rose-400 text-sm">-{{ total_recurring_expenses|round(0)|int }} ₽/мес</span>
+                </div>
+            </div>
+
             <div class="space-y-2">
                 {% for r in recurring %}
                 <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-between text-xs">
@@ -326,8 +351,11 @@
                         <div class="font-bold text-white">{{ r.title }}</div>
                         <div class="text-slate-400 mt-0.5">Периодичность: {{ r.is_annual_or_monthly.value }} • {{ r.planned_date }}</div>
                     </div>
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2">
                         <span class="font-bold text-rose-400">-{{ r.amount|round(0)|int }} ₽</span>
+                        <button type="button" onclick="openEditIncomeModal({{ r.id }}, '{{ r.title|escape }}', {{ r.amount }}, '{{ r.planned_date }}', '{{ r.is_annual_or_monthly.value }}', '{{ r.project_id or '' }}')" class="p-1 rounded bg-slate-700/30 hover:bg-indigo-900/40 text-slate-400 hover:text-indigo-300 text-xs transition" title="Редактировать">
+                            ✏️
+                        </button>
                         <form action="{{ prefix }}/actions/delete-finance/{{ r.id }}" method="POST" onsubmit="return confirm('Удалить этот регулярный расход?');">
                             <button type="submit" class="p-1 rounded bg-slate-700/30 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 text-xs transition" title="Удалить">✕</button>
                         </form>
@@ -353,11 +381,11 @@
         <form action="{{ prefix }}/actions/update-wallet" method="POST" class="space-y-4">
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Фактический остаток средств (₽) *</label>
-                <input type="number" name="current_balance" value="{{ radar.current_balance|round(0)|int }}" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <input type="number" name="current_balance" value="{{ radar.current_balance|round(0)|int }}" required step="any" min="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
             </div>
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Неснижаемый порог безопасности (₽)</label>
-                <input type="number" name="safety_threshold" value="{{ radar.safety_threshold|round(0)|int }}" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <input type="number" name="safety_threshold" value="{{ radar.safety_threshold|round(0)|int }}" required step="any" min="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
             </div>
             <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
                 <button type="button" onclick="document.getElementById('modal-update-wallet').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
@@ -388,7 +416,7 @@
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Сумма (₽) *</label>
-                    <input type="number" name="amount" required step="100" min="1" placeholder="50000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-emerald-400 font-bold focus:outline-none focus:border-emerald-500">
+                    <input type="number" name="amount" required step="any" min="0" placeholder="50000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-emerald-400 font-bold focus:outline-none focus:border-emerald-500">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Ожидаемая дата *</label>
@@ -442,7 +470,7 @@
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Сумма (₽) *</label>
-                    <input type="number" name="amount" required step="100" min="1" placeholder="5000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <input type="number" name="amount" required step="any" min="0" placeholder="5000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Дата события *</label>
@@ -483,6 +511,64 @@
         </form>
     </div>
 </div>
+
+<!-- Modal 4: Edit Finance Record / Income -->
+<div id="modal-edit-income" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+        <button type="button" onclick="document.getElementById('modal-edit-income').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+        <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
+            <span>✏️</span> Редактировать запись
+        </h3>
+        <p class="text-xs text-slate-400 mb-4">Изменение суммы, источника, даты или периодичности.</p>
+
+        <form id="form-edit-income" action="" method="POST" class="space-y-4">
+            <input type="hidden" name="redirect_to" value="{{ prefix }}/finance">
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Название / Источник *</label>
+                <input type="text" id="edit-income-title" name="title" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Сумма (₽) *</label>
+                    <input type="number" id="edit-income-amount" name="amount" required step="any" min="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Дата события *</label>
+                    <input type="date" id="edit-income-date" name="planned_date" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Периодичность</label>
+                    <select id="edit-income-recurrence" name="is_annual_or_monthly" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <option value="NONE">Разово</option>
+                        <option value="MONTHLY">Ежемесячно</option>
+                        <option value="YEARLY">Ежегодно</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Проект</label>
+                    <select id="edit-income-project" name="project_id" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <option value="">Без проекта</option>
+                        {% for p in projects %}
+                        <option value="{{ p.id }}">{{ p.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button type="button" onclick="document.getElementById('modal-edit-income').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
+                <button type="submit" class="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition flex items-center gap-1.5">
+                    <span>💾</span> Сохранить изменения
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -501,6 +587,16 @@
             activeBtn.classList.add('bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/40');
             activeBtn.classList.remove('text-slate-400', 'border-transparent', 'hover:text-slate-200');
         }
+    }
+
+    function openEditIncomeModal(id, title, amount, dateStr, recurrence, projectId) {
+        document.getElementById('form-edit-income').action = '{{ prefix }}/actions/edit-finance/' + id;
+        document.getElementById('edit-income-title').value = title;
+        document.getElementById('edit-income-amount').value = amount;
+        document.getElementById('edit-income-date').value = dateStr;
+        document.getElementById('edit-income-recurrence').value = recurrence || 'NONE';
+        document.getElementById('edit-income-project').value = projectId || '';
+        document.getElementById('modal-edit-income').classList.remove('hidden');
     }
 </script>
 {% endblock %}

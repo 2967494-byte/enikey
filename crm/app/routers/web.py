@@ -308,6 +308,7 @@ def finance_page(request: Request, db: Session = Depends(get_db)):
     total_planned_incomes = sum(float(r.amount) for r in planned_incomes)
     total_recurring_incomes = sum(float(r.amount) for r in recurring_incomes)
     total_past_incomes = sum(float(r.amount) for r in executed_incomes)
+    total_recurring_expenses = sum(float(r.amount) for r in recurring_expenses if r.is_annual_or_monthly == RecurrenceType.MONTHLY)
 
     return templates.TemplateResponse(
         request=request,
@@ -321,6 +322,7 @@ def finance_page(request: Request, db: Session = Depends(get_db)):
             "total_planned_incomes": total_planned_incomes,
             "total_recurring_incomes": total_recurring_incomes,
             "total_past_incomes": total_past_incomes,
+            "total_recurring_expenses": total_recurring_expenses,
             "wishlist": wishlist,
             "birthdays": birthdays,
             "recurring": recurring_expenses,
@@ -515,6 +517,34 @@ def action_delete_finance(record_id: int, redirect_to: Optional[str] = Form(None
     cmd = DeleteFinanceRecordCmd(record_id=record_id)
     CommandExecutor.execute(cmd, db)
     return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance", status_code=303)
+
+@router.post("/actions/edit-finance/{record_id}")
+def action_edit_finance(
+    record_id: int,
+    title: str = Form(...),
+    amount: float = Form(...),
+    planned_date: str = Form(...),
+    is_annual_or_monthly: str = Form("NONE"),
+    project_id: Optional[int] = Form(None),
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    rec = db.query(FinanceRecord).filter(FinanceRecord.id == record_id).first()
+    if rec:
+        rec.title = title
+        rec.amount = amount
+        try:
+            rec.planned_date = datetime.strptime(planned_date, "%Y-%m-%d").date()
+        except Exception:
+            pass
+        try:
+            rec.is_annual_or_monthly = RecurrenceType(is_annual_or_monthly)
+        except Exception:
+            pass
+        rec.project_id = project_id if project_id else None
+        db.commit()
+    return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance", status_code=303)
+
 
 
 @router.post("/actions/update-wallet")
