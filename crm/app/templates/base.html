@@ -103,19 +103,50 @@
         <!-- Navigation Links -->
         <nav class="p-4 space-y-1.5 flex-1">
             <a href="{{ prefix }}/" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition {% if request.url.path == prefix or request.url.path == prefix + '/' %}bg-indigo-600/20 text-indigo-300 border border-indigo-500/30{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}">
-
+                <svg class="w-4.5 h-4.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25a2.25 2.25 0 01-2.25-2.25V6z"/></svg>
                 <span>Главный пульт</span>
             </a>
-            <a href="{{ prefix }}/projects" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition {% if prefix + '/projects' in request.url.path %}bg-indigo-600/20 text-indigo-300 border border-indigo-500/30{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}">
 
-                <span>Проекты и Квоты</span>
-            </a>
+            <!-- Accordion for Projects & Categories -->
+            <div class="space-y-1">
+                <div class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition cursor-pointer {% if prefix + '/projects' in request.url.path %}bg-indigo-600/20 text-indigo-300 border border-indigo-500/30{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}" onclick="toggleProjectsMenu()">
+                    <a href="{{ prefix }}/projects" class="flex items-center gap-3 flex-1 min-w-0" onclick="event.stopPropagation()">
+                        <svg class="w-4.5 h-4.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3"/></svg>
+                        <span class="truncate">Проекты и Квоты</span>
+                    </a>
+                    <button type="button" class="p-1 text-slate-400 hover:text-white transition" aria-label="Развернуть категории">
+                        <svg id="projects-menu-chevron" class="w-3.5 h-3.5 transform transition-transform duration-200 {% if prefix + '/projects' in request.url.path %}rotate-180{% endif %}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </button>
+                </div>
+
+                <!-- Collapsible Categories Sub-menu -->
+                <div id="sidebar-categories-submenu" class="pl-3 pr-1 space-y-0.5 {% if prefix + '/projects' not in request.url.path %}hidden{% endif %}">
+                    {% for cat in sidebar_categories %}
+                    <a href="{{ prefix }}/projects#cat-{{ cat.slug }}" class="flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition group">
+                        <span class="flex items-center gap-2 truncate">
+                            <span class="text-indigo-400 group-hover:text-indigo-300">{{ cat.icon | cat_icon | safe }}</span>
+                            <span class="truncate text-[12px]">{{ cat.title }}</span>
+                        </span>
+                        <span class="text-[10px] text-slate-500 group-hover:text-slate-300 font-semibold px-1.5 py-0.5 rounded bg-slate-800/80 shrink-0">
+                            {{ cat.count }}
+                        </span>
+                    </a>
+                    {% endfor %}
+
+                    <!-- "Новая категория" Button -->
+                    <button type="button" onclick="openNewCategoryModal()" class="w-full flex items-center gap-2 px-2.5 py-1.5 mt-1 rounded text-xs font-medium text-indigo-400 hover:text-indigo-300 hover:bg-indigo-600/10 transition">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                        <span>Новая категория</span>
+                    </button>
+                </div>
+            </div>
+
             <a href="{{ prefix }}/logistics" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition {% if prefix + '/logistics' in request.url.path %}bg-indigo-600/20 text-indigo-300 border border-indigo-500/30{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}">
-
+                <svg class="w-4.5 h-4.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>
                 <span>Логистика и Заказы</span>
             </a>
             <a href="{{ prefix }}/finance" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition {% if prefix + '/finance' in request.url.path %}bg-indigo-600/20 text-indigo-300 border border-indigo-500/30{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}">
-
+                <svg class="w-4.5 h-4.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
                 <span>Финансы и Радар</span>
             </a>
 
@@ -124,12 +155,18 @@
                     СЛУЖЕБНЫЕ РАЗДЕЛЫ
                 </div>
                 <a href="{{ prefix }}/docs" target="_blank" class="flex items-center justify-between px-3.5 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition">
-                    <span class="flex items-center gap-2"> Swagger API</span>
+                    <span class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>
+                        <span>Swagger API</span>
+                    </span>
                     <span class="text-[10px] text-slate-500">v1</span>
                 </a>
                 <a href="{{ prefix }}/api/v1/tools" target="_blank" class="flex items-center justify-between px-3.5 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition">
-                    <span class="flex items-center gap-2"> Инструменты API</span>
-                    <span class="text-[10px] text-indigo-400">JSON</span>
+                    <span class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z"/></svg>
+                        <span>Инструменты API</span>
+                    </span>
+                    <span class="text-[10px] text-indigo-400 font-semibold">JSON</span>
                 </a>
             </div>
         </nav>
@@ -137,7 +174,8 @@
         <!-- Quick Task Modal Button -->
         <div class="p-4 border-t border-slate-800">
             <button onclick="document.getElementById('modal-quick-task').classList.remove('hidden')" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 transition active:scale-98">
-                 Новая задача
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                <span>Новая задача</span>
             </button>
         </div>
     </aside>
@@ -150,8 +188,13 @@
     <!-- Quick Task Modal -->
     <div id="modal-quick-task" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
-            <button onclick="document.getElementById('modal-quick-task').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"></button>
-            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"> Быстрая задача</h3>
+            <button onclick="document.getElementById('modal-quick-task').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                <span>Быстрая задача</span>
+            </h3>
             <form action="{{ prefix }}/actions/quick-task" method="POST" class="space-y-4">
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Название задачи *</label>
@@ -189,6 +232,88 @@
             </form>
         </div>
     </div>
+
+    <!-- Create Category Modal -->
+    <div id="modal-create-category" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+            <button type="button" onclick="closeNewCategoryModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                <span>Новая категория проектов</span>
+            </h3>
+            <form action="{{ prefix }}/actions/create-category" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Название категории *</label>
+                    <input type="text" name="title" required placeholder="Например: Здоровье и Спорт или Инвестиции" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-2">Иконка категории</label>
+                    <div class="grid grid-cols-4 gap-2">
+                        <label class="flex items-center gap-1.5 p-2 rounded-lg bg-slate-800 border border-slate-700 hover:border-indigo-500 cursor-pointer text-xs text-slate-300">
+                            <input type="radio" name="icon" value="folder" checked class="text-indigo-600 focus:ring-0">
+                            <span>Папка</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 p-2 rounded-lg bg-slate-800 border border-slate-700 hover:border-indigo-500 cursor-pointer text-xs text-slate-300">
+                            <input type="radio" name="icon" value="server" class="text-indigo-600 focus:ring-0">
+                            <span>IT</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 p-2 rounded-lg bg-slate-800 border border-slate-700 hover:border-indigo-500 cursor-pointer text-xs text-slate-300">
+                            <input type="radio" name="icon" value="lightbulb" class="text-indigo-600 focus:ring-0">
+                            <span>Идея</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 p-2 rounded-lg bg-slate-800 border border-slate-700 hover:border-indigo-500 cursor-pointer text-xs text-slate-300">
+                            <input type="radio" name="icon" value="wrench" class="text-indigo-600 focus:ring-0">
+                            <span>Сборка</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 p-2 rounded-lg bg-slate-800 border border-slate-700 hover:border-indigo-500 cursor-pointer text-xs text-slate-300">
+                            <input type="radio" name="icon" value="credit-card" class="text-indigo-600 focus:ring-0">
+                            <span>Кредит</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 p-2 rounded-lg bg-slate-800 border border-slate-700 hover:border-indigo-500 cursor-pointer text-xs text-slate-300">
+                            <input type="radio" name="icon" value="car" class="text-indigo-600 focus:ring-0">
+                            <span>Авто</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 p-2 rounded-lg bg-slate-800 border border-slate-700 hover:border-indigo-500 cursor-pointer text-xs text-slate-300">
+                            <input type="radio" name="icon" value="heart" class="text-indigo-600 focus:ring-0">
+                            <span>Спорт</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 p-2 rounded-lg bg-slate-800 border border-slate-700 hover:border-indigo-500 cursor-pointer text-xs text-slate-300">
+                            <input type="radio" name="icon" value="briefcase" class="text-indigo-600 focus:ring-0">
+                            <span>Бизнес</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeNewCategoryModal()" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition">Создать категорию</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleProjectsMenu() {
+            const submenu = document.getElementById('sidebar-categories-submenu');
+            const chevron = document.getElementById('projects-menu-chevron');
+            if (!submenu) return;
+            submenu.classList.toggle('hidden');
+            if (chevron) {
+                chevron.classList.toggle('rotate-180');
+            }
+        }
+
+        function openNewCategoryModal() {
+            const m = document.getElementById('modal-create-category');
+            if (m) m.classList.remove('hidden');
+        }
+
+        function closeNewCategoryModal() {
+            const m = document.getElementById('modal-create-category');
+            if (m) m.classList.add('hidden');
+        }
+    </script>
 
     {% block scripts %}{% endblock %}
 </body>

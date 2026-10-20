@@ -16,11 +16,13 @@
         </div>
         <div class="flex items-center gap-2">
             <button onclick="document.getElementById('modal-edit-project').classList.remove('hidden')" class="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 font-medium text-xs transition flex items-center gap-1.5">
-                 Редактировать проект
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                <span>Редактировать проект</span>
             </button>
             <form action="{{ prefix }}/actions/delete-project/{{ project.id }}" method="POST" onsubmit="return confirm('Вы уверены, что хотите удалить проект «{{ project.title }}» со всеми связанными задачами?');">
-                <button type="submit" class="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-medium text-xs transition flex items-center gap-1">
-
+                <button type="submit" class="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-medium text-xs transition flex items-center gap-1" title="Удалить проект">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <span>Удалить</span>
                 </button>
             </form>
         </div>
@@ -105,8 +107,8 @@
                         <div class="text-[11px] text-slate-400">Оплата: {{ s.pay_day }}-е число</div>
                     </div>
                     <div class="text-right">
-                        <div class="font-bold text-emerald-400 text-sm">{{ s.monthly_cost }} ₽/мес</div>
-                        <div class="text-[10px] text-slate-500 group-hover:text-indigo-400 transition">изменить </div>
+                        <div class="font-bold text-emerald-400 text-sm">{{ s.monthly_cost|money }} ₽/мес</div>
+                        <div class="text-[10px] text-slate-500 group-hover:text-indigo-400 transition">изменить</div>
                     </div>
                 </div>
                 {% else %}
@@ -217,7 +219,10 @@
     {% elif p_type == 'LOAN' %}
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
         <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-            <h3 class="text-base font-bold text-white flex items-center gap-2"> Кредитные обязательства и График</h3>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                <span>Кредитные обязательства и График</span>
+            </h3>
             <button onclick="document.getElementById('modal-edit-project').classList.remove('hidden')" class="text-xs text-indigo-400 hover:underline">Изменить условия</button>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -228,8 +233,8 @@
             </div>
             <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
                 <div class="text-xs text-slate-400">Текущий остаток долга</div>
-                <div class="text-lg font-bold text-rose-400 mt-1">{{ payload.remaining_balance or 0 }} ₽</div>
-                <div class="text-xs text-slate-500 mt-1">Исходная сумма: {{ payload.total_loan_amount or 0 }} ₽</div>
+                <div class="text-lg font-bold text-rose-400 mt-1">{{ payload.remaining_balance|money }} ₽</div>
+                <div class="text-xs text-slate-500 mt-1">Исходная сумма: {{ payload.total_loan_amount|money }} ₽</div>
             </div>
             <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
                 <div class="text-xs text-slate-400">Осталось месяцев</div>
@@ -238,19 +243,19 @@
                 </div>
                 <div class="text-xs text-slate-400 mt-1">
                     {% set calc_sum = payload.calculated_remaining_sum or (payload.remaining_months * payload.monthly_payment if payload.remaining_months and payload.monthly_payment else None) %}
-                    Расчетная сумма: <span class="text-emerald-400 font-semibold">{% if calc_sum %}{{ calc_sum|round(0)|int }} ₽{% else %}—{% endif %}</span>
+                    Расчетная сумма: <span class="text-emerald-400 font-semibold">{% if calc_sum %}{{ calc_sum|money }} ₽{% else %}—{% endif %}</span>
                 </div>
             </div>
             <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
                 <div>
                     <div class="text-xs text-slate-400">Ежемесячный платеж</div>
-                    <div class="text-lg font-bold text-indigo-400 mt-1">{{ payload.monthly_payment or 0 }} ₽</div>
+                    <div class="text-lg font-bold text-indigo-400 mt-1">{{ payload.monthly_payment|money }} ₽</div>
                     <div class="text-xs text-slate-500">{{ payload.payment_day or 15 }}-го числа месяца</div>
                 </div>
                 <form action="{{ prefix }}/actions/pay-loan/{{ project.id }}" method="POST" class="mt-2">
                     <input type="hidden" name="amount_paid" value="{{ payload.monthly_payment or 0 }}">
                     <button type="submit" class="w-full py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition">
-                        Внести платеж (-{{ payload.monthly_payment or 0 }} ₽)
+                        Внести платеж (-{{ payload.monthly_payment|money }} ₽)
                     </button>
                 </form>
             </div>
@@ -419,7 +424,7 @@
                             <div class="font-bold text-white">{{ s.item_name }}</div>
                             <div class="text-[11px] text-slate-400">{{ s.vendor or 'ПВЗ' }} • {{ s.status.value }}</div>
                         </div>
-                        <span class="font-semibold text-slate-300">{{ s.cost|round(0)|int }} ₽</span>
+                        <span class="font-semibold text-slate-300">{{ s.cost|money }} ₽</span>
                     </div>
                     {% else %}
                     <div class="text-xs text-slate-500 py-3 text-center">Нет привязанных закупок.</div>
@@ -430,7 +435,10 @@
             <!-- Finances -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
                 <div class="flex items-center justify-between">
-                    <h3 class="font-bold text-sm text-white flex items-center gap-2"> Финансы проекта</h3>
+                    <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Финансы проекта</span>
+                    </h3>
                     <a href="{{ prefix }}/finance" class="text-xs text-indigo-400 hover:underline">Вся касса →</a>
                 </div>
                 <div class="space-y-2 max-h-52 overflow-y-auto custom-scrollbar">
@@ -441,7 +449,7 @@
                             <div class="text-[11px] text-slate-400">{{ f.planned_date }} • {{ f.status.value }}</div>
                         </div>
                         <span class="font-bold {% if f.record_type.value == 'INCOME_EXPECTED' %}text-emerald-400{% else %}text-rose-400{% endif %}">
-                            {{ f.amount|round(0)|int }} ₽
+                            {{ f.amount|money }} ₽
                         </span>
                     </div>
                     {% else %}
@@ -548,9 +556,12 @@
 <!-- MODAL: EDIT PROJECT AND ALL FIELDS -->
 <div id="modal-edit-project" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
-        <button onclick="document.getElementById('modal-edit-project').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"></button>
+        <button onclick="document.getElementById('modal-edit-project').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-             Редактирование проекта: {{ project.title }}
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            <span>Редактирование проекта: {{ project.title }}</span>
         </h3>
 
         <form action="{{ prefix }}/actions/edit-project/{{ project.id }}" method="POST" class="space-y-4">
@@ -558,6 +569,16 @@
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Название проекта *</label>
                 <input type="text" name="title" value="{{ project.title }}" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Категория проекта</label>
+                <select name="category_slug" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <option value="" {% if not project.category_slug %}selected{% endif %}>По умолчанию (по типу проекта)</option>
+                    {% for cat in sidebar_categories %}
+                    <option value="{{ cat.slug }}" {% if project.category_slug == cat.slug %}selected{% endif %}>{{ cat.title }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
             <div>

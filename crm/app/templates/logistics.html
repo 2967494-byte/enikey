@@ -8,11 +8,15 @@
     <!-- Header & Action -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
-            <h2 class="text-xl font-bold text-white flex items-center gap-2"> Логистика, Детали и Заказы</h2>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                <span>Логистика, Детали и Заказы</span>
+            </h2>
             <p class="text-xs text-slate-400 mt-1">Отслеживание деталей для 3D-принтера, покупок для дома и поручений для друзей.</p>
         </div>
         <button onclick="document.getElementById('modal-add-supply').classList.remove('hidden')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition flex items-center gap-2 shrink-0">
-             Добавить позицию
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>Добавить позицию</span>
         </button>
     </div>
 
@@ -34,9 +38,9 @@
                 <div class="flex items-start justify-between gap-2">
                     <div>
                         <div class="font-bold text-sm text-white">{{ fo.item_name }}</div>
-                        <div class="text-xs text-indigo-400 font-medium mt-0.5"> Для: {{ fo.target_person }}</div>
+                        <div class="text-xs text-indigo-400 font-medium mt-0.5">Для: {{ fo.target_person }}</div>
                     </div>
-                    <span class="text-xs font-bold text-slate-300">{{ fo.cost|round(0)|int }} ₽</span>
+                    <span class="text-xs font-bold text-slate-300">{{ fo.cost|money }} ₽</span>
                 </div>
 
                 <div class="flex items-center justify-between text-[11px] pt-2 border-t border-slate-800">
@@ -68,7 +72,7 @@
                     <div class="font-bold text-sm text-white">{{ item.item_name }}</div>
                     <div class="flex items-center justify-between text-xs text-slate-400">
                         <span>{{ item.vendor or "Магазин" }}</span>
-                        <span class="font-semibold text-white">{{ item.cost|round(0)|int }} ₽</span>
+                        <span class="font-semibold text-white">{{ item.cost|money }} ₽</span>
                     </div>
                     {% if item.project %}
                     <div class="text-[10px] text-slate-500"> {{ item.project.title }}</div>
@@ -157,7 +161,7 @@
                 <div class="p-3 rounded-xl bg-slate-800/40 border border-slate-800 space-y-1">
                     <div class="font-bold text-sm text-slate-200">{{ item.item_name }}</div>
                     <div class="text-xs text-slate-400 flex items-center justify-between">
-                        <span>{{ item.cost|round(0)|int }} ₽</span>
+                        <span>{{ item.cost|money }} ₽</span>
                         <span class="text-emerald-400 text-[10px]">В наличии</span>
                     </div>
                 </div>
@@ -174,8 +178,13 @@
 <!-- Modal Add Supply -->
 <div id="modal-add-supply" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
-        <button onclick="document.getElementById('modal-add-supply').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"></button>
-        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"> Добавить деталь / покупку</h3>
+        <button onclick="document.getElementById('modal-add-supply').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>Добавить деталь / покупку</span>
+        </h3>
         <form action="{{ prefix }}/actions/add-supply" method="POST" class="space-y-4">
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Название детали / товара *</label>

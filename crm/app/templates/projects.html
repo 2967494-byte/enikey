@@ -8,26 +8,33 @@
     <!-- Header & Action -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
-            <h2 class="text-xl font-bold text-white flex items-center gap-2"> Каталог проектов и Квоты</h2>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                <span>Каталог проектов и Квоты</span>
+            </h2>
             <p class="text-xs text-slate-400 mt-1">Каждый проект имеет свой уникальный URL, индивидуальный шаблон данных и цветовую метку в календаре.</p>
         </div>
         <button onclick="document.getElementById('modal-create-project').classList.remove('hidden')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition flex items-center gap-2 shrink-0">
-             Новый проект
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>Новый проект</span>
         </button>
     </div>
 
     <!-- Category Groups -->
     <div class="space-y-8">
-        {% for cat_key, cat in categories.items() %}
-        {% if cat['items']|length > 0 %}
-        <div class="space-y-3">
+        {% for cat in categories %}
+        {% if cat.items|length > 0 %}
+        <div id="cat-{{ cat.slug }}" class="space-y-3 scroll-mt-20">
             <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                {{ cat.title }}
-                <span class="text-xs font-normal text-slate-500">({{ cat['items']|length }})</span>
+                <span class="w-4 h-4 flex items-center justify-center text-indigo-400">
+                    {{ cat.icon | cat_icon | safe }}
+                </span>
+                <span>{{ cat.title }}</span>
+                <span class="text-xs font-normal text-slate-500">({{ cat.items|length }})</span>
             </h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {% for p in cat['items'] %}
+                {% for p in cat.items %}
                 <a href="{{ prefix }}/projects/{{ p.id }}" class="block group bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 transition shadow-sm hover:shadow-md relative overflow-hidden">
                     <!-- Project Color Top Strip -->
                     <div class="absolute top-0 left-0 right-0 h-1" style="background-color: {{ p.color_hex }}"></div>
@@ -59,13 +66,13 @@
                         <div class="flex items-center justify-between">
                             <span class="text-slate-400">Остаток долга:</span>
                             <span class="font-bold text-rose-400">
-                                {% if loan.remaining_balance %}{{ loan.remaining_balance|round(0)|int }} ₽{% else %}—{% endif %}
+                                {% if loan.remaining_balance %}{{ loan.remaining_balance|money }} ₽{% else %}—{% endif %}
                             </span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-slate-400">Платеж в месяц:</span>
                             <span class="font-bold text-emerald-400">
-                                {% if loan.monthly_payment %}{{ loan.monthly_payment|round(0)|int }} ₽/мес{% else %}—{% endif %}
+                                {% if loan.monthly_payment %}{{ loan.monthly_payment|money }} ₽/мес{% else %}—{% endif %}
                             </span>
                         </div>
                         {% if loan.remaining_months %}
@@ -75,7 +82,7 @@
                                 {{ loan.remaining_months }} мес.
                                 {% set calc_sum = loan.calculated_remaining_sum or (loan.remaining_months * loan.monthly_payment if loan.monthly_payment else None) %}
                                 {% if calc_sum %}
-                                <span class="text-slate-400 text-[11px] font-normal">({{ calc_sum|round(0)|int }} ₽)</span>
+                                <span class="text-slate-400 text-[11px] font-normal">({{ calc_sum|money }} ₽)</span>
                                 {% endif %}
                             </span>
                         </div>
@@ -106,7 +113,8 @@
                     <!-- Quota & Alerts Footer -->
                     <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
                         <div class="flex items-center gap-1.5 text-slate-400">
-                            <span> Квота:</span>
+                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>Квота:</span>
                             {% if p.weekly_quota_minutes > 0 %}
                             <span class="font-semibold text-indigo-400">{{ p.quota_done_hours }} / {{ p.quota_total_hours }} ч/нед</span>
                             {% else %}
@@ -133,8 +141,13 @@
 <!-- Create Project Modal -->
 <div id="modal-create-project" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
-        <button onclick="document.getElementById('modal-create-project').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"></button>
-        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"> Создать новый проект</h3>
+        <button onclick="document.getElementById('modal-create-project').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>Создать новый проект</span>
+        </h3>
         <form action="{{ prefix }}/actions/create-project" method="POST" class="space-y-4">
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Название проекта *</label>
@@ -146,6 +159,15 @@
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Категория</label>
+                    <select name="category_slug" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <option value="">По умолчанию (по типу)</option>
+                        {% for cat in sidebar_categories %}
+                        <option value="{{ cat.slug }}">{{ cat.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Тип проекта</label>
                     <select name="project_type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                         <option value="IT_SYSTEM">IT_SYSTEM (Сайт, серверы, SSL)</option>
@@ -156,6 +178,8 @@
                         <option value="HOUSEHOLD" selected>HOUSEHOLD (Бытовые и офисные дела)</option>
                     </select>
                 </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Стадия</label>
                     <select name="stage" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
@@ -166,8 +190,6 @@
                         <option value="COMPLETED">COMPLETED (Завершен)</option>
                     </select>
                 </div>
-            </div>
-            <div class="grid grid-cols-3 gap-3">
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Приоритет</label>
                     <select name="priority" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
@@ -177,6 +199,8 @@
                         <option value="4">4: Фоновый</option>
                     </select>
                 </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Квота (мин/нед)</label>
                     <input type="number" name="weekly_quota_minutes" value="120" step="30" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">

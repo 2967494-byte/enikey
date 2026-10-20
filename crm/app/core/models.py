@@ -67,6 +67,17 @@ class Location(Base):
 
     tasks = relationship("Task", back_populates="location")
 
+class ProjectCategory(Base):
+    __tablename__ = "project_categories"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String(50), unique=True, nullable=False, index=True)
+    title = Column(String(100), nullable=False)
+    icon = Column(String(50), default="folder")
+    color = Column(String(30), default="#6366f1")
+    sort_order = Column(Integer, default=100)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 class Project(Base):
     __tablename__ = "projects"
 
@@ -74,6 +85,7 @@ class Project(Base):
     title = Column(String(200), nullable=False)
     description = Column(Text, default="")
     project_type = Column(Enum(ProjectType), nullable=False, default=ProjectType.HOUSEHOLD)
+    category_slug = Column(String(50), nullable=True)
     stage = Column(Enum(ProjectStage), nullable=False, default=ProjectStage.ACTIVE)
     priority = Column(Integer, default=3)  # 1: Critical, 2: High, 3: Normal, 4: Low
     color_hex = Column(String(20), default="#3b82f6")

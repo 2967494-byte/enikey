@@ -14,6 +14,13 @@ from app.routers import web, api
 async def lifespan(app: FastAPI):
     # Startup: create tables and seed
     Base.metadata.create_all(bind=engine)
+    with engine.connect() as conn:
+        from sqlalchemy import text
+        try:
+            conn.execute(text("ALTER TABLE projects ADD COLUMN category_slug VARCHAR(50)"))
+            conn.commit()
+        except Exception:
+            pass
     db = SessionLocal()
     try:
         seed_initial_data(db)
