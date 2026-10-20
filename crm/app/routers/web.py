@@ -67,11 +67,11 @@ templates.env.filters["cat_icon"] = render_cat_icon
 
 def get_categories_catalog(db: Optional[Session]) -> list:
     defaults = [
-        {"slug": "it_system", "title": "IT и Цифровые Системы", "icon": "server", "items": []},
-        {"slug": "new_idea", "title": "Новые Идеи и Стартапы", "icon": "lightbulb", "items": []},
-        {"slug": "diy_build", "title": "Сборка и Оборудование (DIY)", "icon": "wrench", "items": []},
-        {"slug": "auto_loan", "title": "Автомобиль и Кредиты", "icon": "credit-card", "items": []},
-        {"slug": "household", "title": "Быт, Офисы и Поручения", "icon": "home", "items": []},
+        {"slug": "it_system", "title": "IT и Цифровые Системы", "icon": "server", "projects": [], "items": []},
+        {"slug": "new_idea", "title": "Новые Идеи и Стартапы", "icon": "lightbulb", "projects": [], "items": []},
+        {"slug": "diy_build", "title": "Сборка и Оборудование (DIY)", "icon": "wrench", "projects": [], "items": []},
+        {"slug": "auto_loan", "title": "Автомобиль и Кредиты", "icon": "credit-card", "projects": [], "items": []},
+        {"slug": "household", "title": "Быт, Офисы и Поручения", "icon": "home", "projects": [], "items": []},
     ]
     if not db:
         for c in defaults:
@@ -84,7 +84,7 @@ def get_categories_catalog(db: Optional[Session]) -> list:
         custom_cats = db.query(ProjectCategory).order_by(ProjectCategory.sort_order.asc(), ProjectCategory.id.asc()).all()
         for cc in custom_cats:
             if cc.slug not in cat_map:
-                entry = {"slug": cc.slug, "title": cc.title, "icon": cc.icon or "folder", "items": []}
+                entry = {"slug": cc.slug, "title": cc.title, "icon": cc.icon or "folder", "projects": [], "items": []}
                 cat_map[cc.slug] = entry
                 defaults.append(entry)
     except Exception:
@@ -129,22 +129,26 @@ def get_categories_catalog(db: Optional[Session]) -> list:
 
         # Assign to category
         c_slug = getattr(p, "category_slug", None)
+        target_entry = None
         if c_slug and c_slug in cat_map:
-            cat_map[c_slug]["items"].append(p)
+            target_entry = cat_map[c_slug]
         else:
             if p.project_type == ProjectType.IT_SYSTEM:
-                cat_map["it_system"]["items"].append(p)
+                target_entry = cat_map["it_system"]
             elif p.project_type == ProjectType.NEW_IDEA:
-                cat_map["new_idea"]["items"].append(p)
+                target_entry = cat_map["new_idea"]
             elif p.project_type == ProjectType.DIY_BUILD:
-                cat_map["diy_build"]["items"].append(p)
+                target_entry = cat_map["diy_build"]
             elif p.project_type in [ProjectType.AUTO, ProjectType.LOAN]:
-                cat_map["auto_loan"]["items"].append(p)
+                target_entry = cat_map["auto_loan"]
             else:
-                cat_map["household"]["items"].append(p)
+                target_entry = cat_map["household"]
+
+        target_entry["projects"].append(p)
+        target_entry["items"].append(p)
 
     for c in defaults:
-        c["count"] = len(c["items"])
+        c["count"] = len(c["projects"])
 
     return defaults
 
