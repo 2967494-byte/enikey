@@ -11,6 +11,8 @@ FIXED_RATES = {
     2026: 57390.0,
     2027: 61154.0,
 }
+FIXED_CONTRIBUTIONS = FIXED_RATES
+FIXED_CONTRIBUTIONS_BY_YEAR = FIXED_RATES
 
 RU_MONTHS = [
     "", "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",

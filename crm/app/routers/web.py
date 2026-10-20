@@ -17,7 +17,7 @@ from app.core.models import (
     WalletState, Location,
     IpPaymentGround, IpIncome, IpTaxPayment
 )
-from app.core.ip_accounting import calculate_ip_taxes, get_ip_incomes_grouped_by_month, FIXED_CONTRIBUTIONS
+from app.core.ip_accounting import calculate_ip_taxes, get_ip_incomes_grouped_by_month
 from app.core.executor import CommandExecutor
 from app.core.budget_guard import BudgetGuard
 from app.core.commands import (
