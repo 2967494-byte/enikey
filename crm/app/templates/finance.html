@@ -393,8 +393,8 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </span>
                         <div>
-                            <span class="text-sm font-bold text-white">{{ group.month_name }} {{ group.year }}</span>
-                            <span class="text-xs text-slate-400 ml-2">({{ group.items|length }} {{ 'платеж' if group.items|length == 1 else 'платежа' if group.items|length in [2,3,4] else 'платежей' }})</span>
+                            <span class="text-sm font-bold text-white">{{ group.month_name }}</span>
+                            <span class="text-xs text-slate-400 ml-2">({{ group.incomes|length }} {{ 'платеж' if group.incomes|length == 1 else 'платежа' if group.incomes|length in [2,3,4] else 'платежей' }})</span>
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
@@ -424,7 +424,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-800/50">
-                            {% for inc in group.items %}
+                            {% for inc in group.incomes %}
                             <tr class="hover:bg-slate-800/30 transition">
                                 <td class="p-2.5 text-slate-300 font-mono whitespace-nowrap">
                                     {{ inc.payment_date.strftime('%d.%m.%Y') }}

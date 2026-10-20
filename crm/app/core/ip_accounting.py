@@ -37,9 +37,11 @@ def get_ip_incomes_grouped_by_month(db: Session) -> List[Dict[str, Any]]:
                 "month_name": f"{RU_MONTHS[m]} {y}",
                 "is_current": (y == today.year and m == today.month),
                 "total_amount": 0.0,
+                "incomes": [],
                 "items": []
             }
         groups_dict[key]["total_amount"] += float(inc.amount)
+        groups_dict[key]["incomes"].append(inc)
         groups_dict[key]["items"].append(inc)
 
     return list(groups_dict.values())
