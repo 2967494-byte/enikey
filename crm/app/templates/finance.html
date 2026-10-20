@@ -121,25 +121,28 @@
 .finance-calendar-legend span { display:inline-flex; align-items:center; gap:7px; }
 .finance-calendar-dot { width:8px; height:8px; border-radius:50%; }
 .finance-calendar-dot.is-payment { background:#c64e45; }
-.finance-calendar-dot.is-income { background:#3d8b65; }
+.finance-calendar-dot.is-paid, .finance-calendar-dot.is-income { background:#3d8b65; }
 .finance-calendar-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); border-top:1px solid var(--finance-line); border-left:1px solid var(--finance-line); }
 .finance-calendar-weekday { padding:10px 12px; border-right:1px solid var(--finance-line); border-bottom:1px solid var(--finance-line); background:#f1f0eb; color:var(--finance-muted); font-size:.61rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
-.finance-calendar-day { min-width:0; min-height:116px; padding:9px; border-right:1px solid var(--finance-line); border-bottom:1px solid var(--finance-line); background:var(--finance-surface); }
+.finance-calendar-day { min-width:0; height:93px; min-height:0; overflow:hidden; padding:8px; border-right:1px solid var(--finance-line); border-bottom:1px solid var(--finance-line); background:var(--finance-surface); }
 .finance-calendar-day.is-outside { background:#f5f4f0; }
 .finance-calendar-day.is-outside .finance-calendar-date { color:#b7b6ae; }
 .finance-calendar-date { display:grid; width:25px; height:25px; place-items:center; margin-bottom:5px; color:var(--finance-ink); font-size:.72rem; }
 .finance-calendar-day.is-today .finance-calendar-date { border-radius:50%; background:var(--finance-ink); color:#fff; }
-.finance-calendar-events { display:grid; gap:4px; }
-.finance-calendar-event { min-width:0; padding:5px 6px; border-left:2px solid; font-size:.62rem; line-height:1.3; }
+.finance-calendar-events { display:grid; max-height:53px; gap:3px; overflow-y:auto; }
+.finance-calendar-event { display:block; width:100%; min-width:0; padding:4px 5px; border:0; border-left:2px solid; border-radius:0!important; color:var(--finance-ink); text-align:left; font:inherit; font-size:.6rem; line-height:1.25; cursor:pointer; }
 .finance-calendar-event > span { display:block; overflow:hidden; color:var(--finance-ink); font-weight:500; text-overflow:ellipsis; white-space:nowrap; }
-.finance-calendar-event > strong { display:block; margin-top:2px; font-size:.61rem; font-weight:600; }
+.finance-calendar-event > strong { display:block; margin-top:2px; font-size:.58rem; font-weight:600; }
+.finance-calendar-event-form { min-width:0; }
+.finance-calendar-event-form button:hover { filter:brightness(.96); }
 .finance-calendar-event.is-payment { border-color:#c64e45; background:#f8eeeb; }
 .finance-calendar-event.is-payment > strong { color:#a64038; }
 .finance-calendar-event.is-income { border-color:#3d8b65; background:#edf4ee; }
-.finance-calendar-event.is-income > strong { color:#337651; }
-.finance-calendar-event.is-executed { opacity:.65; }
-@media(max-width:760px) { .finance-calendar-header { align-items:flex-start; flex-direction:column; } .finance-calendar-controls { width:100%; justify-content:space-between; } .finance-calendar-controls strong { flex:1; } .finance-calendar-day { min-height:86px; padding:5px; } .finance-calendar-event { padding:4px; } .finance-calendar-event > span { white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; } }
-@media(max-width:480px) { .finance-calendar-day { min-height:66px; } .finance-calendar-event > span { display:none; } .finance-calendar-event > strong { margin:0; font-size:.55rem; } .finance-calendar-weekday { padding:8px 2px; text-align:center; font-size:.52rem; } .finance-calendar-legend { padding:10px 14px; } }
+.finance-calendar-event.is-income > strong, .finance-calendar-event.is-paid > strong { color:#337651; }
+.finance-calendar-event.is-paid { border-color:#337651; background:#dcebe0; cursor:default; }
+
+@media(max-width:760px) { .finance-calendar-header { align-items:flex-start; flex-direction:column; } .finance-calendar-controls { width:100%; justify-content:space-between; } .finance-calendar-controls strong { flex:1; } .finance-calendar-day { height:69px; min-height:0; padding:5px; } .finance-calendar-event { padding:4px; } .finance-calendar-event > span { white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; } }
+@media(max-width:480px) { .finance-calendar-day { height:53px; min-height:0; } .finance-calendar-event > span { display:none; } .finance-calendar-event > strong { margin:0; font-size:.55rem; } .finance-calendar-weekday { padding:8px 2px; text-align:center; font-size:.52rem; } .finance-calendar-legend { padding:10px 14px; } }
 </style>
 <div class="p-4 md:p-6 space-y-6 max-w-7xl mx-auto w-full finance-page finance-{{ active_tab }} {% if active_tab == 'ip_incomes' %}ip-income-page{% endif %}">
 
@@ -277,8 +280,8 @@
             </div>
         </header>
         <div class="finance-calendar-legend" aria-label="Обозначения календаря">
-            <span><i class="finance-calendar-dot is-payment"></i>Платежи</span>
-            <span><i class="finance-calendar-dot is-income"></i>Поступления</span>
+            <span><i class="finance-calendar-dot is-payment"></i>К оплате</span>
+            <span><i class="finance-calendar-dot is-paid"></i>Оплачено / поступило</span>
         </div>
         <div class="finance-calendar-grid" role="grid" aria-label="{{ calendar_month_label }}">
             {% for weekday in ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'] %}
@@ -290,10 +293,29 @@
                     <span class="finance-calendar-date">{{ day.date.day }}</span>
                     <div class="finance-calendar-events">
                         {% for event in day.events %}
-                        <div class="finance-calendar-event {% if event.type == 'income' %}is-income{% else %}is-payment{% endif %}{% if event.executed %} is-executed{% endif %}" title="{{ event.title }} — {{ event.amount|money }} ₽">
-                            <span>{{ event.title }}</span>
-                            <strong>{% if event.type == 'income' %}+{% else %}−{% endif %}{{ event.amount|money }} ₽</strong>
-                        </div>
+                            {% if event.paid %}
+                            <div class="finance-calendar-event is-paid" title="{{ event.title }} — {% if event.type == 'income' %}получено{% else %}оплачено{% endif %}: {{ event.amount|money }} ₽">
+                                <span>{{ event.title }}</span>
+                                <strong>{% if event.type == 'income' %}+{{ event.amount|money }} ₽ · Получено{% else %}−{{ event.amount|money }} ₽ · Оплачено{% endif %}</strong>
+                            </div>
+                            {% elif event.recurring %}
+                            <form method="POST" action="{{ prefix }}/actions/execute-finance-occurrence/{{ event.record_id }}" class="finance-calendar-event-form">
+                                <input type="hidden" name="occurrence_date" value="{{ event.date }}">
+                                <input type="hidden" name="redirect_to" value="{{ prefix }}/finance?tab=radar&amp;calendar_month={{ selected_calendar_month }}">
+                                <button type="submit" class="finance-calendar-event is-{{ event.type }}" title="{{ event.title }} — {{ event.amount|money }} ₽. Нажмите, чтобы отметить {% if event.type == 'income' %}полученным.{% else %}оплаченным.{% endif %}" aria-label="{% if event.type == 'income' %}Отметить поступление{% else %}Отметить платёж оплаченным{% endif %}: {{ event.title }}, {{ event.amount|money }} рублей">
+                                    <span>{{ event.title }}</span>
+                                    <strong>{% if event.type == 'income' %}+{% else %}−{% endif %}{{ event.amount|money }} ₽</strong>
+                                </button>
+                            </form>
+                            {% else %}
+                            <form method="POST" action="{{ prefix }}/actions/execute-finance/{{ event.record_id }}" class="finance-calendar-event-form">
+                                <input type="hidden" name="redirect_to" value="{{ prefix }}/finance?tab=radar&amp;calendar_month={{ selected_calendar_month }}">
+                                <button type="submit" class="finance-calendar-event is-{{ event.type }}" title="{{ event.title }} — {{ event.amount|money }} ₽. Нажмите, чтобы отметить {% if event.type == 'income' %}полученным.{% else %}оплаченным.{% endif %}" aria-label="{% if event.type == 'income' %}Отметить поступление{% else %}Отметить платёж оплаченным{% endif %}: {{ event.title }}, {{ event.amount|money }} рублей">
+                                    <span>{{ event.title }}</span>
+                                    <strong>{% if event.type == 'income' %}+{% else %}−{% endif %}{{ event.amount|money }} ₽</strong>
+                                </button>
+                            </form>
+                            {% endif %}
                         {% endfor %}
                     </div>
                 </div>

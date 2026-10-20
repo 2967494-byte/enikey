@@ -367,31 +367,70 @@ def finance_page(
     # All records
     records = db.query(FinanceRecord).order_by(FinanceRecord.planned_date.asc()).all()
 
-    # One-month personal finance calendar. Planned and completed transactions
-    # remain visible; wishlist items are goals, not scheduled cash movement.
+    # One-month calendar: show scheduled and completed transactions, plus
+    # projected occurrences for recurring records.
     today = date.today()
     try:
         selected_calendar_month = datetime.strptime(calendar_month or "", "%Y-%m").date().replace(day=1)
     except ValueError:
         selected_calendar_month = today.replace(day=1)
-    prev_month = (selected_calendar_month.replace(day=1) - timedelta(days=1)).replace(day=1)
+    prev_month = (selected_calendar_month - timedelta(days=1)).replace(day=1)
     next_month = (selected_calendar_month.replace(day=28) + timedelta(days=4)).replace(day=1)
     ru_months = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
+    paid_occurrences = {
+        (record.record_type, record.planned_date, record.title.strip().casefold(), round(float(record.amount), 2))
+        for record in records if record.status == FinanceStatus.EXECUTED
+    }
     calendar_events = {}
-    for record in records:
-        if record.status not in (FinanceStatus.PLANNED, FinanceStatus.EXECUTED):
-            continue
-        if record.record_type == FinanceRecordType.EXPENSE_WISHLIST:
-            continue
-        if record.planned_date.year != selected_calendar_month.year or record.planned_date.month != selected_calendar_month.month:
-            continue
+
+    def add_calendar_event(record, event_date, is_paid, is_recurring=False):
         event_type = "income" if record.record_type == FinanceRecordType.INCOME_EXPECTED else "payment"
-        calendar_events.setdefault(record.planned_date.day, []).append({
+        calendar_events.setdefault(event_date.day, []).append({
             "title": record.title,
             "amount": float(record.amount),
             "type": event_type,
-            "executed": record.status == FinanceStatus.EXECUTED,
+            "paid": is_paid,
+            "recurring": is_recurring,
+            "record_id": record.id,
+            "date": event_date.isoformat(),
         })
+
+    for record in records:
+        if record.record_type == FinanceRecordType.EXPENSE_WISHLIST:
+            continue
+        if record.status not in (FinanceStatus.PLANNED, FinanceStatus.EXECUTED):
+            continue
+
+        if record.status == FinanceStatus.PLANNED and record.is_annual_or_monthly != RecurrenceType.NONE:
+            first_month = (record.planned_date.year, record.planned_date.month)
+            shown_month = (selected_calendar_month.year, selected_calendar_month.month)
+            if shown_month < first_month:
+                continue
+            if record.is_annual_or_monthly == RecurrenceType.MONTHLY:
+                if shown_month == first_month:
+                    occurrence_date = record.planned_date
+                else:
+                    occurrence_day = min(28, record.planned_date.day)
+                    occurrence_date = selected_calendar_month.replace(day=occurrence_day)
+            elif record.is_annual_or_monthly == RecurrenceType.YEARLY:
+                if selected_calendar_month.month != record.planned_date.month:
+                    continue
+                try:
+                    occurrence_date = selected_calendar_month.replace(day=record.planned_date.day)
+                except ValueError:
+                    continue
+                if occurrence_date < record.planned_date:
+                    continue
+            else:
+                continue
+            occurrence_key = (record.record_type, occurrence_date, record.title.strip().casefold(), round(float(record.amount), 2))
+            if occurrence_key not in paid_occurrences:
+                add_calendar_event(record, occurrence_date, False, True)
+            continue
+
+        if record.planned_date.year == selected_calendar_month.year and record.planned_date.month == selected_calendar_month.month:
+            add_calendar_event(record, record.planned_date, record.status == FinanceStatus.EXECUTED)
+
     calendar_weeks = []
     for week in pycalendar.Calendar(firstweekday=0).monthdatescalendar(selected_calendar_month.year, selected_calendar_month.month):
         calendar_weeks.append([{
@@ -492,6 +531,7 @@ def finance_page(
             "calendar_month_label": calendar_month_label,
             "previous_calendar_month": prev_month.strftime("%Y-%m"),
             "next_calendar_month": next_month.strftime("%Y-%m"),
+            "selected_calendar_month": selected_calendar_month.strftime("%Y-%m"),
             "target_year": target_year,
             "available_years": available_years,
             "ip_monthly_groups": ip_monthly_groups,
@@ -729,12 +769,81 @@ def action_add_finance(
     return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance", status_code=303)
 
 @router.post("/actions/execute-finance/{record_id}")
-def action_execute_finance(record_id: int, request: Request, db: Session = Depends(get_db)):
-    cmd = ExecuteFinanceRecordCmd(record_id=record_id)
-    CommandExecutor.execute(cmd, db)
+def action_execute_finance(
+    record_id: int,
+    request: Request,
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    record = db.query(FinanceRecord).filter(FinanceRecord.id == record_id).first()
+    if record and record.status == FinanceStatus.PLANNED:
+        cmd = ExecuteFinanceRecordCmd(record_id=record_id)
+        CommandExecutor.execute(cmd, db)
     if request.headers.get("HX-Request"):
         return Response(headers={"HX-Refresh": "true"})
-    return RedirectResponse(f"{settings.APP_PREFIX}/finance", status_code=303)
+    safe_default = f"{settings.APP_PREFIX}/finance"
+    safe_redirect = redirect_to if redirect_to and redirect_to.startswith(f"{settings.APP_PREFIX}/finance?tab=radar") else safe_default
+    return RedirectResponse(safe_redirect, status_code=303)
+
+
+@router.post("/actions/execute-finance-occurrence/{record_id}")
+def action_execute_finance_occurrence(
+    record_id: int,
+    occurrence_date: date = Form(...),
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    record = db.query(FinanceRecord).filter(FinanceRecord.id == record_id).first()
+    safe_default = f"{settings.APP_PREFIX}/finance?tab=radar&calendar_month={occurrence_date.strftime('%Y-%m')}"
+    safe_redirect = redirect_to if redirect_to and redirect_to.startswith(f"{settings.APP_PREFIX}/finance?tab=radar") else safe_default
+    if (not record or record.status != FinanceStatus.PLANNED
+            or record.record_type == FinanceRecordType.EXPENSE_WISHLIST
+            or record.is_annual_or_monthly == RecurrenceType.NONE
+            or occurrence_date < record.planned_date):
+        return RedirectResponse(safe_redirect, status_code=303)
+
+    if record.is_annual_or_monthly == RecurrenceType.MONTHLY:
+        valid_occurrence = (occurrence_date == record.planned_date
+                            or occurrence_date.day == min(28, record.planned_date.day))
+    else:
+        valid_occurrence = (occurrence_date.month == record.planned_date.month
+                            and occurrence_date.day == record.planned_date.day)
+    if not valid_occurrence:
+        return RedirectResponse(safe_redirect, status_code=303)
+
+    if occurrence_date == record.planned_date:
+        CommandExecutor.execute(ExecuteFinanceRecordCmd(record_id=record.id), db)
+        return RedirectResponse(safe_redirect, status_code=303)
+
+    duplicate = db.query(FinanceRecord).filter(
+        FinanceRecord.record_type == record.record_type,
+        FinanceRecord.status == FinanceStatus.EXECUTED,
+        FinanceRecord.planned_date == occurrence_date,
+        FinanceRecord.title == record.title,
+        FinanceRecord.amount == record.amount,
+    ).first()
+    if not duplicate:
+        completed = FinanceRecord(
+            project_id=record.project_id,
+            title=record.title,
+            record_type=record.record_type,
+            amount=record.amount,
+            planned_date=occurrence_date,
+            is_annual_or_monthly=RecurrenceType.NONE,
+            status=FinanceStatus.EXECUTED,
+        )
+        wallet = db.query(WalletState).first()
+        if not wallet:
+            wallet = WalletState(current_balance=0.0, safety_threshold=50000.0)
+            db.add(wallet)
+        amount = float(record.amount)
+        if record.record_type == FinanceRecordType.INCOME_EXPECTED:
+            wallet.current_balance = float(wallet.current_balance or 0.0) + amount
+        else:
+            wallet.current_balance = float(wallet.current_balance or 0.0) - amount
+        db.add(completed)
+        db.commit()
+    return RedirectResponse(safe_redirect, status_code=303)
 
 @router.post("/actions/delete-finance/{record_id}")
 def action_delete_finance(record_id: int, redirect_to: Optional[str] = Form(None), db: Session = Depends(get_db)):
