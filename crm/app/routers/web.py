@@ -877,6 +877,33 @@ def action_add_ip_ground(
     db.commit()
     return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance?tab=ip_incomes", status_code=303)
 
+@router.post("/actions/edit-ip-ground/{ground_id}")
+def action_edit_ip_ground(
+    ground_id: int,
+    name: str = Form(...),
+    counterparty_id: Optional[int] = Form(None),
+    client_name: Optional[str] = Form(None),
+    default_account: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    ground = db.query(IpPaymentGround).filter(IpPaymentGround.id == ground_id).first()
+    if ground:
+        resolved_client = client_name.strip() if client_name else None
+        if counterparty_id and not resolved_client:
+            cp = db.query(Counterparty).filter(Counterparty.id == counterparty_id).first()
+            if cp:
+                resolved_client = cp.name
+
+        ground.name = name.strip()
+        ground.counterparty_id = counterparty_id if counterparty_id else None
+        ground.client_name = resolved_client
+        ground.default_account = default_account.strip() if default_account else None
+        ground.description = description.strip() if description else None
+        db.commit()
+    return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance?tab=ip_incomes", status_code=303)
+
 @router.post("/actions/delete-ip-ground/{ground_id}")
 def action_delete_ip_ground(
     ground_id: int,
