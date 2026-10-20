@@ -1,20 +1,37 @@
 {% extends "base.html" %}
 
-{% block title %}Финансы, Доходы и Радар — Enikey CRM{% endblock %}
+{% block title %}Финансы, ИП и Бухгалтерия — Enikey CRM{% endblock %}
 
 {% block content %}
 <div class="p-4 md:p-6 space-y-6 max-w-7xl mx-auto w-full">
 
-    <!-- Header & Action -->
+    <!-- Header & Action Controls -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
             <h2 class="text-xl font-bold text-white flex items-center gap-2">
                 <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                <span>Финансовый Радар, Доходы и Бюджет</span>
+                <span>Финансы, ИП и Бухгалтерия</span>
             </h2>
-            <p class="text-xs text-slate-400 mt-1">Управление поступлениями (будущие, периодические, прошлые) и защита от кассовых разрывов на 14 и 30 дней.</p>
+            <p class="text-xs text-slate-400 mt-1">Раздельный учет личных финансов, поступлений на ИП с детализацией по месяцам и расчет налогов УСН 6%.</p>
         </div>
+
+        <!-- Dynamic Action Buttons depending on Tab -->
         <div class="flex flex-wrap items-center gap-2">
+            {% if active_tab == 'ip_incomes' %}
+            <button onclick="document.getElementById('modal-manage-grounds').classList.remove('hidden')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                <span>Справочник оснований</span>
+            </button>
+            <button onclick="document.getElementById('modal-add-ip-income').classList.remove('hidden')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-600/20 transition flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span>Внести поступление на ИП</span>
+            </button>
+            {% elif active_tab == 'accounting' %}
+            <button onclick="document.getElementById('modal-record-tax-payment').classList.remove('hidden')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Отметить уплату налога</span>
+            </button>
+            {% else %}
             <button onclick="document.getElementById('modal-update-wallet').classList.remove('hidden')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5">
                 <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                 <span>Баланс кошелька</span>
@@ -27,9 +44,38 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 <span>Добавить поступление</span>
             </button>
+            {% endif %}
         </div>
     </div>
 
+    <!-- Main Navigation Tabs -->
+    <div class="flex items-center gap-2 border-b border-slate-800 pb-3 overflow-x-auto custom-scrollbar">
+        <a href="{{ prefix }}/finance?tab=radar" class="px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shrink-0 {% if active_tab == 'radar' %}bg-indigo-600 text-white shadow-md shadow-indigo-600/20{% else %}bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+            <span>Личные финансы и Радар</span>
+        </a>
+
+        <a href="{{ prefix }}/finance?tab=ip_incomes" class="px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shrink-0 {% if active_tab == 'ip_incomes' %}bg-emerald-600 text-white shadow-md shadow-emerald-600/20{% else %}bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Поступления на ИП</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] {% if active_tab == 'ip_incomes' %}bg-black/20 text-white{% else %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% endif %} font-mono">
+                {{ total_ip_revenue|money }} ₽
+            </span>
+        </a>
+
+        <a href="{{ prefix }}/finance?tab=accounting&year={{ target_year }}" class="px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shrink-0 {% if active_tab == 'accounting' %}bg-amber-600 text-white shadow-md shadow-amber-600/20{% else %}bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            <span>Бухгалтерия и Налоги (УСН 6%)</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] {% if active_tab == 'accounting' %}bg-black/20 text-white{% else %}bg-amber-500/10 text-amber-400 border border-amber-500/20{% endif %}">
+                {{ target_year }} год
+            </span>
+        </a>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- TAB 1: ЛИЧНЫЕ ФИНАНСЫ И РАДАР -->
+    <!-- ============================================================= -->
+    {% if active_tab == 'radar' %}
     <!-- Top Radar Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- 1. Actual balance -->
@@ -59,363 +105,942 @@
 
         <!-- 4. Income forecast -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
-            <span class="text-xs text-slate-400 font-medium">Ожидаемые поступления</span>
-            <div class="text-2xl font-bold text-emerald-400">+{{ radar.income_30d|money }} ₽</div>
-            <div class="text-[11px] text-slate-500">в течение 30 дней</div>
+            <span class="text-xs text-slate-400 font-medium">Ожидаемые доходы (14д)</span>
+            <div class="text-2xl font-bold text-emerald-400">+{{ radar.income_14d|money }} ₽</div>
+            <div class="text-[11px] text-slate-500">Запланировано всего: {{ total_planned_incomes|money }} ₽</div>
         </div>
     </div>
 
-    <!-- MAIN SECTION: ПОСТУПЛЕНИЯ И ДОХОДЫ -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+    <!-- Incomes Management Section -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+        <div class="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-800/20">
             <div>
-                <h3 class="font-bold text-base text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                    <span>Поступления и Доходы</span>
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <span>Личные поступления и доходы</span>
                 </h3>
-                <span class="text-xs text-slate-400">Учет будущих ожидаемых сумм, периодических регулярных выплат (ЗП, аренда, VPN) и истории зачислений</span>
+                <p class="text-xs text-slate-400 mt-0.5">Будущие запланированные поступления, периодические выплаты и архив полученных средств.</p>
             </div>
-            <button type="button" onclick="document.getElementById('modal-add-income').classList.remove('hidden')" class="px-3.5 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 hover:text-emerald-200 text-xs font-semibold border border-emerald-500/30 transition flex items-center gap-1.5 shrink-0">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <span>Новое поступление</span>
-            </button>
+            <div class="flex items-center gap-1.5 p-1 bg-slate-950/60 rounded-xl border border-slate-800">
+                <button onclick="switchIncomeTab('planned')" id="tab-btn-planned" class="income-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                    Будущие ({{ planned_incomes|length }})
+                </button>
+                <button onclick="switchIncomeTab('recurring')" id="tab-btn-recurring" class="income-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 border border-transparent hover:text-slate-200">
+                    Периодические ({{ recurring_incomes|length }})
+                </button>
+                <button onclick="switchIncomeTab('executed')" id="tab-btn-executed" class="income-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 border border-transparent hover:text-slate-200">
+                    Прошлые ({{ executed_incomes|length }})
+                </button>
+            </div>
         </div>
 
-        <!-- Income Tabs Navigation -->
-        <div class="flex flex-wrap items-center gap-2 border-b border-slate-800/80 pb-2">
-            <button id="tab-btn-future" onclick="switchIncomeTab('future')" class="income-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 transition flex items-center gap-2">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                <span>Будущие поступления</span>
-                <span class="px-1.5 py-0.2 rounded-full bg-emerald-950/60 text-[10px]">{{ planned_incomes|length }}</span>
-            </button>
-            <button id="tab-btn-recurring" onclick="switchIncomeTab('recurring')" class="income-tab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 border border-transparent hover:text-slate-200 transition flex items-center gap-2">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                <span>Периодические поступления</span>
-                <span class="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px]">{{ recurring_incomes|length }}</span>
-            </button>
-            <button id="tab-btn-history" onclick="switchIncomeTab('history')" class="income-tab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 border border-transparent hover:text-slate-200 transition flex items-center gap-2">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                <span>Прошлые поступления</span>
-                <span class="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px]">{{ executed_incomes|length }}</span>
-            </button>
-        </div>
-
-        <!-- Tab 1: Будущие разовые поступления -->
-        <div id="tab-content-future" class="income-tab-content space-y-3">
-            <div class="flex items-center justify-between text-xs text-slate-400 px-1">
-                <span>Ожидаемые разовые доходы (аванс, остаток по контракту, возврат долга):</span>
-                <span class="text-emerald-400 font-semibold">Итого ожидается: +{{ total_planned_incomes|money }} ₽</span>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {% for inc in planned_incomes %}
-                {% set days_left = (inc.planned_date - today).days %}
-                <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-emerald-500/40 space-y-3 transition flex flex-col justify-between">
-                    <div class="space-y-1.5">
+        <div class="p-4">
+            <!-- 1. PLANNED INCOMES -->
+            <div id="tab-content-planned" class="income-tab-content space-y-2">
+                {% if planned_incomes|length == 0 %}
+                <div class="text-center py-8 text-slate-500 text-xs">
+                    Нет запланированных разовых поступлений. Нажмите «Добавить поступление» выше.
+                </div>
+                {% else %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {% for inc in planned_incomes %}
+                    <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-3.5 space-y-2 hover:border-slate-600 transition">
                         <div class="flex items-start justify-between gap-2">
-                            <div class="font-bold text-sm text-white leading-snug">{{ inc.title }}</div>
-                            <span class="text-sm font-bold text-emerald-400 shrink-0">+{{ inc.amount|money }} ₽</span>
+                            <span class="text-sm font-bold text-white">{{ inc.title }}</span>
+                            <span class="text-sm font-bold text-emerald-400 whitespace-nowrap">+{{ inc.amount|money }} ₽</span>
                         </div>
-                        <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-                            <span class="flex items-center gap-1">
-                                <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                {{ inc.planned_date }}
-                            </span>
-                            {% if days_left > 0 %}
-                            <span class="px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300">через {{ days_left }} дн.</span>
-                            {% elif days_left == 0 %}
-                            <span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold">Сегодня!</span>
-                            {% else %}
-                            <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">Просрочено на {{ -days_left }} дн.</span>
-                            {% endif %}
-                            {% if inc.project %}
-                            <span class="px-1.5 py-0.5 rounded text-[10px] bg-indigo-500/20 text-indigo-300">{{ inc.project.title }}</span>
-                            {% endif %}
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span>Срок: {{ inc.planned_date.strftime('%d.%m.%Y') }}</span>
+                            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-medium">Разовое</span>
+                        </div>
+                        <div class="pt-2 border-t border-slate-700/50 flex items-center justify-end gap-1.5">
+                            <button onclick="openEditIncomeModal({{ inc.id }}, '{{ inc.title }}', {{ inc.amount }}, '{{ inc.planned_date.isoformat() }}', '{{ inc.is_annual_or_monthly.value }}', {{ inc.project_id or 'null' }})" class="px-2.5 py-1 rounded bg-slate-700/50 hover:bg-slate-700 text-slate-300 text-xs transition">
+                                Изменить
+                            </button>
+                            <form action="{{ prefix }}/actions/execute-finance/{{ inc.id }}" method="POST">
+                                <button type="submit" class="px-2.5 py-1 rounded bg-emerald-600/30 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs font-medium transition">
+                                    Получено ✓
+                                </button>
+                            </form>
+                            <form action="{{ prefix }}/actions/delete-finance/{{ inc.id }}" method="POST" onsubmit="return confirm('Удалить?');">
+                                <button type="submit" class="p-1 rounded text-slate-500 hover:text-rose-400 transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </form>
                         </div>
                     </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
 
-                    <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-700/40">
-                        <form action="{{ prefix }}/actions/execute-finance/{{ inc.id }}" method="POST" class="grow">
-                            <button type="submit" class="w-full py-1.5 px-3 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs font-semibold border border-emerald-500/40 transition flex items-center justify-center gap-1.5" title="Зачислить сумму на фактический баланс кошелька">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                <span>Зачислить на баланс</span>
+            <!-- 2. RECURRING INCOMES -->
+            <div id="tab-content-recurring" class="income-tab-content hidden space-y-2">
+                {% if recurring_incomes|length == 0 %}
+                <div class="text-center py-8 text-slate-500 text-xs">
+                    Нет периодических поступлений.
+                </div>
+                {% else %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {% for inc in recurring_incomes %}
+                    <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-3.5 space-y-2 hover:border-slate-600 transition">
+                        <div class="flex items-start justify-between gap-2">
+                            <span class="text-sm font-bold text-white">{{ inc.title }}</span>
+                            <span class="text-sm font-bold text-emerald-400 whitespace-nowrap">+{{ inc.amount|money }} ₽</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span>Следующая дата: {{ inc.planned_date.strftime('%d.%m.%Y') }}</span>
+                            <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-medium">
+                                {% if inc.is_annual_or_monthly.value == 'MONTHLY' %}Ежемесячно{% else %}Ежегодно{% endif %}
+                            </span>
+                        </div>
+                        <div class="pt-2 border-t border-slate-700/50 flex items-center justify-end gap-1.5">
+                            <button onclick="openEditIncomeModal({{ inc.id }}, '{{ inc.title }}', {{ inc.amount }}, '{{ inc.planned_date.isoformat() }}', '{{ inc.is_annual_or_monthly.value }}', {{ inc.project_id or 'null' }})" class="px-2.5 py-1 rounded bg-slate-700/50 hover:bg-slate-700 text-slate-300 text-xs transition">
+                                Изменить
                             </button>
+                            <form action="{{ prefix }}/actions/delete-finance/{{ inc.id }}" method="POST" onsubmit="return confirm('Удалить?');">
+                                <button type="submit" class="p-1 rounded text-slate-500 hover:text-rose-400 transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- 3. EXECUTED INCOMES -->
+            <div id="tab-content-executed" class="income-tab-content hidden space-y-2">
+                {% if executed_incomes|length == 0 %}
+                <div class="text-center py-8 text-slate-500 text-xs">
+                    Архив прошлых поступлений пуст.
+                </div>
+                {% else %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="text-[11px] uppercase bg-slate-800/60 text-slate-400 border-b border-slate-700">
+                            <tr>
+                                <th class="p-2.5">Дата</th>
+                                <th class="p-2.5">Источник / Описание</th>
+                                <th class="p-2.5">Сумма</th>
+                                <th class="p-2.5 text-right">Действие</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            {% for inc in executed_incomes %}
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="p-2.5 text-slate-400">{{ inc.planned_date.strftime('%d.%m.%Y') }}</td>
+                                <td class="p-2.5 font-medium text-white">{{ inc.title }}</td>
+                                <td class="p-2.5 text-emerald-400 font-bold">+{{ inc.amount|money }} ₽</td>
+                                <td class="p-2.5 text-right">
+                                    <form action="{{ prefix }}/actions/delete-finance/{{ inc.id }}" method="POST" onsubmit="return confirm('Удалить?');" class="inline-block">
+                                        <button type="submit" class="text-slate-500 hover:text-rose-400">Удалить</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Wishlist & Recurring Expenses Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Wishlist -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+            <h3 class="text-base font-bold text-white flex items-center justify-between">
+                <span>Wishlist (Цели покупок)</span>
+                <span class="text-xs text-indigo-400 font-normal">{{ wishlist|length }} желаний</span>
+            </h3>
+            <div class="space-y-2">
+                {% for w in wishlist %}
+                <div class="p-3 bg-slate-800/40 rounded-xl border border-slate-700/50 flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-sm font-semibold text-white">{{ w.title }}</div>
+                        <div class="text-xs text-slate-400">{{ w.amount|money }} ₽</div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <form action="{{ prefix }}/actions/execute-finance/{{ w.id }}" method="POST">
+                            <button type="submit" class="px-2.5 py-1 rounded bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white text-xs transition">Куплено</button>
                         </form>
-                        <button type="button" onclick="openEditIncomeModal({{ inc.id }}, '{{ inc.title|escape }}', {{ inc.amount }}, '{{ inc.planned_date }}', '{{ inc.is_annual_or_monthly.value }}', '{{ inc.project_id or '' }}')" class="p-1.5 rounded-lg bg-slate-700/40 hover:bg-indigo-900/50 text-slate-400 hover:text-indigo-300 transition" title="Редактировать">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                        </button>
-                        <form action="{{ prefix }}/actions/delete-finance/{{ inc.id }}" method="POST" onsubmit="return confirm('Удалить это запланированное поступление?');">
-                            <button type="submit" class="p-1.5 rounded-lg bg-slate-700/40 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 transition" title="Удалить">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <form action="{{ prefix }}/actions/delete-finance/{{ w.id }}" method="POST" onsubmit="return confirm('Удалить?');">
+                            <button type="submit" class="p-1 text-slate-500 hover:text-rose-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             </button>
                         </form>
                     </div>
                 </div>
                 {% else %}
-                <div class="col-span-3 text-center py-8 rounded-xl bg-slate-800/30 border border-dashed border-slate-800 text-xs text-slate-400 space-y-2">
-                    <div>Нет запланированных разовых поступлений.</div>
-                    <button type="button" onclick="document.getElementById('modal-add-income').classList.remove('hidden')" class="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 text-xs font-semibold transition">
-                        + Запланировать будущее поступление
-                    </button>
-                </div>
+                <div class="text-center py-6 text-slate-500 text-xs">Список желаний пуст.</div>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- Tab 2: Периодические регулярные поступления -->
-        <div id="tab-content-recurring" class="income-tab-content space-y-3 hidden">
-            <div class="flex items-center justify-between text-xs text-slate-400 px-1">
-                <span>Регулярные доходы (Зарплата, абонентские платы за VPN, пассивный доход):</span>
-                <span class="text-emerald-400 font-semibold">Ежемесячный поток: +{{ total_recurring_incomes|money }} ₽/мес</span>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {% for inc in recurring_incomes %}
-                <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-emerald-500/40 space-y-3 transition flex flex-col justify-between">
-                    <div class="space-y-1.5">
-                        <div class="flex items-start justify-between gap-2">
-                            <div class="font-bold text-sm text-white leading-snug">{{ inc.title }}</div>
-                            <span class="text-sm font-bold text-emerald-400 shrink-0">+{{ inc.amount|money }} ₽</span>
+        <!-- Regular Expenses -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+            <h3 class="text-base font-bold text-white flex items-center justify-between">
+                <span>Регулярные личные расходы</span>
+                <span class="text-xs text-rose-400 font-bold">-{{ total_recurring_expenses|money }} ₽ / мес</span>
+            </h3>
+            <div class="space-y-2">
+                {% for r in recurring %}
+                <div class="p-3 bg-slate-800/40 rounded-xl border border-slate-700/50 flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-sm font-semibold text-white">{{ r.title }}</div>
+                        <div class="text-xs text-slate-400">
+                            {{ r.planned_date.strftime('%d.%m') }} •
+                            {% if r.is_annual_or_monthly.value == 'MONTHLY' %}Ежемесячно{% else %}Ежегодно{% endif %}
                         </div>
-                        <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-                            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-[10px] font-medium flex items-center gap-1">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                <span>{{ inc.is_annual_or_monthly.value }}</span>
-                            </span>
-                            <span>Ближайшая дата: {{ inc.planned_date }}</span>
-                            {% if inc.project %}
-                            <span class="px-1.5 py-0.5 rounded text-[10px] bg-indigo-500/20 text-indigo-300">{{ inc.project.title }}</span>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-700/40">
-                        <form action="{{ prefix }}/actions/execute-finance/{{ inc.id }}" method="POST" class="grow">
-                            <button type="submit" class="w-full py-1.5 px-3 rounded-lg bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white text-xs font-semibold border border-indigo-500/40 transition flex items-center justify-center gap-1.5" title="Зачислить за текущий месяц и автоматически запланировать следующий">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                <span>Зачислить (текущий период)</span>
-                            </button>
-                        </form>
-                        <button type="button" onclick="openEditIncomeModal({{ inc.id }}, '{{ inc.title|escape }}', {{ inc.amount }}, '{{ inc.planned_date }}', '{{ inc.is_annual_or_monthly.value }}', '{{ inc.project_id or '' }}')" class="p-1.5 rounded-lg bg-slate-700/40 hover:bg-indigo-900/50 text-slate-400 hover:text-indigo-300 transition" title="Редактировать">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                        </button>
-                        <form action="{{ prefix }}/actions/delete-finance/{{ inc.id }}" method="POST" onsubmit="return confirm('Удалить эту периодическую запись поступления?');">
-                            <button type="submit" class="p-1.5 rounded-lg bg-slate-700/40 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 transition" title="Удалить">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                {% else %}
-                <div class="col-span-3 text-center py-8 rounded-xl bg-slate-800/30 border border-dashed border-slate-800 text-xs text-slate-400 space-y-2">
-                    <div>Периодические регулярные поступления еще не настроены.</div>
-                    <button type="button" onclick="document.getElementById('modal-add-income').classList.remove('hidden')" class="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 text-xs font-semibold transition">
-                        + Добавить регулярный доход (ЗП / Абонплата)
-                    </button>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- Tab 3: Прошлые поступления (История) -->
-        <div id="tab-content-history" class="income-tab-content space-y-3 hidden">
-            <div class="flex items-center justify-between text-xs text-slate-400 px-1">
-                <span>Фактически полученные и зачисленные средства на баланс:</span>
-                <span class="text-emerald-400 font-semibold">Всего зачислено: +{{ total_past_incomes|money }} ₽</span>
-            </div>
-
-            <div class="space-y-2 max-h-80 overflow-y-auto pr-1">
-                {% for inc in executed_incomes %}
-                <div class="p-3 rounded-xl bg-slate-800/40 border border-slate-700/50 flex items-center justify-between text-xs hover:bg-slate-800/70 transition">
-                    <div class="space-y-0.5">
-                        <div class="font-bold text-white flex items-center gap-2">
-                            <span>{{ inc.title }}</span>
-                            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-medium flex items-center gap-1">
-                                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                Зачислено
-                            </span>
-                            {% if inc.project %}
-                            <span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-700 text-slate-300">{{ inc.project.title }}</span>
-                            {% endif %}
-                        </div>
-                        <div class="text-[11px] text-slate-400">Дата зачисления: {{ inc.planned_date }}</div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="font-bold text-emerald-400 text-sm">+{{ inc.amount|money }} ₽</span>
-                        <button type="button" onclick="openEditIncomeModal({{ inc.id }}, '{{ inc.title|escape }}', {{ inc.amount }}, '{{ inc.planned_date }}', '{{ inc.is_annual_or_monthly.value }}', '{{ inc.project_id or '' }}')" class="p-1 rounded bg-slate-700/30 hover:bg-indigo-900/40 text-slate-400 hover:text-indigo-300 text-xs transition" title="Редактировать">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                        </button>
-                        <form action="{{ prefix }}/actions/delete-finance/{{ inc.id }}" method="POST" onsubmit="return confirm('Удалить эту запись из истории?');">
-                            <button type="submit" class="p-1 rounded bg-slate-700/30 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 text-xs transition" title="Удалить из истории">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <span class="text-xs font-bold text-rose-400">-{{ r.amount|money }} ₽</span>
+                        <form action="{{ prefix }}/actions/delete-finance/{{ r.id }}" method="POST" onsubmit="return confirm('Удалить?');">
+                            <button type="submit" class="p-1 text-slate-500 hover:text-rose-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             </button>
                         </form>
                     </div>
                 </div>
                 {% else %}
-                <div class="text-center py-8 text-xs text-slate-500">История зачисленных поступлений пока пуста.</div>
+                <div class="text-center py-6 text-slate-500 text-xs">Нет регулярных расходов.</div>
                 {% endfor %}
             </div>
         </div>
     </div>
+    {% endif %}
 
-    <!-- Wishlist & Gap Checker -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-            <div>
-                <h3 class="font-bold text-base text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                    <span>Список желаемых покупок (Wishlist)</span>
-                </h3>
-                <span class="text-xs text-slate-400">Система автоматически проверяет, вызовет ли покупка кассовый разрыв с учетом всех поступлений и расходов</span>
-            </div>
-            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">{{ wishlist|length }} желаний</span>
+
+    <!-- ============================================================= -->
+    <!-- TAB 2: ПОСТУПЛЕНИЯ НА ИП (СВОДКА, СТОЛБЦЫ, РАСКРЫВАЕМЫЕ МЕСЯЦЫ) -->
+    <!-- ============================================================= -->
+    {% if active_tab == 'ip_incomes' %}
+    <!-- IP Metrics Overview -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+            <span class="text-xs text-slate-400 font-medium">Общая выручка за всё время</span>
+            <div class="text-2xl font-bold text-emerald-400">{{ total_ip_revenue|money }} ₽</div>
+            <div class="text-[11px] text-slate-500">С момента основания ИП</div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {% for w in wishlist %}
-            {% set will_cause_gap = w.amount > radar.available_limit_14d %}
-            <div class="p-4 rounded-xl border {% if will_cause_gap %}bg-rose-950/20 border-rose-900/40{% else %}bg-slate-800/60 border-slate-700/60{% endif %} space-y-3 flex flex-col justify-between">
-                <div class="space-y-1.5">
-                    <div class="flex items-start justify-between gap-2">
-                        <div class="font-bold text-sm text-white">{{ w.title }}</div>
-                        <span class="text-sm font-bold text-slate-200 shrink-0">{{ w.amount|money }} ₽</span>
-                    </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+            <span class="text-xs text-slate-400 font-medium">Выручка за {{ target_year }} год</span>
+            <div class="text-2xl font-bold text-white">{{ year_ip_revenue|money }} ₽</div>
+            <div class="text-[11px] text-slate-500">Налог 6%: {{ (year_ip_revenue * 0.06)|money }} ₽</div>
+        </div>
 
-                    <div class="text-xs">
-                        {% if will_cause_gap %}
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1 w-fit">
-                            <svg class="w-3.5 h-3.5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                            <span>Вызовет дефицит бюджета!</span>
-                        </span>
-                        {% else %}
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 w-fit">
-                            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            <span>Безопасно для покупки</span>
-                        </span>
-                        {% endif %}
-                    </div>
-                </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+            <span class="text-xs text-slate-400 font-medium">Количество поступлений</span>
+            <div class="text-2xl font-bold text-indigo-300">{{ all_ip_incomes|length }}</div>
+            <div class="text-[11px] text-slate-500">Внесено отдельных платежей</div>
+        </div>
 
-                <div class="flex items-center gap-2 pt-2 border-t border-slate-700/40">
-                    <form action="{{ prefix }}/actions/execute-finance/{{ w.id }}" method="POST" class="grow">
-                        <button type="submit" class="w-full py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition">
-                            Куплено (списать баланс)
-                        </button>
-                    </form>
-                    <button type="button" onclick="openEditIncomeModal({{ w.id }}, '{{ w.title|escape }}', {{ w.amount }}, '{{ w.planned_date }}', '{{ w.is_annual_or_monthly.value }}', '{{ w.project_id or '' }}')" class="p-1.5 rounded-lg bg-slate-700/40 hover:bg-indigo-900/50 text-slate-400 hover:text-indigo-300 transition" title="Редактировать">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                    </button>
-                    <form action="{{ prefix }}/actions/delete-finance/{{ w.id }}" method="POST" onsubmit="return confirm('Удалить эту покупку из Wishlist?');">
-                        <button type="submit" class="p-1.5 rounded-lg bg-slate-700/40 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 transition" title="Удалить">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        </button>
-                    </form>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+            <span class="text-xs text-slate-400 font-medium">Справочник оснований</span>
+            <div class="text-2xl font-bold text-amber-300">{{ ip_grounds|length }}</div>
+            <div class="text-[11px] text-slate-500">
+                <button onclick="document.getElementById('modal-manage-grounds').classList.remove('hidden')" class="text-indigo-400 hover:underline">
+                    Управление договорами →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Accordion Incomes Table -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+        <div class="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-800/30">
+            <div>
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>Поступления по месяцам</span>
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5">Кликните на месяц, чтобы раскрыть или скрыть входящие платежи за период.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="toggleAllMonths(true)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">
+                    Раскрыть все
+                </button>
+                <button type="button" onclick="toggleAllMonths(false)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">
+                    Свернуть все
+                </button>
+            </div>
+        </div>
+
+        {% if ip_monthly_groups|length == 0 %}
+        <div class="text-center py-16 p-6">
+            <div class="w-12 h-12 mx-auto rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl mb-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h4 class="text-base font-bold text-white">Пока не внесено ни одного поступления на ИП</h4>
+            <p class="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                Внесите данные с момента организации ИП по каждому отдельному поступлению (дата, счет, сумма, основание, номер счета).
+            </p>
+            <button onclick="document.getElementById('modal-add-ip-income').classList.remove('hidden')" class="mt-4 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-600/20 transition">
+                + Внести первое поступление
+            </button>
+        </div>
+        {% else %}
+        <div class="divide-y divide-slate-800">
+            {% for group in ip_monthly_groups %}
+            <div class="month-accordion-item" id="month-group-{{ group.year }}-{{ group.month }}">
+                <!-- Accordion Header Button -->
+                <button type="button" onclick="toggleMonth('{{ group.year }}-{{ group.month }}')" class="w-full px-4 md:px-5 py-3.5 flex items-center justify-between text-left hover:bg-slate-800/40 transition">
+                    <div class="flex items-center gap-3">
+                        <span class="w-6 h-6 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 accordion-arrow transition-transform duration-200" id="arrow-{{ group.year }}-{{ group.month }}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </span>
+                        <div>
+                            <span class="text-sm font-bold text-white">{{ group.month_name }} {{ group.year }}</span>
+                            <span class="text-xs text-slate-400 ml-2">({{ group.items|length }} {{ 'платеж' if group.items|length == 1 else 'платежа' if group.items|length in [2,3,4] else 'платежей' }})</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm md:text-base font-bold text-emerald-400 font-mono">
+                            +{{ group.total_amount|money }} ₽
+                        </span>
+                        <span class="text-[10px] text-slate-400 px-2 py-0.5 rounded bg-slate-800 border border-slate-700 hidden sm:inline-block">
+                            Налог 6%: {{ (group.total_amount * 0.06)|money }} ₽
+                        </span>
+                    </div>
+                </button>
+
+                <!-- Month Payments Table Container -->
+                <div class="month-content overflow-x-auto bg-slate-950/40 border-t border-slate-800/80 px-2 py-2" id="content-{{ group.year }}-{{ group.month }}">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="text-[10px] uppercase font-bold text-slate-400 bg-slate-900/60 border-b border-slate-800">
+                            <tr>
+                                <th class="p-2.5">Дата</th>
+                                <th class="p-2.5">Сумма</th>
+                                <th class="p-2.5">Основание / Договор</th>
+                                <th class="p-2.5">Тип</th>
+                                <th class="p-2.5">Счет / Акт</th>
+                                <th class="p-2.5">Банковский счет</th>
+                                <th class="p-2.5">Клиент / Заказчик</th>
+                                <th class="p-2.5">Примечание</th>
+                                <th class="p-2.5 text-right">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/50">
+                            {% for inc in group.items %}
+                            <tr class="hover:bg-slate-800/30 transition">
+                                <td class="p-2.5 text-slate-300 font-mono whitespace-nowrap">
+                                    {{ inc.payment_date.strftime('%d.%m.%Y') }}
+                                </td>
+                                <td class="p-2.5 text-emerald-400 font-bold font-mono whitespace-nowrap text-sm">
+                                    +{{ inc.amount|money }} ₽
+                                </td>
+                                <td class="p-2.5 font-medium text-white max-w-xs truncate" title="{{ inc.ground_title or '—' }}">
+                                    {{ inc.ground_title or "—" }}
+                                </td>
+                                <td class="p-2.5 whitespace-nowrap">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-medium {% if 'аванс' in (inc.payment_type or '')|lower %}bg-amber-500/10 text-amber-400 border border-amber-500/20{% else %}bg-indigo-500/10 text-indigo-400 border border-indigo-500/20{% endif %}">
+                                        {{ inc.payment_type or "Оплата" }}
+                                    </span>
+                                </td>
+                                <td class="p-2.5 text-slate-400 font-mono whitespace-nowrap">
+                                    {{ inc.invoice_number or "—" }}
+                                </td>
+                                <td class="p-2.5 text-slate-400 whitespace-nowrap">
+                                    {{ inc.account_name or "Основной счет" }}
+                                </td>
+                                <td class="p-2.5 text-slate-300 whitespace-nowrap">
+                                    {{ inc.client_name or "—" }}
+                                </td>
+                                <td class="p-2.5 text-slate-400 max-w-xs truncate" title="{{ inc.notes or '' }}">
+                                    {{ inc.notes or "—" }}
+                                </td>
+                                <td class="p-2.5 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <button type="button" onclick="openEditIpIncomeModal({{ inc.id }}, '{{ inc.payment_date.isoformat() }}', {{ inc.amount }}, '{{ inc.account_name or '' }}', '{{ inc.invoice_number or '' }}', {{ inc.ground_id or 'null' }}, '{{ inc.ground_title or '' }}', '{{ inc.client_name or '' }}', '{{ inc.payment_type or '' }}', '{{ inc.notes or '' }}')" class="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Редактировать">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                        </button>
+                                        <form action="{{ prefix }}/actions/delete-ip-income/{{ inc.id }}" method="POST" onsubmit="return confirm('Удалить эту запись о поступлении на {{ inc.amount|money }} ₽?');" class="inline-block">
+                                            <button type="submit" class="p-1 rounded bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-400 transition" title="Удалить">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            {% else %}
-            <div class="col-span-3 text-center py-6 text-xs text-slate-500">Список покупок пуст.</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+
+    <!-- ============================================================= -->
+    <!-- TAB 3: БУХГАЛТЕРИЯ И НАЛОГИ УСН 6% -->
+    <!-- ============================================================= -->
+    {% if active_tab == 'accounting' %}
+    <!-- Year Selector Strip -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <span>Налоговый период:</span>
+                <span class="text-amber-400 text-base font-bold">{{ ip_taxes.selected_year }} год</span>
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">УСН «Доходы» 6% без наемных работников. Действует 100% уменьшение налога на страховые взносы (389-ФЗ).</p>
+        </div>
+        <div class="flex items-center gap-1.5 overflow-x-auto">
+            {% for y in available_years %}
+            <a href="{{ prefix }}/finance?tab=accounting&year={{ y }}" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition {% if y == ip_taxes.selected_year %}bg-amber-600 text-white shadow-sm{% else %}bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700{% endif %}">
+                {{ y }}
+            </a>
             {% endfor %}
         </div>
     </div>
 
-    <!-- Birthdays & Recurring Expenses Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-
-        <!-- Birthdays -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-            <h3 class="font-bold text-base text-white flex items-center gap-2">
-                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V4a2 2 0 112 2h-2zm0 0V4a2 2 0 10-2 2h2zm-7 4h14a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2z"/></svg>
-                <span>Дни рождения и Подарки</span>
-            </h3>
-            <div class="space-y-2">
-                {% for b in birthdays %}
-                <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-between text-xs">
-                    <div>
-                        <div class="font-bold text-white">{{ b.title }}</div>
-                        <div class="text-slate-400 mt-0.5">Дата: {{ b.planned_date }}</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold text-indigo-300">{{ b.amount|money }} ₽</span>
-                        <button type="button" onclick="openEditIncomeModal({{ b.id }}, '{{ b.title|escape }}', {{ b.amount }}, '{{ b.planned_date }}', '{{ b.is_annual_or_monthly.value }}', '{{ b.project_id or '' }}')" class="p-1 rounded bg-slate-700/30 hover:bg-indigo-900/40 text-slate-400 hover:text-indigo-300 text-xs transition" title="Редактировать">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                        </button>
-                        <form action="{{ prefix }}/actions/delete-finance/{{ b.id }}" method="POST" onsubmit="return confirm('Удалить эту запись?');">
-                            <button type="submit" class="p-1 rounded bg-slate-700/30 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 text-xs transition" title="Удалить">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                {% else %}
-                <div class="text-center py-6 text-xs text-slate-500">Дни рождения не добавлены.</div>
-                {% endfor %}
-            </div>
+    <!-- Annual Highlights Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+            <span class="text-xs text-slate-400 font-medium">Выручка за {{ ip_taxes.selected_year }} год</span>
+            <div class="text-2xl font-bold text-white font-mono">{{ ip_taxes.rev_year|money }} ₽</div>
+            <div class="text-[11px] text-slate-500">Сумма всех поступлений за год</div>
         </div>
 
-        <!-- Recurring mandatory expenses -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
-                <div>
-                    <h3 class="font-bold text-base text-white flex items-center gap-2">
-                        <svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                        <span>Регулярные обязательные расходы</span>
-                    </h3>
-                    <span class="text-xs text-slate-400">Платежи по кредитам, серверам и подпискам</span>
-                </div>
-                <div class="text-right">
-                    <span class="text-xs text-slate-400 block sm:inline">Сумма расходов: </span>
-                    <span class="font-bold text-rose-400 text-sm">-{{ total_recurring_expenses|money }} ₽/мес</span>
-                </div>
-            </div>
-
-            <div class="space-y-2">
-                {% for r in recurring %}
-                <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-between text-xs">
-                    <div>
-                        <div class="font-bold text-white">{{ r.title }}</div>
-                        <div class="text-slate-400 mt-0.5">Периодичность: {{ r.is_annual_or_monthly.value }} • {{ r.planned_date }}</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold text-rose-400">-{{ r.amount|money }} ₽</span>
-                        <button type="button" onclick="openEditIncomeModal({{ r.id }}, '{{ r.title|escape }}', {{ r.amount }}, '{{ r.planned_date }}', '{{ r.is_annual_or_monthly.value }}', '{{ r.project_id or '' }}')" class="p-1 rounded bg-slate-700/30 hover:bg-indigo-900/40 text-slate-400 hover:text-indigo-300 text-xs transition" title="Редактировать">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                        </button>
-                        <form action="{{ prefix }}/actions/delete-finance/{{ r.id }}" method="POST" onsubmit="return confirm('Удалить этот регулярный расход?');">
-                            <button type="submit" class="p-1 rounded bg-slate-700/30 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 text-xs transition" title="Удалить">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                {% else %}
-                <div class="text-center py-6 text-xs text-slate-500">Регулярные обязательные расходы не настроены.</div>
-                {% endfor %}
-            </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+            <span class="text-xs text-slate-400 font-medium">Исчисленный налог (6%)</span>
+            <div class="text-2xl font-bold text-amber-400 font-mono">{{ ip_taxes.tax_year_raw|money }} ₽</div>
+            <div class="text-[11px] text-slate-500">До применения налоговых вычетов</div>
         </div>
 
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+            <span class="text-xs text-slate-400 font-medium">Взносы к вычету (Фикс + 1%)</span>
+            <div class="text-2xl font-bold text-emerald-400 font-mono">{{ ip_taxes.total_contributions|money }} ₽</div>
+            <div class="text-[11px] text-slate-500">Фикс: {{ ip_taxes.fixed_contributions|money }} ₽ + 1%: {{ ip_taxes.one_percent_amount|money }} ₽</div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+            <span class="text-xs text-slate-400 font-medium">Итого налог УСН к уплате</span>
+            <div class="text-2xl font-bold {% if ip_taxes.total_usn_due == 0 %}text-emerald-400{% else %}text-rose-400{% endif %} font-mono">
+                {{ ip_taxes.total_usn_due|money }} ₽
+            </div>
+            <div class="text-[11px] text-slate-500">
+                {% if ip_taxes.total_usn_due == 0 %}
+                Налог полностью перекрыт взносами!
+                {% else %}
+                С учетом 100% зачета взносов
+                {% endif %}
+            </div>
+        </div>
     </div>
+
+    <!-- Explanatory Legal Banner -->
+    <div class="p-4 rounded-2xl bg-indigo-950/30 border border-indigo-500/20 flex items-start gap-3 text-xs text-indigo-200">
+        <svg class="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div class="space-y-1">
+            <div class="font-bold text-white text-sm">Правило уменьшения налога УСН 6% (Федеральный закон № 389-ФЗ):</div>
+            <p class="leading-relaxed">
+                ИП на УСН «Доходы» без работников уменьшают авансовые платежи и налог за год <strong>на всю сумму подлежащих уплате страховых взносов</strong> (до 100%, вплоть до 0 ₽).
+                При этом фиксированные взносы уменьшают налог года, за который они начислены, даже если фактически будут оплачены в конце года (до 31 декабря).
+                Взнос 1% с доходов свыше 300 000 ₽ уменьшает налог текущего либо следующего года.
+            </p>
+        </div>
+    </div>
+
+    <!-- Quarters Breakdown Grid -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span>Расчет авансовых платежей по кварталам ({{ ip_taxes.selected_year }} год)</span>
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {% for q in ip_taxes.quarters %}
+            <div class="p-4 rounded-xl bg-slate-800/40 border border-slate-700/60 space-y-3 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-white uppercase">{{ q.title }}</span>
+                        <span class="text-[10px] text-slate-400">Срок: {{ q.deadline_date.strftime('%d.%m.%Y') }}</span>
+                    </div>
+
+                    <div class="mt-3 space-y-1.5 text-xs text-slate-300">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Доход за период:</span>
+                            <span class="font-bold text-white font-mono">{{ q.revenue|money }} ₽</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Доход нарастающим:</span>
+                            <span class="font-mono text-slate-300">{{ q.cum_revenue|money }} ₽</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Налог 6% исчисл.:</span>
+                            <span class="font-mono text-amber-300">{{ q.tax_raw|money }} ₽</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Вычет взносов:</span>
+                            <span class="font-mono text-emerald-400">-{{ q.deduction|money }} ₽</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-700/60 flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] text-slate-400 block uppercase font-semibold">К уплате за квартал:</span>
+                        <span class="text-base font-bold font-mono {% if q.due == 0 %}text-emerald-400{% else %}text-rose-400{% endif %}">
+                            {{ q.due|money }} ₽
+                        </span>
+                    </div>
+                    {% if q.due == 0 %}
+                    <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">0 ₽ к доплате</span>
+                    {% else %}
+                    <button onclick="prefillTaxPayment('{{ ip_taxes.selected_year }}', '{{ q.key }}', 'Аванс УСН 6% ({{ q.title }})', {{ q.due }}, '{{ q.deadline_date.isoformat() }}')" class="px-2 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-medium transition">
+                        Оплатить
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Insurance Contributions Detailed Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            <span>Страховые взносы ИП за {{ ip_taxes.selected_year }} год</span>
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- 1. Fixed Contributions -->
+            <div class="p-4 rounded-xl bg-slate-800/40 border border-slate-700/60 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-bold text-white">Фиксированные взносы ИП (ОПС + ОМС)</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] bg-slate-700 text-slate-300">До 31 декабря {{ ip_taxes.selected_year }}</span>
+                </div>
+                <div class="text-xl font-bold text-emerald-400 font-mono">{{ ip_taxes.fixed_contributions|money }} ₽</div>
+                <p class="text-xs text-slate-400">
+                    Обязательная сумма для всех ИП в {{ ip_taxes.selected_year }} году независимо от наличия дохода.
+                    Полностью идет в зачет налога УСН 6%.
+                </p>
+                <div class="pt-2 flex justify-end">
+                    <button onclick="prefillTaxPayment('{{ ip_taxes.selected_year }}', 'FIXED', 'Фиксированные страховые взносы ИП за {{ ip_taxes.selected_year }} год', {{ ip_taxes.fixed_contributions }}, '{{ ip_taxes.selected_year }}-12-31')" class="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs font-semibold border border-emerald-500/30 transition">
+                        Отметить уплату взносов
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. 1% Above 300k -->
+            <div class="p-4 rounded-xl bg-slate-800/40 border border-slate-700/60 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-bold text-white">1% с доходов свыше 300 000 ₽</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] bg-slate-700 text-slate-300">До 1 июля {{ ip_taxes.selected_year + 1 }}</span>
+                </div>
+                <div class="text-xl font-bold text-indigo-300 font-mono">{{ ip_taxes.one_percent_amount|money }} ₽</div>
+                <p class="text-xs text-slate-400">
+                    Расчет: ({{ ip_taxes.rev_year|money }} ₽ - 300 000 ₽) × 1% = {{ ip_taxes.one_percent_amount|money }} ₽.
+                    Максимальный размер взноса ограничен законом (не более ~300 тыс. ₽).
+                </p>
+                <div class="pt-2 flex justify-end">
+                    <button onclick="prefillTaxPayment('{{ ip_taxes.selected_year }}', '1_PERCENT', '1% пенсионных взносов с дохода свыше 300к за {{ ip_taxes.selected_year }} год', {{ ip_taxes.one_percent_amount }}, '{{ ip_taxes.selected_year + 1 }}-07-01')" class="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white text-xs font-semibold border border-indigo-500/30 transition">
+                        Отметить уплату 1%
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Milestones & Deadlines Calendar -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <h3 class="text-base font-bold text-white flex items-center justify-between">
+            <span class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Календарь обязательных платежей и дедлайнов</span>
+            </span>
+            <span class="text-xs text-slate-400 font-normal">Хронологический порядок</span>
+        </h3>
+
+        <div class="space-y-2.5">
+            {% for m in ip_taxes.milestones %}
+            <div class="p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 {% if m.is_overdue %}bg-rose-950/20 border-rose-500/30{% elif m.days_remaining <= 14 and not m.is_paid and not m.is_zero %}bg-amber-950/20 border-amber-500/30{% elif m.is_zero %}bg-slate-800/30 border-slate-800 opacity-75{% elif m.is_paid %}bg-emerald-950/20 border-emerald-500/30{% else %}bg-slate-800/40 border-slate-700/60{% endif %}">
+                <div class="flex items-start sm:items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 {% if m.is_overdue %}bg-rose-500/20 text-rose-300{% elif m.days_remaining <= 14 and not m.is_paid and not m.is_zero %}bg-amber-500/20 text-amber-300{% elif m.is_paid %}bg-emerald-500/20 text-emerald-300{% else %}bg-slate-800 text-slate-400{% endif %}">
+                        {{ m.deadline.strftime('%d.%m') }}
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-white flex items-center gap-2">
+                            <span>{{ m.title }}</span>
+                            {% if m.is_paid %}
+                            <span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 font-medium">Оплачено ✓</span>
+                            {% elif m.is_overdue %}
+                            <span class="px-1.5 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-300 font-medium">Просрочено</span>
+                            {% elif m.days_remaining <= 14 and not m.is_zero %}
+                            <span class="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 font-medium">Срок подошел</span>
+                            {% elif m.is_zero %}
+                            <span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 font-medium">0 ₽ к доплате</span>
+                            {% endif %}
+                        </div>
+                        <div class="text-xs text-slate-400 mt-0.5">
+                            Крайний срок уплаты: <strong>{{ m.deadline.strftime('%d.%m.%Y') }}</strong> •
+                            {% if m.is_paid %}
+                            Оплачено: {{ m.paid_amount|money }} ₽
+                            {% elif m.days_remaining < 0 %}
+                            Просрочено на {{ -m.days_remaining }} дн.
+                            {% elif m.days_remaining == 0 %}
+                            Сегодня последний день!
+                            {% else %}
+                            Осталось {{ m.days_remaining }} дн.
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
+                    <span class="text-base font-bold font-mono {% if m.due_amount == 0 %}text-emerald-400{% else %}text-white{% endif %}">
+                        {{ m.due_amount|money }} ₽
+                    </span>
+                    {% if m.due_amount > 0 and not m.is_paid %}
+                    <button onclick="prefillTaxPayment('{{ ip_taxes.selected_year }}', '{{ m.key }}', '{{ m.title }}', {{ m.due_amount }}, '{{ m.deadline.isoformat() }}')" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition shrink-0">
+                        Оплатить
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
 </div>
 
-<!-- Modal 1: Update Wallet -->
-<div id="modal-update-wallet" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm p-6 shadow-2xl relative">
-        <button onclick="document.getElementById('modal-update-wallet').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+
+<!-- ============================================================= -->
+<!-- MODAL: ADD IP INCOME -->
+<!-- ============================================================= -->
+<div id="modal-add-ip-income" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+        <button type="button" onclick="document.getElementById('modal-add-ip-income').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
-        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-            <span>Настройки кошелька</span>
+        <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
+            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>Внести поступление на ИП</span>
         </h3>
+        <p class="text-xs text-slate-400 mb-4">Фиксация фактического поступления средств на расчетный счет ИП.</p>
+
+        <form action="{{ prefix }}/actions/add-ip-income" method="POST" class="space-y-4">
+            <input type="hidden" name="redirect_to" value="{{ prefix }}/finance?tab=ip_incomes">
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Дата поступления *</label>
+                    <input type="date" name="payment_date" required value="{{ today.isoformat() }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Сумма (₽) *</label>
+                    <input type="number" name="amount" required step="any" min="0" placeholder="150000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Основание (из справочника)</label>
+                    <select id="add-income-ground-select" name="ground_id" onchange="onGroundSelectChange(this)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        <option value="">— Выбрать из справочника —</option>
+                        {% for g in ip_grounds %}
+                        <option value="{{ g.id }}" data-title="{{ g.name }}" data-client="{{ g.client_name or '' }}" data-account="{{ g.default_account or '' }}">{{ g.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Или основание текстом</label>
+                    <input type="text" id="add-income-ground-title" name="ground_title" placeholder="Договор №12 от 01.09" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Тип платежа</label>
+                    <select name="payment_type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        <option value="Оплата за месяц">Оплата за месяц</option>
+                        <option value="Аванс">Аванс</option>
+                        <option value="Окончательный расчет">Окончательный расчет</option>
+                        <option value="Разовая услуга">Разовая услуга</option>
+                        <option value="Прочее">Прочее</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Номер счета / Акта</label>
+                    <input type="text" name="invoice_number" placeholder="Счет № 42" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Расчетный счет ИП</label>
+                    <input type="text" id="add-income-account" name="account_name" value="Основной счет ИП" placeholder="Тинькофф / Точка / Сбер" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Клиент / Заказчик</label>
+                    <input type="text" id="add-income-client" name="client_name" placeholder="ООО Ромашка" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Примечание (опционально)</label>
+                <input type="text" name="notes" placeholder="Комментарий к платежу" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button type="button" onclick="document.getElementById('modal-add-ip-income').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
+                <button type="submit" class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-600/20 transition flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>Сохранить поступление</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ============================================================= -->
+<!-- MODAL: EDIT IP INCOME -->
+<!-- ============================================================= -->
+<div id="modal-edit-ip-income" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+        <button type="button" onclick="document.getElementById('modal-edit-ip-income').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            <span>Редактировать поступление на ИП</span>
+        </h3>
+        <p class="text-xs text-slate-400 mb-4">Изменение даты, суммы, основания или параметров платежа.</p>
+
+        <form id="form-edit-ip-income" action="" method="POST" class="space-y-4">
+            <input type="hidden" name="redirect_to" value="{{ prefix }}/finance?tab=ip_incomes">
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Дата поступления *</label>
+                    <input type="date" id="edit-ip-date" name="payment_date" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Сумма (₽) *</label>
+                    <input type="number" id="edit-ip-amount" name="amount" required step="any" min="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Основание (из справочника)</label>
+                    <select id="edit-ip-ground-select" name="ground_id" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <option value="">— Не выбрано —</option>
+                        {% for g in ip_grounds %}
+                        <option value="{{ g.id }}">{{ g.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Основание текстом</label>
+                    <input type="text" id="edit-ip-ground-title" name="ground_title" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Тип платежа</label>
+                    <input type="text" id="edit-ip-payment-type" name="payment_type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Номер счета / Акта</label>
+                    <input type="text" id="edit-ip-invoice" name="invoice_number" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Расчетный счет ИП</label>
+                    <input type="text" id="edit-ip-account" name="account_name" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Клиент / Заказчик</label>
+                    <input type="text" id="edit-ip-client" name="client_name" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Примечание</label>
+                <input type="text" id="edit-ip-notes" name="notes" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button type="button" onclick="document.getElementById('modal-edit-ip-income').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
+                <button type="submit" class="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ============================================================= -->
+<!-- MODAL: MANAGE GROUNDS DIRECTORY -->
+<!-- ============================================================= -->
+<div id="modal-manage-grounds" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl p-6 shadow-2xl relative max-h-[90vh] flex flex-col">
+        <button type="button" onclick="document.getElementById('modal-manage-grounds').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            <span>Справочник оснований и договоров</span>
+        </h3>
+        <p class="text-xs text-slate-400 mb-4">Шаблоны оснований платежей, привязанные клиенты и счета по умолчанию.</p>
+
+        <!-- Existing Grounds List -->
+        <div class="overflow-y-auto space-y-2 pr-1 custom-scrollbar max-h-64 mb-4">
+            {% for g in ip_grounds %}
+            <div class="p-3 bg-slate-800/60 rounded-xl border border-slate-700/60 flex items-center justify-between gap-3">
+                <div>
+                    <div class="text-sm font-semibold text-white">{{ g.name }}</div>
+                    <div class="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+                        {% if g.client_name %}<span class="text-indigo-300">Клиент: {{ g.client_name }}</span> •{% endif %}
+                        {% if g.default_account %}<span>Счет: {{ g.default_account }}</span> •{% endif %}
+                        <span>{{ g.description or 'Без описания' }}</span>
+                    </div>
+                </div>
+                <form action="{{ prefix }}/actions/delete-ip-ground/{{ g.id }}" method="POST" onsubmit="return confirm('Удалить это основание из справочника?');">
+                    <input type="hidden" name="redirect_to" value="{{ prefix }}/finance?tab=ip_incomes">
+                    <button type="submit" class="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-700 transition" title="Удалить">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <div class="text-center py-6 text-slate-500 text-xs">В справочнике пока нет оснований. Добавьте ниже.</div>
+            {% endfor %}
+        </div>
+
+        <!-- Add New Ground Form -->
+        <div class="pt-4 border-t border-slate-800">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">+ Добавить новое основание</h4>
+            <form action="{{ prefix }}/actions/add-ip-ground" method="POST" class="space-y-3">
+                <input type="hidden" name="redirect_to" value="{{ prefix }}/finance?tab=ip_incomes">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-0.5">Название договора / Основания *</label>
+                        <input type="text" name="name" required placeholder="Договор №..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-0.5">Клиент / Заказчик</label>
+                        <input type="text" name="client_name" placeholder="ООО Компания" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-0.5">Счет по умолчанию</label>
+                        <input type="text" name="default_account" placeholder="Основной счет ИП" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-0.5">Краткое описание</label>
+                        <input type="text" name="description" placeholder="Ежемесячная поддержка и разработка" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div class="flex justify-end pt-1">
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">
+                        Добавить основание
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- ============================================================= -->
+<!-- MODAL: RECORD TAX PAYMENT -->
+<!-- ============================================================= -->
+<div id="modal-record-tax-payment" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+        <button type="button" onclick="document.getElementById('modal-record-tax-payment').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Отметить уплату налога или взноса</span>
+        </h3>
+        <p class="text-xs text-slate-400 mb-4">Фиксация перечисления на ЕНС (Единый налоговый счет).</p>
+
+        <form action="{{ prefix }}/actions/record-tax-payment" method="POST" class="space-y-4">
+            <input type="hidden" name="redirect_to" value="{{ prefix }}/finance?tab=accounting&year={{ target_year }}">
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Год *</label>
+                    <input type="number" id="tax-pay-year" name="year" required value="{{ target_year }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Период</label>
+                    <select id="tax-pay-period" name="period" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <option value="Q1">I квартал</option>
+                        <option value="Q2">II квартал (Полугодие)</option>
+                        <option value="Q3">III квартал (9 месяцев)</option>
+                        <option value="YEAR">Год (УСН)</option>
+                        <option value="FIXED">Фиксированные взносы</option>
+                        <option value="ONE_PERCENT">1% свыше 300к</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Назначение платежа *</label>
+                <input type="text" id="tax-pay-title" name="title" required placeholder="Авансовый платеж УСН 6%" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Сумма (₽) *</label>
+                    <input type="number" id="tax-pay-amount" name="amount" required step="any" min="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Дата платежа *</label>
+                    <input type="date" id="tax-pay-date" name="payment_date" required value="{{ today.isoformat() }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Примечание</label>
+                <input type="text" name="notes" placeholder="Списано с ЕНС / ПП №..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button type="button" onclick="document.getElementById('modal-record-tax-payment').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
+                <button type="submit" class="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition">Подтвердить оплату</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ============================================================= -->
+<!-- PERSONAL FINANCE MODALS (WALLET, ADD EXPENSE, ADD INCOME, EDIT) -->
+<!-- ============================================================= -->
+<!-- Modal 1: Update Wallet Balance -->
+<div id="modal-update-wallet" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm p-6 shadow-2xl relative">
+        <button type="button" onclick="document.getElementById('modal-update-wallet').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <h3 class="text-base font-bold text-white mb-1">Фактический баланс</h3>
+        <p class="text-xs text-slate-400 mb-4">Текущий остаток живых денег на личных счетах и картах.</p>
+
         <form action="{{ prefix }}/actions/update-wallet" method="POST" class="space-y-4">
             <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1">Фактический остаток средств (₽) *</label>
-                <input type="number" name="current_balance" value="{{ radar.current_balance|round(0)|int }}" required step="any" min="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <label class="block text-xs font-medium text-slate-400 mb-1">Текущий остаток (₽) *</label>
+                <input type="number" step="any" min="0" name="current_balance" value="{{ radar.current_balance }}" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-indigo-500">
             </div>
             <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1">Неснижаемый порог безопасности (₽)</label>
-                <input type="number" name="safety_threshold" value="{{ radar.safety_threshold|round(0)|int }}" required step="any" min="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <label class="block text-xs font-medium text-slate-400 mb-1">Порог безопасности (НЗ) (₽)</label>
+                <input type="number" step="any" min="0" name="safety_threshold" value="{{ radar.safety_threshold }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
             </div>
             <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
                 <button type="button" onclick="document.getElementById('modal-update-wallet').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
@@ -425,35 +1050,35 @@
     </div>
 </div>
 
-<!-- Modal 2: Add Income (Dedicated) -->
+<!-- Modal 2: Add Income (Personal) -->
 <div id="modal-add-income" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
-        <button onclick="document.getElementById('modal-add-income').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+        <button type="button" onclick="document.getElementById('modal-add-income').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
-        <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
-            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-            <span>Добавить поступление / доход</span>
+        <h3 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span>Запланировать личное поступление</span>
         </h3>
-        <p class="text-xs text-slate-400 mb-4">Внесите разовый или регулярный доход для расчета финансового радара.</p>
+        <p class="text-xs text-slate-400 mb-4">Разовый или периодический доход в личный бюджет.</p>
 
         <form action="{{ prefix }}/actions/add-finance" method="POST" class="space-y-4">
             <input type="hidden" name="record_type" value="INCOME_EXPECTED">
-            <input type="hidden" name="redirect_to" value="{{ prefix }}/finance">
+            <input type="hidden" name="redirect_to" value="{{ prefix }}/finance?tab=radar">
 
             <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1">Источник / Описание дохода *</label>
-                <input type="text" name="title" required placeholder="Например: Зарплата (аванс), Оплата VPN от клиента, Возврат долга" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                <label class="block text-xs font-medium text-slate-400 mb-1">Источник / Клиент / Проект *</label>
+                <input type="text" name="title" required placeholder="Зарплата / Дивиденды / Проект" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Сумма (₽) *</label>
-                    <input type="number" name="amount" required step="any" min="0" placeholder="50000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-emerald-400 font-bold focus:outline-none focus:border-emerald-500">
+                    <input type="number" step="any" min="0" name="amount" required placeholder="50000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-emerald-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Ожидаемая дата *</label>
-                    <input type="date" name="planned_date" value="{{ today.isoformat() }}" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Дата поступления *</label>
+                    <input type="date" name="planned_date" required value="{{ today.isoformat() }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
                 </div>
             </div>
 
@@ -461,15 +1086,15 @@
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Периодичность</label>
                     <select name="is_annual_or_monthly" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-                        <option value="NONE" selected>Разовое поступление</option>
-                        <option value="MONTHLY">Ежемесячно (ЗП, абонплата)</option>
-                        <option value="YEARLY">Ежегодно (дивиденды, бонус)</option>
+                        <option value="NONE">Разово (один раз)</option>
+                        <option value="MONTHLY">Ежемесячно</option>
+                        <option value="YEARLY">Ежегодно</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Привязка к проекту</label>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Проект</label>
                     <select name="project_id" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-                        <option value="">Без проекта (Личное)</option>
+                        <option value="">Без проекта</option>
                         {% for p in projects %}
                         <option value="{{ p.id }}">{{ p.title }}</option>
                         {% endfor %}
@@ -479,61 +1104,61 @@
 
             <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
                 <button type="button" onclick="document.getElementById('modal-add-income').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
-                <button type="submit" class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-600/20 transition flex items-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                    <span>Сохранить доход</span>
-                </button>
+                <button type="submit" class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-600/20 transition">Запланировать</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Modal 3: Add Expense / Birthday / Wishlist -->
+<!-- Modal 3: Add Expense (Personal) -->
 <div id="modal-add-finance" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
-        <button onclick="document.getElementById('modal-add-finance').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+        <button type="button" onclick="document.getElementById('modal-add-finance').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
-        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <span>Запланировать расход / покупку</span>
-        </h3>
+        <h3 class="text-base font-bold text-white mb-1">Запланировать расход</h3>
+        <p class="text-xs text-slate-400 mb-4">Внесите будущий расход, Wishlist или регулярный платеж.</p>
+
         <form action="{{ prefix }}/actions/add-finance" method="POST" class="space-y-4">
-            <input type="hidden" name="redirect_to" value="{{ prefix }}/finance">
+            <input type="hidden" name="redirect_to" value="{{ prefix }}/finance?tab=radar">
+
             <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1">Название / Описание *</label>
-                <input type="text" name="title" required placeholder="Например: Подарок брату, Оплата хостинга, Покупка SSD" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <label class="block text-xs font-medium text-slate-400 mb-1">Название расхода *</label>
+                <input type="text" name="title" required placeholder="Аренда, подписка, покупка..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
             </div>
+
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Сумма (₽) *</label>
-                    <input type="number" name="amount" required step="any" min="0" placeholder="5000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <input type="number" step="any" min="0" name="amount" required placeholder="5000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Дата события *</label>
-                    <input type="date" name="planned_date" value="{{ today.isoformat() }}" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <input type="date" name="planned_date" required value="{{ today.isoformat() }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
             </div>
+
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Категория расхода</label>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Тип записи</label>
                     <select name="record_type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                         <option value="EXPENSE_MANDATORY">Обязательный расход</option>
-                        <option value="EXPENSE_BIRTHDAY">День рождения / Подарок</option>
-                        <option value="EXPENSE_WISHLIST">Хотелка / Покупка (Wishlist)</option>
+                        <option value="EXPENSE_WISHLIST">Wishlist (Покупка)</option>
+                        <option value="EXPENSE_BIRTHDAY">День рождения</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Периодичность</label>
                     <select name="is_annual_or_monthly" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
-                        <option value="NONE" selected>Разово</option>
+                        <option value="NONE">Разово</option>
                         <option value="MONTHLY">Ежемесячно</option>
-                        <option value="YEARLY">Ежегодно (ДР)</option>
+                        <option value="YEARLY">Ежегодно</option>
                     </select>
                 </div>
             </div>
+
             <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1">Привязка к проекту (опционально)</label>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Проект (опционально)</label>
                 <select name="project_id" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                     <option value="">Без проекта</option>
                     {% for p in projects %}
@@ -549,7 +1174,7 @@
     </div>
 </div>
 
-<!-- Modal 4: Edit Finance Record / Income -->
+<!-- Modal 4: Edit Finance Record / Income (Personal) -->
 <div id="modal-edit-income" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
         <button type="button" onclick="document.getElementById('modal-edit-income').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
@@ -562,7 +1187,7 @@
         <p class="text-xs text-slate-400 mb-4">Изменение суммы, источника, даты или периодичности.</p>
 
         <form id="form-edit-income" action="" method="POST" class="space-y-4">
-            <input type="hidden" name="redirect_to" value="{{ prefix }}/finance">
+            <input type="hidden" name="redirect_to" value="{{ prefix }}/finance?tab=radar">
 
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Название / Источник *</label>
@@ -602,10 +1227,7 @@
 
             <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
                 <button type="button" onclick="document.getElementById('modal-edit-income').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">Отмена</button>
-                <button type="submit" class="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition flex items-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                    <span>Сохранить изменения</span>
-                </button>
+                <button type="submit" class="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition">Сохранить</button>
             </div>
         </form>
     </div>
@@ -614,6 +1236,7 @@
 
 {% block scripts %}
 <script>
+    // Personal income tabs switcher
     function switchIncomeTab(tabName) {
         document.querySelectorAll('.income-tab-content').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.income-tab-btn').forEach(btn => {
@@ -630,6 +1253,7 @@
         }
     }
 
+    // Modal Edit Personal Income
     function openEditIncomeModal(id, title, amount, dateStr, recurrence, projectId) {
         document.getElementById('form-edit-income').action = '{{ prefix }}/actions/edit-finance/' + id;
         document.getElementById('edit-income-title').value = title;
@@ -638,6 +1262,68 @@
         document.getElementById('edit-income-recurrence').value = recurrence || 'NONE';
         document.getElementById('edit-income-project').value = projectId || '';
         document.getElementById('modal-edit-income').classList.remove('hidden');
+    }
+
+    // Monthly accordion toggle
+    function toggleMonth(key) {
+        const content = document.getElementById('content-' + key);
+        const arrow = document.getElementById('arrow-' + key);
+        if (!content) return;
+        if (content.classList.contains('hidden')) {
+            content.classList.remove('hidden');
+            if (arrow) arrow.style.transform = 'rotate(0deg)';
+        } else {
+            content.classList.add('hidden');
+            if (arrow) arrow.style.transform = 'rotate(-90deg)';
+        }
+    }
+
+    function toggleAllMonths(expand) {
+        document.querySelectorAll('.month-content').forEach(el => {
+            if (expand) el.classList.remove('hidden');
+            else el.classList.add('hidden');
+        });
+        document.querySelectorAll('.accordion-arrow').forEach(el => {
+            el.style.transform = expand ? 'rotate(0deg)' : 'rotate(-90deg)';
+        });
+    }
+
+    // Ground Select Autocomplete helper in Add IP Income
+    function onGroundSelectChange(selectEl) {
+        const opt = selectEl.options[selectEl.selectedIndex];
+        if (!opt || !opt.value) return;
+        const title = opt.getAttribute('data-title');
+        const client = opt.getAttribute('data-client');
+        const account = opt.getAttribute('data-account');
+
+        if (title) document.getElementById('add-income-ground-title').value = title;
+        if (client) document.getElementById('add-income-client').value = client;
+        if (account) document.getElementById('add-income-account').value = account;
+    }
+
+    // Modal Edit IP Income
+    function openEditIpIncomeModal(id, dateStr, amount, account, invoice, groundId, groundTitle, client, paymentType, notes) {
+        document.getElementById('form-edit-ip-income').action = '{{ prefix }}/actions/edit-ip-income/' + id;
+        document.getElementById('edit-ip-date').value = dateStr;
+        document.getElementById('edit-ip-amount').value = amount;
+        document.getElementById('edit-ip-account').value = account || 'Основной счет ИП';
+        document.getElementById('edit-ip-invoice').value = invoice || '';
+        document.getElementById('edit-ip-ground-select').value = groundId || '';
+        document.getElementById('edit-ip-ground-title').value = groundTitle || '';
+        document.getElementById('edit-ip-client').value = client || '';
+        document.getElementById('edit-ip-payment-type').value = paymentType || 'Оплата за месяц';
+        document.getElementById('edit-ip-notes').value = notes || '';
+        document.getElementById('modal-edit-ip-income').classList.remove('hidden');
+    }
+
+    // Prefill Record Tax Payment Modal
+    function prefillTaxPayment(year, period, title, amount, dateStr) {
+        document.getElementById('tax-pay-year').value = year;
+        document.getElementById('tax-pay-period').value = period;
+        document.getElementById('tax-pay-title').value = title;
+        document.getElementById('tax-pay-amount').value = amount;
+        if (dateStr) document.getElementById('tax-pay-date').value = dateStr;
+        document.getElementById('modal-record-tax-payment').classList.remove('hidden');
     }
 </script>
 {% endblock %}

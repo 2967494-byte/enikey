@@ -14,5 +14,10 @@ crm/venv/
 crm/brain.db
 crm/brain.db-shm
 crm/brain.db-wal
+brain.db
+brain.db-shm
+brain.db-wal
+scratch/
 package-lock.json
 server/package-lock.json
+

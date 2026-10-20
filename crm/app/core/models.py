@@ -166,3 +166,48 @@ class FinanceRecord(Base):
 
     project = relationship("Project", back_populates="finance_records")
     supply_item = relationship("SupplyItem")
+
+class IpPaymentGround(Base):
+    """Справочник оснований платежей / договоров ИП"""
+    __tablename__ = "ip_payment_grounds"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False) # e.g. "Договор №12/24 от 15.01.2024"
+    client_name = Column(String(255), nullable=True) # Заказчик / плательщик
+    default_account = Column(String(100), default="Т-Банк (Тинькофф)")
+    description = Column(Text, default="")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    incomes = relationship("IpIncome", back_populates="ground")
+
+class IpIncome(Base):
+    """Отдельный учет поступлений на расчетный счет ИП"""
+    __tablename__ = "ip_incomes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    payment_date = Column(Date, nullable=False, index=True)
+    amount = Column(Numeric(14, 2), nullable=False)
+    account_name = Column(String(100), default="Т-Банк (Тинькофф)", nullable=False) # Т-Банк, Точка, Сбер
+    invoice_number = Column(String(100), nullable=True) # Номер счета на оплату
+    ground_id = Column(Integer, ForeignKey("ip_payment_grounds.id", ondelete="SET NULL"), nullable=True)
+    ground_title = Column(String(255), nullable=True) # Название договора / основания
+    client_name = Column(String(255), nullable=True) # Контрагент / Клиент
+    payment_type = Column(String(50), default="Оплата за месяц") # Аванс, Оплата за месяц, Окончательный расчет
+    notes = Column(Text, default="")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    ground = relationship("IpPaymentGround", back_populates="incomes")
+
+class IpTaxPayment(Base):
+    """Фактические платежи по налогам и взносам ИП"""
+    __tablename__ = "ip_tax_payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    year = Column(Integer, nullable=False, index=True)
+    period = Column(String(30), nullable=False) # Q1, Q2, Q3, YEAR, FIXED, ONE_PERCENT
+    title = Column(String(255), nullable=False)
+    amount = Column(Numeric(14, 2), nullable=False)
+    payment_date = Column(Date, nullable=False)
+    status = Column(String(20), default="PAID") # PAID, PLANNED
+    notes = Column(Text, default="")
+    created_at = Column(DateTime, default=datetime.utcnow)

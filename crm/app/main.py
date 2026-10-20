@@ -35,6 +35,17 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         seed_initial_data(db)
+        from app.core.models import IpPaymentGround
+        if db.query(IpPaymentGround).count() == 0:
+            default_grounds = [
+                IpPaymentGround(name="Договор на оказание IT-услуг", description="Ежемесячная оплата по договору IT-поддержки и разработки"),
+                IpPaymentGround(name="Договор абонентского обслуживания", description="Фиксированное регулярное абонентское обслуживание"),
+                IpPaymentGround(name="Аванс за разработку ПО", description="Предоплата по этапу разработки"),
+                IpPaymentGround(name="Окончательный расчет по акту", description="Закрывающий расчет после подписания акта сдачи-приемки"),
+                IpPaymentGround(name="Консультационные услуги", description="Почасовая или разовая экспертная консультация"),
+            ]
+            db.add_all(default_grounds)
+            db.commit()
     finally:
         db.close()
 

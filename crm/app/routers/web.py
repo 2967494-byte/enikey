@@ -14,8 +14,10 @@ from app.core.models import (
     SupplyItem, SupplyStatus, PaymentSettlement,
     Task, TaskStatus,
     FinanceRecord, FinanceRecordType, FinanceStatus, RecurrenceType,
-    WalletState, Location
+    WalletState, Location,
+    IpPaymentGround, IpIncome, IpTaxPayment
 )
+from app.core.ip_accounting import calculate_ip_taxes, get_ip_incomes_grouped_by_month, FIXED_CONTRIBUTIONS
 from app.core.executor import CommandExecutor
 from app.core.budget_guard import BudgetGuard
 from app.core.commands import (
@@ -234,6 +236,26 @@ def projects_page(request: Request, db: Session = Depends(get_db)):
     )
 
 # -------------------------------------------------------------
+# 2b. Isolated Category Page (GET /categories/{slug})
+# -------------------------------------------------------------
+@router.get("/categories/{slug}", response_class=HTMLResponse)
+def category_detail_page(slug: str, request: Request, db: Session = Depends(get_db)):
+    categories = get_categories_catalog(db)
+    current_cat = next((c for c in categories if c["slug"] == slug), None)
+    if not current_cat:
+        return RedirectResponse(f"{settings.APP_PREFIX}/projects")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="category_detail.html",
+        context=template_context(request, {
+            "current_cat": current_cat,
+            "projects": current_cat.get("projects", []),
+            "all_categories": categories,
+        }, db=db)
+    )
+
+# -------------------------------------------------------------
 # 3. Individual Project Page (GET /projects/{project_id})
 # -------------------------------------------------------------
 @router.get("/projects/{project_id}", response_class=HTMLResponse)
@@ -332,7 +354,12 @@ def logistics_page(request: Request, db: Session = Depends(get_db)):
 # 5. Finance Page (GET /finance)
 # -------------------------------------------------------------
 @router.get("/finance", response_class=HTMLResponse)
-def finance_page(request: Request, db: Session = Depends(get_db)):
+def finance_page(
+    request: Request,
+    tab: str = "radar",
+    year: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
     radar = BudgetGuard.get_financial_radar(db)
 
     # All records
@@ -386,10 +413,39 @@ def finance_page(request: Request, db: Session = Depends(get_db)):
     total_past_incomes = sum(float(r.amount) for r in executed_incomes)
     total_recurring_expenses = sum(float(r.amount) for r in recurring_expenses if r.is_annual_or_monthly == RecurrenceType.MONTHLY)
 
+    # --- IP Finances & Accounting ---
+    current_year = date.today().year
+    target_year = year or current_year
+
+    ip_monthly_groups = get_ip_incomes_grouped_by_month(db)
+    ip_grounds = db.query(IpPaymentGround).order_by(IpPaymentGround.name.asc()).all()
+    all_ip_incomes = db.query(IpIncome).order_by(IpIncome.payment_date.desc()).all()
+
+    # Available years for selector
+    years_set = {current_year - 2, current_year - 1, current_year, current_year + 1}
+    for inc in all_ip_incomes:
+        years_set.add(inc.payment_date.year)
+    available_years = sorted(list(years_set), reverse=True)
+
+    ip_taxes = calculate_ip_taxes(db, target_year=target_year)
+
+    total_ip_revenue = sum(float(i.amount) for i in all_ip_incomes)
+    year_ip_revenue = sum(float(i.amount) for i in all_ip_incomes if i.payment_date.year == target_year)
+
     return templates.TemplateResponse(
         request=request,
         name="finance.html",
         context=template_context(request, {
+            "active_tab": tab,
+            "target_year": target_year,
+            "available_years": available_years,
+            "ip_monthly_groups": ip_monthly_groups,
+            "ip_grounds": ip_grounds,
+            "all_ip_incomes": all_ip_incomes,
+            "total_ip_revenue": total_ip_revenue,
+            "year_ip_revenue": year_ip_revenue,
+            "ip_taxes": ip_taxes,
+            # Radar & personal finance:
             "radar": radar,
             "records": records,
             "planned_incomes": planned_incomes,
@@ -526,6 +582,7 @@ def action_create_project(
     color_hex: str = Form("#3b82f6"),
     weekly_quota_minutes: int = Form(0),
     preferred_slot_minutes: int = Form(60),
+    redirect_to: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
     cmd = CreateProjectCmd(
@@ -544,7 +601,7 @@ def action_create_project(
         if p:
             p.category_slug = category_slug.strip() or None
             db.commit()
-    return RedirectResponse(f"{settings.APP_PREFIX}/projects/{res['project_id']}", status_code=303)
+    return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/projects/{res['project_id']}", status_code=303)
 
 @router.post("/actions/create-category")
 def action_create_category(
@@ -654,6 +711,168 @@ def action_edit_finance(
         rec.project_id = project_id if project_id else None
         db.commit()
     return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance", status_code=303)
+
+# -------------------------------------------------------------
+# 5b. IP Income & Accounting Action Endpoints
+# -------------------------------------------------------------
+@router.post("/actions/add-ip-income")
+def action_add_ip_income(
+    payment_date: str = Form(...),
+    amount: float = Form(...),
+    account_name: Optional[str] = Form("Основной счет ИП"),
+    invoice_number: Optional[str] = Form(None),
+    ground_id: Optional[int] = Form(None),
+    ground_title: Optional[str] = Form(None),
+    client_name: Optional[str] = Form(None),
+    payment_type: Optional[str] = Form("Оплата за месяц"),
+    notes: Optional[str] = Form(None),
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    try:
+        p_date = datetime.strptime(payment_date, "%Y-%m-%d").date()
+    except Exception:
+        p_date = date.today()
+
+    resolved_ground_title = (ground_title or "").strip()
+    resolved_client = (client_name or "").strip()
+    if ground_id:
+        ground = db.query(IpPaymentGround).filter(IpPaymentGround.id == ground_id).first()
+        if ground:
+            if not resolved_ground_title:
+                resolved_ground_title = ground.name
+            if not resolved_client and ground.client_name:
+                resolved_client = ground.client_name
+
+    income = IpIncome(
+        payment_date=p_date,
+        amount=amount,
+        account_name=(account_name or "Основной счет ИП").strip(),
+        invoice_number=invoice_number.strip() if invoice_number else None,
+        ground_id=ground_id if ground_id else None,
+        ground_title=resolved_ground_title or None,
+        client_name=resolved_client or None,
+        payment_type=(payment_type or "Оплата за месяц").strip(),
+        notes=notes.strip() if notes else None
+    )
+    db.add(income)
+    db.commit()
+    return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance?tab=ip_incomes", status_code=303)
+
+@router.post("/actions/edit-ip-income/{income_id}")
+def action_edit_ip_income(
+    income_id: int,
+    payment_date: str = Form(...),
+    amount: float = Form(...),
+    account_name: Optional[str] = Form("Основной счет ИП"),
+    invoice_number: Optional[str] = Form(None),
+    ground_id: Optional[int] = Form(None),
+    ground_title: Optional[str] = Form(None),
+    client_name: Optional[str] = Form(None),
+    payment_type: Optional[str] = Form("Оплата за месяц"),
+    notes: Optional[str] = Form(None),
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    inc = db.query(IpIncome).filter(IpIncome.id == income_id).first()
+    if inc:
+        try:
+            inc.payment_date = datetime.strptime(payment_date, "%Y-%m-%d").date()
+        except Exception:
+            pass
+        inc.amount = amount
+        inc.account_name = (account_name or "Основной счет ИП").strip()
+        inc.invoice_number = invoice_number.strip() if invoice_number else None
+        inc.ground_id = ground_id if ground_id else None
+
+        resolved_ground_title = (ground_title or "").strip()
+        resolved_client = (client_name or "").strip()
+        if ground_id:
+            ground = db.query(IpPaymentGround).filter(IpPaymentGround.id == ground_id).first()
+            if ground:
+                if not resolved_ground_title:
+                    resolved_ground_title = ground.name
+                if not resolved_client and ground.client_name:
+                    resolved_client = ground.client_name
+
+        inc.ground_title = resolved_ground_title or None
+        inc.client_name = resolved_client or None
+        inc.payment_type = (payment_type or "Оплата за месяц").strip()
+        inc.notes = notes.strip() if notes else None
+        db.commit()
+    return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance?tab=ip_incomes", status_code=303)
+
+@router.post("/actions/delete-ip-income/{income_id}")
+def action_delete_ip_income(
+    income_id: int,
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    inc = db.query(IpIncome).filter(IpIncome.id == income_id).first()
+    if inc:
+        db.delete(inc)
+        db.commit()
+    return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance?tab=ip_incomes", status_code=303)
+
+@router.post("/actions/add-ip-ground")
+def action_add_ip_ground(
+    name: str = Form(...),
+    client_name: Optional[str] = Form(None),
+    default_account: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    ground = IpPaymentGround(
+        name=name.strip(),
+        client_name=client_name.strip() if client_name else None,
+        default_account=default_account.strip() if default_account else None,
+        description=description.strip() if description else None
+    )
+    db.add(ground)
+    db.commit()
+    return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance?tab=ip_incomes", status_code=303)
+
+@router.post("/actions/delete-ip-ground/{ground_id}")
+def action_delete_ip_ground(
+    ground_id: int,
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    g = db.query(IpPaymentGround).filter(IpPaymentGround.id == ground_id).first()
+    if g:
+        db.delete(g)
+        db.commit()
+    return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance?tab=ip_incomes", status_code=303)
+
+@router.post("/actions/record-tax-payment")
+def action_record_tax_payment(
+    year: int = Form(...),
+    period: str = Form(...),
+    title: str = Form(...),
+    amount: float = Form(...),
+    payment_date: str = Form(...),
+    notes: Optional[str] = Form(None),
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    try:
+        p_date = datetime.strptime(payment_date, "%Y-%m-%d").date()
+    except Exception:
+        p_date = date.today()
+    tp = IpTaxPayment(
+        year=year,
+        period=period,
+        title=title.strip(),
+        amount=amount,
+        payment_date=p_date,
+        status="PAID",
+        notes=notes.strip() if notes else None
+    )
+    db.add(tp)
+    db.commit()
+    return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance?tab=accounting&year={year}", status_code=303)
+
 
 
 
