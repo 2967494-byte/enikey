@@ -37,6 +37,8 @@ def format_money(val) -> str:
     if val is None or val == "":
         return "0"
     try:
+        if hasattr(val, "_undefined_name") or type(val).__name__ == "Undefined":
+            return "0"
         f = float(val)
         sign = "-" if f < 0 else ""
         abs_f = abs(f)
@@ -45,8 +47,8 @@ def format_money(val) -> str:
         else:
             formatted = f"{abs_f:,.2f}".replace(",", " ").replace(".", ",")
         return f"{sign}{formatted}"
-    except (ValueError, TypeError):
-        return str(val)
+    except Exception:
+        return "0"
 
 templates.env.filters["money"] = format_money
 
@@ -294,10 +296,19 @@ def project_detail_page(project_id: int, request: Request, db: Session = Depends
     auto_stats = None
     if project.project_type == ProjectType.AUTO:
         payload = project.template_payload or {}
-        cur_m = payload.get("current_mileage", 0)
-        last_to_m = payload.get("last_to_mileage", 0)
-        interval = payload.get("to_interval_km", 10000)
-        rem_km = (int(last_to_m) + int(interval)) - int(cur_m)
+        try:
+            cur_m = int(payload.get("current_mileage") or 0)
+        except (ValueError, TypeError):
+            cur_m = 0
+        try:
+            last_to_m = int(payload.get("last_to_mileage") or 0)
+        except (ValueError, TypeError):
+            last_to_m = 0
+        try:
+            interval = int(payload.get("to_interval_km") or 10000)
+        except (ValueError, TypeError):
+            interval = 10000
+        rem_km = (last_to_m + interval) - cur_m
         auto_stats = {
             "current_mileage": cur_m,
             "last_to_mileage": last_to_m,

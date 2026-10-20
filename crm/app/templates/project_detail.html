@@ -233,8 +233,8 @@
             </div>
             <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
                 <div class="text-xs text-slate-400">Текущий остаток долга</div>
-                <div class="text-lg font-bold text-rose-400 mt-1">{{ payload.remaining_balance|money }} ₽</div>
-                <div class="text-xs text-slate-500 mt-1">Исходная сумма: {{ payload.total_loan_amount|money }} ₽</div>
+                <div class="text-lg font-bold text-rose-400 mt-1">{{ (payload.remaining_balance or 0)|money }} ₽</div>
+                <div class="text-xs text-slate-500 mt-1">Исходная сумма: {{ (payload.total_loan_amount or 0)|money }} ₽</div>
             </div>
             <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
                 <div class="text-xs text-slate-400">Осталось месяцев</div>
@@ -242,20 +242,20 @@
                     {% if payload.remaining_months %}{{ payload.remaining_months }} мес.{% else %}—{% endif %}
                 </div>
                 <div class="text-xs text-slate-400 mt-1">
-                    {% set calc_sum = payload.calculated_remaining_sum or (payload.remaining_months * payload.monthly_payment if payload.remaining_months and payload.monthly_payment else None) %}
+                    {% set calc_sum = payload.calculated_remaining_sum or ((payload.remaining_months|int * payload.monthly_payment|float) if payload.remaining_months and payload.monthly_payment else None) %}
                     Расчетная сумма: <span class="text-emerald-400 font-semibold">{% if calc_sum %}{{ calc_sum|money }} ₽{% else %}—{% endif %}</span>
                 </div>
             </div>
             <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
                 <div>
                     <div class="text-xs text-slate-400">Ежемесячный платеж</div>
-                    <div class="text-lg font-bold text-indigo-400 mt-1">{{ payload.monthly_payment|money }} ₽</div>
+                    <div class="text-lg font-bold text-indigo-400 mt-1">{{ (payload.monthly_payment or 0)|money }} ₽</div>
                     <div class="text-xs text-slate-500">{{ payload.payment_day or 15 }}-го числа месяца</div>
                 </div>
                 <form action="{{ prefix }}/actions/pay-loan/{{ project.id }}" method="POST" class="mt-2">
                     <input type="hidden" name="amount_paid" value="{{ payload.monthly_payment or 0 }}">
                     <button type="submit" class="w-full py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition">
-                        Внести платеж (-{{ payload.monthly_payment|money }} ₽)
+                        Внести платеж (-{{ (payload.monthly_payment or 0)|money }} ₽)
                     </button>
                 </form>
             </div>
