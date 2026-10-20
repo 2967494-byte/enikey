@@ -65,9 +65,17 @@
         [class*="backdrop-blur"] { backdrop-filter:none!important; }
         button, input, select, textarea { font:inherit; }
         button { transition:background-color .16s ease,color .16s ease,border-color .16s ease!important; }
-        button[class*="bg-indigo-"], aside button { background:var(--ink)!important; color:white!important; border:1px solid var(--ink)!important; border-radius:2px!important; box-shadow:none!important; }
-        button[class*="bg-indigo-"]:hover, aside button:hover { background:var(--signal)!important; border-color:var(--signal)!important; }
+        button[class*="bg-indigo-"], aside button.btn-primary { background:var(--ink)!important; color:white!important; border:1px solid var(--ink)!important; border-radius:2px!important; box-shadow:none!important; }
+        button[class*="bg-indigo-"]:hover, aside button.btn-primary:hover { background:var(--signal)!important; border-color:var(--signal)!important; }
         button[class*="bg-slate-"], button[class*="bg-rose-"], button[class*="bg-amber-"] { border-radius:2px!important; }
+        aside svg { flex-shrink:0!important; }
+        aside nav a svg, aside nav .nav-icon { width:18px!important; height:18px!important; min-width:18px!important; max-width:18px!important; display:inline-block; }
+        aside button.chevron-btn { background:transparent!important; border:none!important; box-shadow:none!important; color:var(--muted)!important; padding:4px!important; line-height:1!important; }
+        aside button.chevron-btn:hover { background:transparent!important; border:none!important; color:var(--ink)!important; }
+        aside button.new-cat-btn { background:transparent!important; border:1px dashed var(--line)!important; color:var(--signal)!important; box-shadow:none!important; border-radius:3px!important; }
+        aside button.new-cat-btn:hover { background:var(--soft)!important; border-color:var(--signal)!important; color:var(--signal)!important; }
+        #sidebar-categories-submenu svg { width:14px!important; height:14px!important; min-width:14px!important; max-width:14px!important; display:inline-block; }
+        #projects-menu-chevron { width:12px!important; height:12px!important; min-width:12px!important; max-width:12px!important; display:inline-block; }
         input, select, textarea { background:var(--surface)!important; color:var(--ink)!important; border-color:var(--line)!important; border-radius:2px!important; }
         input::placeholder, textarea::placeholder { color:#a1a198!important; }
         a { transition:color .16s ease; }
@@ -103,7 +111,7 @@
         <!-- Navigation Links -->
         <nav class="p-4 space-y-1.5 flex-1">
             <a href="{{ prefix }}/" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition {% if request.url.path == prefix or request.url.path == prefix + '/' %}bg-indigo-600/20 text-indigo-300 border border-indigo-500/30{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}">
-                <svg class="w-4.5 h-4.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25a2.25 2.25 0 01-2.25-2.25V6z"/></svg>
+                <svg width="18" height="18" class="w-[18px] h-[18px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25a2.25 2.25 0 01-2.25-2.25V6z"/></svg>
                 <span>Главный пульт</span>
             </a>
 
@@ -111,11 +119,11 @@
             <div class="space-y-1">
                 <div class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition cursor-pointer {% if prefix + '/projects' in request.url.path %}bg-indigo-600/20 text-indigo-300 border border-indigo-500/30{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}" onclick="toggleProjectsMenu()">
                     <a href="{{ prefix }}/projects" class="flex items-center gap-3 flex-1 min-w-0" onclick="event.stopPropagation()">
-                        <svg class="w-4.5 h-4.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3"/></svg>
+                        <svg width="18" height="18" class="w-[18px] h-[18px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3"/></svg>
                         <span class="truncate">Проекты и Квоты</span>
                     </a>
-                    <button type="button" class="p-1 text-slate-400 hover:text-white transition" aria-label="Развернуть категории">
-                        <svg id="projects-menu-chevron" class="w-3.5 h-3.5 transform transition-transform duration-200 {% if prefix + '/projects' in request.url.path %}rotate-180{% endif %}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    <button type="button" class="chevron-btn p-1 text-slate-400 hover:text-white transition" aria-label="Развернуть категории">
+                        <svg id="projects-menu-chevron" width="12" height="12" class="w-3 h-3 transform transition-transform duration-200 {% if prefix + '/projects' in request.url.path %}rotate-180{% endif %}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
                     </button>
                 </div>
 
@@ -124,7 +132,7 @@
                     {% for cat in sidebar_categories %}
                     <a href="{{ prefix }}/projects#cat-{{ cat.slug }}" class="flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition group">
                         <span class="flex items-center gap-2 truncate">
-                            <span class="text-indigo-400 group-hover:text-indigo-300">{{ cat.icon | cat_icon | safe }}</span>
+                            <span class="text-indigo-400 group-hover:text-indigo-300 w-4 h-4 flex items-center justify-center shrink-0">{{ cat.icon | cat_icon | safe }}</span>
                             <span class="truncate text-[12px]">{{ cat.title }}</span>
                         </span>
                         <span class="text-[10px] text-slate-500 group-hover:text-slate-300 font-semibold px-1.5 py-0.5 rounded bg-slate-800/80 shrink-0">
@@ -134,19 +142,19 @@
                     {% endfor %}
 
                     <!-- "Новая категория" Button -->
-                    <button type="button" onclick="openNewCategoryModal()" class="w-full flex items-center gap-2 px-2.5 py-1.5 mt-1 rounded text-xs font-medium text-indigo-400 hover:text-indigo-300 hover:bg-indigo-600/10 transition">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                    <button type="button" onclick="openNewCategoryModal()" class="new-cat-btn w-full flex items-center gap-2 px-2.5 py-1.5 mt-1 rounded text-xs font-medium text-indigo-400 hover:text-indigo-300 transition">
+                        <svg width="14" height="14" class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                         <span>Новая категория</span>
                     </button>
                 </div>
             </div>
 
             <a href="{{ prefix }}/logistics" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition {% if prefix + '/logistics' in request.url.path %}bg-indigo-600/20 text-indigo-300 border border-indigo-500/30{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}">
-                <svg class="w-4.5 h-4.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>
+                <svg width="18" height="18" class="w-[18px] h-[18px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>
                 <span>Логистика и Заказы</span>
             </a>
             <a href="{{ prefix }}/finance" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition {% if prefix + '/finance' in request.url.path %}bg-indigo-600/20 text-indigo-300 border border-indigo-500/30{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}">
-                <svg class="w-4.5 h-4.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+                <svg width="18" height="18" class="w-[18px] h-[18px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
                 <span>Финансы и Радар</span>
             </a>
 
@@ -156,14 +164,14 @@
                 </div>
                 <a href="{{ prefix }}/docs" target="_blank" class="flex items-center justify-between px-3.5 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition">
                     <span class="flex items-center gap-2">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>
+                        <svg width="14" height="14" class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>
                         <span>Swagger API</span>
                     </span>
                     <span class="text-[10px] text-slate-500">v1</span>
                 </a>
                 <a href="{{ prefix }}/api/v1/tools" target="_blank" class="flex items-center justify-between px-3.5 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition">
                     <span class="flex items-center gap-2">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z"/></svg>
+                        <svg width="14" height="14" class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z"/></svg>
                         <span>Инструменты API</span>
                     </span>
                     <span class="text-[10px] text-indigo-400 font-semibold">JSON</span>
@@ -173,8 +181,8 @@
 
         <!-- Quick Task Modal Button -->
         <div class="p-4 border-t border-slate-800">
-            <button onclick="document.getElementById('modal-quick-task').classList.remove('hidden')" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 transition active:scale-98">
-                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            <button onclick="document.getElementById('modal-quick-task').classList.remove('hidden')" class="btn-primary w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 transition active:scale-98">
+                <svg width="16" height="16" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                 <span>Новая задача</span>
             </button>
         </div>
