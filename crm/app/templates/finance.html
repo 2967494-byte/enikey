@@ -3,16 +3,68 @@
 {% block title %}Финансы, ИП и Контрагенты — Enikey CRM{% endblock %}
 
 {% block content %}
-<div class="p-4 md:p-6 space-y-6 max-w-7xl mx-auto w-full">
+<style>
+.ip-income-page { --ip-paper:#f4f3ef; --ip-surface:#fbfaf7; --ip-ink:#171915; --ip-muted:#777970; --ip-line:#d5d5ce; --ip-accent:#f05b36; gap:28px!important; }
+.ip-income-page .ip-income-header { align-items:flex-end!important; padding:0 0 24px!important; border-color:var(--ip-line)!important; }
+.ip-income-page .ip-income-header h2 svg { display:none; }
+.ip-income-page .ip-income-header h2 { font-size:clamp(1.65rem,3vw,2.45rem)!important; line-height:1.08; letter-spacing:-.055em!important; font-weight:600!important; }
+.ip-income-page .ip-income-header p { max-width:620px; margin-top:10px!important; color:var(--ip-muted)!important; font-size:.82rem!important; line-height:1.65; }
+.ip-income-page .ip-finance-tabs { gap:0!important; padding:0!important; border-color:var(--ip-line)!important; }
+.ip-income-page .ip-finance-tabs > a { border:0!important; border-bottom:2px solid transparent!important; border-radius:0!important; background:transparent!important; box-shadow:none!important; color:var(--ip-muted)!important; padding:13px 17px!important; font-size:.76rem!important; }
+.ip-income-page .ip-finance-tabs > a:hover { color:var(--ip-ink)!important; background:transparent!important; }
+.ip-income-page .ip-finance-tabs > a[class*="bg-emerald-600"] { color:var(--ip-ink)!important; border-bottom-color:var(--ip-accent)!important; }
+.ip-income-page .ip-finance-tabs > a svg { display:none; }
+.ip-income-page .ip-income-header > div:last-child button:first-child { background:transparent!important; border:1px solid var(--ip-line)!important; color:var(--ip-ink)!important; box-shadow:none!important; }
+.ip-income-page .ip-income-header > div:last-child button:last-child { background:var(--ip-ink)!important; border:1px solid var(--ip-ink)!important; color:#fff!important; box-shadow:none!important; }
+.ip-income-page .ip-income-header > div:last-child button:last-child:hover { background:var(--ip-accent)!important; border-color:var(--ip-accent)!important; }
+.ip-income-page .ip-finance-tabs > a > span:last-child { background:var(--ip-paper)!important; color:var(--ip-muted)!important; border:1px solid var(--ip-line)!important; border-radius:2px!important; padding:3px 6px!important; }
+.ip-income-page .ip-income-metrics { grid-template-columns:repeat(4,minmax(0,1fr)); gap:1px!important; background:var(--ip-line); border:1px solid var(--ip-line); }
+.ip-income-page .ip-income-metrics > div { min-height:132px; display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:12px!important; padding:20px 22px!important; border:0!important; border-radius:0!important; background:var(--ip-surface)!important; }
+.ip-income-page .ip-income-metrics > div > span { color:var(--ip-muted)!important; font-size:.68rem!important; line-height:1.5; }
+.ip-income-page .ip-income-metrics > div > div:nth-child(2) { color:var(--ip-ink)!important; font-size:clamp(1.35rem,2.1vw,1.9rem)!important; letter-spacing:-.05em; line-height:1.1; font-weight:600!important; }
+.ip-income-page .ip-income-metrics > div > div:last-child { color:var(--ip-muted)!important; font-size:.66rem!important; }
+.ip-income-page .ip-income-metrics a { color:var(--ip-accent)!important; text-decoration:none; }
+.ip-income-page .ip-income-ledger { border:1px solid var(--ip-line)!important; border-radius:3px!important; background:var(--ip-surface)!important; box-shadow:none!important; }
+.ip-income-page .ip-income-ledger > div:first-child { padding:20px 22px!important; background:transparent!important; border-color:var(--ip-line)!important; }
+.ip-income-page .ip-income-ledger h3 { font-size:1.02rem!important; font-weight:600!important; }
+.ip-income-page .ip-income-ledger h3 svg { display:none; }
+.ip-income-page .ip-income-ledger p { color:var(--ip-muted)!important; font-size:.72rem!important; }
+.ip-income-page .ip-income-ledger > div:first-child > div:last-child { gap:6px!important; }
+.ip-income-page .ip-income-ledger button { border-radius:2px!important; box-shadow:none!important; }
+.ip-income-page .ip-income-ledger > div:first-child button { padding:8px 10px!important; background:transparent!important; border:1px solid var(--ip-line)!important; color:var(--ip-muted)!important; font-size:.68rem!important; }
+.ip-income-page .ip-income-ledger > div:first-child button:hover { background:var(--ip-paper)!important; color:var(--ip-ink)!important; }
+.ip-income-page .month-accordion-item { border-color:var(--ip-line)!important; }
+.ip-income-page .month-accordion-item > button { padding:17px 22px!important; background:var(--ip-surface)!important; }
+.ip-income-page .month-accordion-item > button:hover { background:#f7f6f2!important; }
+.ip-income-page .month-accordion-item > button .accordion-arrow { width:24px!important; height:24px!important; border-radius:2px!important; background:var(--ip-paper)!important; color:var(--ip-muted)!important; }
+.ip-income-page .month-accordion-item > button .text-sm.font-bold { font-size:.86rem!important; font-weight:600!important; }
+.ip-income-page .month-accordion-item > button .text-emerald-400 { color:var(--ip-ink)!important; font-size:.9rem!important; font-weight:600!important; }
+.ip-income-page .month-accordion-item > button > div:last-child > span:last-child { border-radius:2px!important; background:var(--ip-paper)!important; border-color:var(--ip-line)!important; color:var(--ip-muted)!important; font-weight:400!important; }
+.ip-income-page .month-content { padding:0!important; background:var(--ip-surface)!important; border-color:var(--ip-line)!important; }
+.ip-income-page .month-content table { border-collapse:collapse; min-width:860px; }
+.ip-income-page .month-content thead { background:#f1f0eb!important; color:var(--ip-muted)!important; }
+.ip-income-page .month-content th { padding:12px 13px!important; color:var(--ip-muted)!important; font-size:.61rem!important; letter-spacing:.07em; font-weight:600!important; }
+.ip-income-page .month-content td { padding:13px!important; border-color:#e8e7e1!important; font-size:.72rem!important; }
+.ip-income-page .month-content tbody tr:hover { background:#f7f6f2!important; }
+.ip-income-page .month-content td:nth-child(2) { color:var(--ip-ink)!important; font-weight:600!important; }
+.ip-income-page .month-content td:nth-child(3), .ip-income-page .month-content td:nth-child(4) { color:var(--ip-ink)!important; }
+.ip-income-page .month-content td:nth-child(5) span { background:#f1f0eb!important; border:1px solid var(--ip-line)!important; border-radius:2px!important; color:var(--ip-muted)!important; padding:4px 7px!important; font-weight:500!important; }
+.ip-income-page .month-content td:nth-child(9) button { width:30px;height:30px; display:inline-flex;align-items:center;justify-content:center; background:transparent!important; border:1px solid transparent!important; color:var(--ip-muted)!important; }
+.ip-income-page .month-content td:nth-child(9) button:hover { background:var(--ip-paper)!important; border-color:var(--ip-line)!important; color:var(--ip-ink)!important; }
+.ip-income-page a:hover { color:var(--ip-accent); }
+@media(max-width:900px) { .ip-income-page .ip-income-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:640px) { .ip-income-page { gap:20px!important; } .ip-income-page .ip-income-header { align-items:stretch!important; } .ip-income-page .ip-income-header > div:last-child { width:100%; } .ip-income-page .ip-income-header > div:last-child button { flex:1; justify-content:center; } .ip-income-page .ip-income-metrics > div { min-height:116px; padding:15px!important; } .ip-income-page .ip-finance-tabs > a { padding:12px 13px!important; } .ip-income-page .ip-income-ledger > div:first-child { padding:16px!important; } .ip-income-page .ip-month-actions { width:100%; } .ip-income-page .month-accordion-item > button { padding:15px!important; } }
+</style>
+<div class="p-4 md:p-6 space-y-6 max-w-7xl mx-auto w-full {% if active_tab == 'ip_incomes' %}ip-income-page{% endif %}">
 
     <!-- Header & Action Controls -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+    <div class="ip-income-header flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
             <h2 class="text-xl font-bold text-white flex items-center gap-2">
                 <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                <span>Финансы, ИП и Контрагенты</span>
+                <span>{% if active_tab == 'ip_incomes' %}Поступления ИП{% else %}Финансы, ИП и Контрагенты{% endif %}</span>
             </h2>
-            <p class="text-xs text-slate-400 mt-1">Раздельный учет личных финансов, поступлений на ИП с детализацией по месяцам, база юрлиц-контрагентов и налоги УСН 6%.</p>
+            <p class="text-xs text-slate-400 mt-1">{% if active_tab == 'ip_incomes' %}Учет выручки и платежей по месяцам. Договоры, контрагенты и налоговая сводка — в одном месте.{% else %}Раздельный учет личных финансов, поступлений на ИП с детализацией по месяцам, база юрлиц-контрагентов и налоги УСН 6%.{% endif %}</p>
         </div>
 
         <!-- Dynamic Action Buttons depending on Tab -->
@@ -54,7 +106,7 @@
     </div>
 
     <!-- Main Navigation Tabs -->
-    <div class="flex items-center gap-2 border-b border-slate-800 pb-3 overflow-x-auto custom-scrollbar">
+    <div class="ip-finance-tabs flex items-center gap-2 border-b border-slate-800 pb-3 overflow-x-auto custom-scrollbar">
         <a href="{{ prefix }}/finance?tab=radar" class="px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shrink-0 {% if active_tab == 'radar' %}bg-indigo-600 text-white shadow-md shadow-indigo-600/20{% else %}bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800{% endif %}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
             <span>Личные финансы и Радар</span>
@@ -332,7 +384,7 @@
     <!-- ============================================================= -->
     {% if active_tab == 'ip_incomes' %}
     <!-- IP Metrics Overview -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="ip-income-metrics grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
             <span class="text-xs text-slate-400 font-medium">Общая выручка за всё время</span>
             <div class="text-2xl font-bold text-emerald-400">{{ total_ip_revenue|money }} ₽</div>
@@ -363,7 +415,7 @@
     </div>
 
     <!-- Monthly Accordion Incomes Table -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+    <div class="ip-income-ledger bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
         <div class="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-800/30">
             <div>
                 <h3 class="text-base font-bold text-white flex items-center gap-2">
