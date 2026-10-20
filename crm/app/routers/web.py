@@ -1,5 +1,6 @@
 from datetime import date, datetime, timedelta, time
 from typing import Optional
+import calendar as pycalendar
 from fastapi import APIRouter, Depends, Request, Form, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -358,12 +359,48 @@ def finance_page(
     request: Request,
     tab: str = "radar",
     year: Optional[int] = None,
+    calendar_month: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     radar = BudgetGuard.get_financial_radar(db)
 
     # All records
     records = db.query(FinanceRecord).order_by(FinanceRecord.planned_date.asc()).all()
+
+    # One-month personal finance calendar. Planned and completed transactions
+    # remain visible; wishlist items are goals, not scheduled cash movement.
+    today = date.today()
+    try:
+        selected_calendar_month = datetime.strptime(calendar_month or "", "%Y-%m").date().replace(day=1)
+    except ValueError:
+        selected_calendar_month = today.replace(day=1)
+    prev_month = (selected_calendar_month.replace(day=1) - timedelta(days=1)).replace(day=1)
+    next_month = (selected_calendar_month.replace(day=28) + timedelta(days=4)).replace(day=1)
+    ru_months = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
+    calendar_events = {}
+    for record in records:
+        if record.status not in (FinanceStatus.PLANNED, FinanceStatus.EXECUTED):
+            continue
+        if record.record_type == FinanceRecordType.EXPENSE_WISHLIST:
+            continue
+        if record.planned_date.year != selected_calendar_month.year or record.planned_date.month != selected_calendar_month.month:
+            continue
+        event_type = "income" if record.record_type == FinanceRecordType.INCOME_EXPECTED else "payment"
+        calendar_events.setdefault(record.planned_date.day, []).append({
+            "title": record.title,
+            "amount": float(record.amount),
+            "type": event_type,
+            "executed": record.status == FinanceStatus.EXECUTED,
+        })
+    calendar_weeks = []
+    for week in pycalendar.Calendar(firstweekday=0).monthdatescalendar(selected_calendar_month.year, selected_calendar_month.month):
+        calendar_weeks.append([{
+            "date": day,
+            "in_month": day.month == selected_calendar_month.month,
+            "is_today": day == today,
+            "events": calendar_events.get(day.day, []) if day.month == selected_calendar_month.month else [],
+        } for day in week])
+    calendar_month_label = f"{ru_months[selected_calendar_month.month - 1].capitalize()} {selected_calendar_month.year}"
 
     # Incomes Breakdown:
     # 1. Planned future one-time incomes (status=PLANNED, recurrence=NONE)
@@ -451,6 +488,10 @@ def finance_page(
         name="finance.html",
         context=template_context(request, {
             "active_tab": tab,
+            "calendar_weeks": calendar_weeks,
+            "calendar_month_label": calendar_month_label,
+            "previous_calendar_month": prev_month.strftime("%Y-%m"),
+            "next_calendar_month": next_month.strftime("%Y-%m"),
             "target_year": target_year,
             "available_years": available_years,
             "ip_monthly_groups": ip_monthly_groups,

@@ -108,7 +108,39 @@
 .finance-page .finance-counterparty-grid { gap:14px!important; }
 .finance-page .finance-counterparty-grid > div { min-width:0; }
 @media(max-width:900px) { .finance-page .finance-overview { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-@media(max-width:640px) { .finance-page { gap:20px!important; } .finance-page .finance-page-header { align-items:stretch!important; } .finance-page .finance-page-header > div:last-child { width:100%; } .finance-page .finance-page-header > div:last-child button { flex:1; justify-content:center; } .finance-page .finance-overview > div { min-height:116px; padding:15px!important; } .finance-page .ip-finance-tabs > a { padding:12px 13px!important; } }</style>
+@media(max-width:640px) { .finance-page { gap:20px!important; } .finance-page .finance-page-header { align-items:stretch!important; } .finance-page .finance-page-header > div:last-child { width:100%; } .finance-page .finance-page-header > div:last-child button { flex:1; justify-content:center; } .finance-page .finance-overview > div { min-height:116px; padding:15px!important; } .finance-page .ip-finance-tabs > a { padding:12px 13px!important; } }
+.finance-calendar { overflow:hidden; }
+.finance-calendar-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 22px 14px; border-bottom:1px solid var(--finance-line); }
+.finance-calendar-header h3 { margin:0; color:var(--finance-ink); font-size:1rem; font-weight:600; letter-spacing:-.025em; }
+.finance-calendar-header p { margin:5px 0 0; color:var(--finance-muted); font-size:.72rem; }
+.finance-calendar-controls { display:flex; align-items:center; gap:12px; }
+.finance-calendar-controls strong { min-width:150px; text-align:center; color:var(--finance-ink); font-size:.82rem; font-weight:600; }
+.finance-calendar-controls a { display:grid; width:34px; height:34px; place-items:center; border:1px solid var(--finance-line); border-radius:2px; color:var(--finance-ink); font-size:1.15rem; text-decoration:none; }
+.finance-calendar-controls a:hover { border-color:var(--finance-accent); color:var(--finance-accent); }
+.finance-calendar-legend { display:flex; gap:20px; padding:12px 22px; color:var(--finance-muted); font-size:.68rem; }
+.finance-calendar-legend span { display:inline-flex; align-items:center; gap:7px; }
+.finance-calendar-dot { width:8px; height:8px; border-radius:50%; }
+.finance-calendar-dot.is-payment { background:#c64e45; }
+.finance-calendar-dot.is-income { background:#3d8b65; }
+.finance-calendar-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); border-top:1px solid var(--finance-line); border-left:1px solid var(--finance-line); }
+.finance-calendar-weekday { padding:10px 12px; border-right:1px solid var(--finance-line); border-bottom:1px solid var(--finance-line); background:#f1f0eb; color:var(--finance-muted); font-size:.61rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
+.finance-calendar-day { min-width:0; min-height:116px; padding:9px; border-right:1px solid var(--finance-line); border-bottom:1px solid var(--finance-line); background:var(--finance-surface); }
+.finance-calendar-day.is-outside { background:#f5f4f0; }
+.finance-calendar-day.is-outside .finance-calendar-date { color:#b7b6ae; }
+.finance-calendar-date { display:grid; width:25px; height:25px; place-items:center; margin-bottom:5px; color:var(--finance-ink); font-size:.72rem; }
+.finance-calendar-day.is-today .finance-calendar-date { border-radius:50%; background:var(--finance-ink); color:#fff; }
+.finance-calendar-events { display:grid; gap:4px; }
+.finance-calendar-event { min-width:0; padding:5px 6px; border-left:2px solid; font-size:.62rem; line-height:1.3; }
+.finance-calendar-event > span { display:block; overflow:hidden; color:var(--finance-ink); font-weight:500; text-overflow:ellipsis; white-space:nowrap; }
+.finance-calendar-event > strong { display:block; margin-top:2px; font-size:.61rem; font-weight:600; }
+.finance-calendar-event.is-payment { border-color:#c64e45; background:#f8eeeb; }
+.finance-calendar-event.is-payment > strong { color:#a64038; }
+.finance-calendar-event.is-income { border-color:#3d8b65; background:#edf4ee; }
+.finance-calendar-event.is-income > strong { color:#337651; }
+.finance-calendar-event.is-executed { opacity:.65; }
+@media(max-width:760px) { .finance-calendar-header { align-items:flex-start; flex-direction:column; } .finance-calendar-controls { width:100%; justify-content:space-between; } .finance-calendar-controls strong { flex:1; } .finance-calendar-day { min-height:86px; padding:5px; } .finance-calendar-event { padding:4px; } .finance-calendar-event > span { white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; } }
+@media(max-width:480px) { .finance-calendar-day { min-height:66px; } .finance-calendar-event > span { display:none; } .finance-calendar-event > strong { margin:0; font-size:.55rem; } .finance-calendar-weekday { padding:8px 2px; text-align:center; font-size:.52rem; } .finance-calendar-legend { padding:10px 14px; } }
+</style>
 <div class="p-4 md:p-6 space-y-6 max-w-7xl mx-auto w-full finance-page finance-{{ active_tab }} {% if active_tab == 'ip_incomes' %}ip-income-page{% endif %}">
 
     <!-- Header & Action Controls -->
@@ -229,6 +261,46 @@
             <div class="text-[11px] text-slate-500">Запланировано всего: {{ total_planned_incomes|money }} ₽</div>
         </div>
     </div>
+
+
+    <!-- Personal finance calendar -->
+    <section class="finance-calendar finance-panel" aria-labelledby="finance-calendar-title">
+        <header class="finance-calendar-header">
+            <div>
+                <h3 id="finance-calendar-title">Календарь движения денег</h3>
+                <p>Платежи и ожидаемые поступления по датам</p>
+            </div>
+            <div class="finance-calendar-controls">
+                <a href="{{ prefix }}/finance?tab=radar&amp;calendar_month={{ previous_calendar_month }}" aria-label="Предыдущий месяц">←</a>
+                <strong>{{ calendar_month_label }}</strong>
+                <a href="{{ prefix }}/finance?tab=radar&amp;calendar_month={{ next_calendar_month }}" aria-label="Следующий месяц">→</a>
+            </div>
+        </header>
+        <div class="finance-calendar-legend" aria-label="Обозначения календаря">
+            <span><i class="finance-calendar-dot is-payment"></i>Платежи</span>
+            <span><i class="finance-calendar-dot is-income"></i>Поступления</span>
+        </div>
+        <div class="finance-calendar-grid" role="grid" aria-label="{{ calendar_month_label }}">
+            {% for weekday in ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'] %}
+            <div class="finance-calendar-weekday" role="columnheader">{{ weekday }}</div>
+            {% endfor %}
+            {% for week in calendar_weeks %}
+                {% for day in week %}
+                <div class="finance-calendar-day{% if not day.in_month %} is-outside{% endif %}{% if day.is_today %} is-today{% endif %}" role="gridcell">
+                    <span class="finance-calendar-date">{{ day.date.day }}</span>
+                    <div class="finance-calendar-events">
+                        {% for event in day.events %}
+                        <div class="finance-calendar-event {% if event.type == 'income' %}is-income{% else %}is-payment{% endif %}{% if event.executed %} is-executed{% endif %}" title="{{ event.title }} — {{ event.amount|money }} ₽">
+                            <span>{{ event.title }}</span>
+                            <strong>{% if event.type == 'income' %}+{% else %}−{% endif %}{{ event.amount|money }} ₽</strong>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </section>
 
     <!-- Incomes Management Section -->
     <div class="finance-panel bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
