@@ -68,6 +68,18 @@
                                 {% if loan.monthly_payment %}{{ loan.monthly_payment|round(0)|int }} ₽/мес{% else %}—{% endif %}
                             </span>
                         </div>
+                        {% if loan.remaining_months %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-400">Осталось:</span>
+                            <span class="font-medium text-amber-300">
+                                {{ loan.remaining_months }} мес.
+                                {% set calc_sum = loan.calculated_remaining_sum or (loan.remaining_months * loan.monthly_payment if loan.monthly_payment else None) %}
+                                {% if calc_sum %}
+                                <span class="text-slate-400 text-[11px] font-normal">({{ calc_sum|round(0)|int }} ₽)</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
                         {% if loan.payment_day %}
                         <div class="text-[11px] text-slate-400 flex items-center justify-between pt-1 border-t border-slate-700/50">
                             <span>День списания:</span>

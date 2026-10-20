@@ -220,7 +220,7 @@
             <h3 class="text-base font-bold text-white flex items-center gap-2"> Кредитные обязательства и График</h3>
             <button onclick="document.getElementById('modal-edit-project').classList.remove('hidden')" class="text-xs text-indigo-400 hover:underline">Изменить условия</button>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
                 <div class="text-xs text-slate-400">Банк / Договор</div>
                 <div class="text-lg font-bold text-white mt-1">{{ payload.bank_name or project.title }}</div>
@@ -230,6 +230,16 @@
                 <div class="text-xs text-slate-400">Текущий остаток долга</div>
                 <div class="text-lg font-bold text-rose-400 mt-1">{{ payload.remaining_balance or 0 }} ₽</div>
                 <div class="text-xs text-slate-500 mt-1">Исходная сумма: {{ payload.total_loan_amount or 0 }} ₽</div>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
+                <div class="text-xs text-slate-400">Осталось месяцев</div>
+                <div class="text-lg font-bold text-amber-300 mt-1">
+                    {% if payload.remaining_months %}{{ payload.remaining_months }} мес.{% else %}—{% endif %}
+                </div>
+                <div class="text-xs text-slate-400 mt-1">
+                    {% set calc_sum = payload.calculated_remaining_sum or (payload.remaining_months * payload.monthly_payment if payload.remaining_months and payload.monthly_payment else None) %}
+                    Расчетная сумма: <span class="text-emerald-400 font-semibold">{% if calc_sum %}{{ calc_sum|round(0)|int }} ₽{% else %}—{% endif %}</span>
+                </div>
             </div>
             <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
                 <div>
@@ -682,11 +692,21 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Ежемесячный платеж (₽)</label>
-                        <input type="number" name="monthly_payment" value="{{ payload.monthly_payment or '' }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        <input type="number" step="any" min="0" id="loan_monthly_payment" name="monthly_payment" value="{{ payload.monthly_payment or '' }}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500" oninput="updateLoanCalculatedSum()">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">День месяца (1..31)</label>
                         <input type="number" name="payment_day" value="{{ payload.payment_day or 15 }}" min="1" max="31" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Осталось месяцев</label>
+                        <input type="number" step="1" min="0" id="loan_remaining_months" name="remaining_months" value="{{ payload.remaining_months or '' }}" placeholder="Сколько еще платить (мес)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-amber-300 font-medium focus:outline-none focus:border-indigo-500" oninput="updateLoanCalculatedSum()">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Расчетная сумма (мес × платеж) (₽)</label>
+                        <input type="number" step="any" min="0" id="loan_calculated_remaining_sum" name="calculated_remaining_sum" value="{{ payload.calculated_remaining_sum or ((payload.remaining_months * payload.monthly_payment)|round(0)|int if payload.remaining_months and payload.monthly_payment else '') }}" placeholder="Рассчитывается автоматически" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-emerald-400 font-bold focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
 
@@ -847,6 +867,21 @@
             const span = r.querySelector('.row-index');
             if (span) span.innerText = idx + 1;
         });
+    }
+
+    function updateLoanCalculatedSum() {
+        const monthsInput = document.getElementById('loan_remaining_months');
+        const paymentInput = document.getElementById('loan_monthly_payment');
+        const sumInput = document.getElementById('loan_calculated_remaining_sum');
+        if (!monthsInput || !paymentInput || !sumInput) return;
+
+        const months = parseFloat(monthsInput.value) || 0;
+        const payment = parseFloat(paymentInput.value) || 0;
+        if (months > 0 && payment > 0) {
+            sumInput.value = Math.round(months * payment);
+        } else if (months === 0 || payment === 0) {
+            sumInput.value = '';
+        }
     }
 
     document.addEventListener('DOMContentLoaded', function() {

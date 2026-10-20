@@ -526,6 +526,15 @@ class CommandExecutor:
         old_balance = float(payload.get("remaining_balance", 0.0))
         new_balance = max(0.0, old_balance - cmd.amount_paid)
         payload["remaining_balance"] = new_balance
+        if "remaining_months" in payload and payload["remaining_months"]:
+            try:
+                months = int(payload["remaining_months"])
+                if months > 0:
+                    payload["remaining_months"] = months - 1
+                    if "monthly_payment" in payload and payload["monthly_payment"]:
+                        payload["calculated_remaining_sum"] = (months - 1) * float(payload["monthly_payment"])
+            except Exception:
+                pass
         proj.template_payload = payload
 
         # Record executed expense

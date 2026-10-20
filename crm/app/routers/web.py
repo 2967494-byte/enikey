@@ -686,6 +686,26 @@ async def action_edit_project(
                 payload["payment_day"] = int(form_data.get("payment_day"))
             except Exception:
                 pass
+        if "remaining_months" in form_data:
+            val = form_data.get("remaining_months")
+            if val is not None and str(val).strip() != "":
+                try:
+                    payload["remaining_months"] = int(val)
+                except Exception:
+                    pass
+            else:
+                payload.pop("remaining_months", None)
+        if "calculated_remaining_sum" in form_data:
+            val = form_data.get("calculated_remaining_sum")
+            if val is not None and str(val).strip() != "":
+                try:
+                    payload["calculated_remaining_sum"] = float(val)
+                except Exception:
+                    pass
+            elif payload.get("remaining_months") and payload.get("monthly_payment"):
+                payload["calculated_remaining_sum"] = float(payload["remaining_months"]) * float(payload["monthly_payment"])
+            else:
+                payload.pop("calculated_remaining_sum", None)
 
     elif proj.project_type == ProjectType.DIY_BUILD:
         if "specs" in form_data:
