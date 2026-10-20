@@ -167,17 +167,45 @@ class FinanceRecord(Base):
     project = relationship("Project", back_populates="finance_records")
     supply_item = relationship("SupplyItem")
 
+class Counterparty(Base):
+    """Справочник контрагентов (Юридические лица, ИП, партнеры)"""
+    __tablename__ = "counterparties"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False, index=True) # Краткое наименование: ООО "Вектор"
+    full_name = Column(String(500), nullable=True) # Полное наименование по ЕГРЮЛ
+    inn = Column(String(12), nullable=True, index=True) # ИНН (10 или 12 знаков)
+    kpp = Column(String(9), nullable=True) # КПП (9 знаков)
+    ogrn = Column(String(15), nullable=True) # ОГРН / ОГРНИП
+    legal_address = Column(Text, nullable=True) # Юридический адрес
+    actual_address = Column(Text, nullable=True) # Фактический / почтовый адрес
+    bank_name = Column(String(255), nullable=True) # Наименование банка
+    bik = Column(String(9), nullable=True) # БИК банка (9 цифр)
+    corr_account = Column(String(20), nullable=True) # Корр. счет (20 цифр)
+    checking_account = Column(String(20), nullable=True) # Расчетный счет контрагента (20 цифр)
+    contact_person = Column(String(255), nullable=True) # ФИО директора / контактного лица
+    contact_phone = Column(String(50), nullable=True) # Телефон
+    contact_email = Column(String(100), nullable=True) # Email
+    notes = Column(Text, default="") # Дополнительные примечания
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    grounds = relationship("IpPaymentGround", back_populates="counterparty")
+    incomes = relationship("IpIncome", back_populates="counterparty")
+
 class IpPaymentGround(Base):
     """Справочник оснований платежей / договоров ИП"""
     __tablename__ = "ip_payment_grounds"
 
     id = Column(Integer, primary_key=True, index=True)
+    counterparty_id = Column(Integer, ForeignKey("counterparties.id", ondelete="SET NULL"), nullable=True)
     name = Column(String(255), nullable=False) # e.g. "Договор №12/24 от 15.01.2024"
     client_name = Column(String(255), nullable=True) # Заказчик / плательщик
     default_account = Column(String(100), default="Т-Банк (Тинькофф)")
     description = Column(Text, default="")
     created_at = Column(DateTime, default=datetime.utcnow)
 
+    counterparty = relationship("Counterparty", back_populates="grounds")
     incomes = relationship("IpIncome", back_populates="ground")
 
 class IpIncome(Base):
@@ -191,12 +219,14 @@ class IpIncome(Base):
     invoice_number = Column(String(100), nullable=True) # Номер счета на оплату
     ground_id = Column(Integer, ForeignKey("ip_payment_grounds.id", ondelete="SET NULL"), nullable=True)
     ground_title = Column(String(255), nullable=True) # Название договора / основания
+    counterparty_id = Column(Integer, ForeignKey("counterparties.id", ondelete="SET NULL"), nullable=True)
     client_name = Column(String(255), nullable=True) # Контрагент / Клиент
     payment_type = Column(String(50), default="Оплата за месяц") # Аванс, Оплата за месяц, Окончательный расчет
     notes = Column(Text, default="")
     created_at = Column(DateTime, default=datetime.utcnow)
 
     ground = relationship("IpPaymentGround", back_populates="incomes")
+    counterparty = relationship("Counterparty", back_populates="incomes")
 
 class IpTaxPayment(Base):
     """Фактические платежи по налогам и взносам ИП"""
@@ -211,3 +241,4 @@ class IpTaxPayment(Base):
     status = Column(String(20), default="PAID") # PAID, PLANNED
     notes = Column(Text, default="")
     created_at = Column(DateTime, default=datetime.utcnow)
+

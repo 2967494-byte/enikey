@@ -27,6 +27,16 @@ async def lifespan(app: FastAPI):
         except Exception:
             pass
         try:
+            conn.execute(text("ALTER TABLE ip_incomes ADD COLUMN counterparty_id INTEGER"))
+            conn.commit()
+        except Exception:
+            pass
+        try:
+            conn.execute(text("ALTER TABLE ip_payment_grounds ADD COLUMN counterparty_id INTEGER"))
+            conn.commit()
+        except Exception:
+            pass
+        try:
             conn.execute(text("UPDATE projects SET category_slug = 'auto' WHERE category_slug = 'auto_loan' AND project_type = 'AUTO'"))
             conn.execute(text("UPDATE projects SET category_slug = 'loan' WHERE category_slug = 'auto_loan' AND project_type = 'LOAN'"))
             conn.commit()

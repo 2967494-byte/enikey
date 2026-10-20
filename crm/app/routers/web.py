@@ -15,7 +15,7 @@ from app.core.models import (
     Task, TaskStatus,
     FinanceRecord, FinanceRecordType, FinanceStatus, RecurrenceType,
     WalletState, Location,
-    IpPaymentGround, IpIncome, IpTaxPayment
+    IpPaymentGround, IpIncome, IpTaxPayment, Counterparty
 )
 from app.core.ip_accounting import calculate_ip_taxes, get_ip_incomes_grouped_by_month
 from app.core.executor import CommandExecutor
@@ -432,6 +432,20 @@ def finance_page(
     total_ip_revenue = sum(float(i.amount) for i in all_ip_incomes)
     year_ip_revenue = sum(float(i.amount) for i in all_ip_incomes if i.payment_date.year == target_year)
 
+    # Counterparties & Stats
+    counterparties = db.query(Counterparty).order_by(Counterparty.name.asc()).all()
+    counterparty_stats = {cp.id: {"total_amount": 0.0, "payments_count": 0} for cp in counterparties}
+    for inc in all_ip_incomes:
+        matched_id = inc.counterparty_id
+        if not matched_id and inc.client_name:
+            for cp in counterparties:
+                if cp.name.strip().lower() == inc.client_name.strip().lower():
+                    matched_id = cp.id
+                    break
+        if matched_id and matched_id in counterparty_stats:
+            counterparty_stats[matched_id]["total_amount"] += float(inc.amount)
+            counterparty_stats[matched_id]["payments_count"] += 1
+
     return templates.TemplateResponse(
         request=request,
         name="finance.html",
@@ -441,6 +455,8 @@ def finance_page(
             "available_years": available_years,
             "ip_monthly_groups": ip_monthly_groups,
             "ip_grounds": ip_grounds,
+            "counterparties": counterparties,
+            "counterparty_stats": counterparty_stats,
             "all_ip_incomes": all_ip_incomes,
             "total_ip_revenue": total_ip_revenue,
             "year_ip_revenue": year_ip_revenue,
@@ -723,6 +739,7 @@ def action_add_ip_income(
     invoice_number: Optional[str] = Form(None),
     ground_id: Optional[int] = Form(None),
     ground_title: Optional[str] = Form(None),
+    counterparty_id: Optional[int] = Form(None),
     client_name: Optional[str] = Form(None),
     payment_type: Optional[str] = Form("Оплата за месяц"),
     notes: Optional[str] = Form(None),
@@ -736,6 +753,12 @@ def action_add_ip_income(
 
     resolved_ground_title = (ground_title or "").strip()
     resolved_client = (client_name or "").strip()
+
+    if counterparty_id:
+        cp = db.query(Counterparty).filter(Counterparty.id == counterparty_id).first()
+        if cp and not resolved_client:
+            resolved_client = cp.name
+
     if ground_id:
         ground = db.query(IpPaymentGround).filter(IpPaymentGround.id == ground_id).first()
         if ground:
@@ -743,6 +766,8 @@ def action_add_ip_income(
                 resolved_ground_title = ground.name
             if not resolved_client and ground.client_name:
                 resolved_client = ground.client_name
+            if not counterparty_id and ground.counterparty_id:
+                counterparty_id = ground.counterparty_id
 
     income = IpIncome(
         payment_date=p_date,
@@ -751,6 +776,7 @@ def action_add_ip_income(
         invoice_number=invoice_number.strip() if invoice_number else None,
         ground_id=ground_id if ground_id else None,
         ground_title=resolved_ground_title or None,
+        counterparty_id=counterparty_id if counterparty_id else None,
         client_name=resolved_client or None,
         payment_type=(payment_type or "Оплата за месяц").strip(),
         notes=notes.strip() if notes else None
@@ -768,6 +794,7 @@ def action_edit_ip_income(
     invoice_number: Optional[str] = Form(None),
     ground_id: Optional[int] = Form(None),
     ground_title: Optional[str] = Form(None),
+    counterparty_id: Optional[int] = Form(None),
     client_name: Optional[str] = Form(None),
     payment_type: Optional[str] = Form("Оплата за месяц"),
     notes: Optional[str] = Form(None),
@@ -784,9 +811,16 @@ def action_edit_ip_income(
         inc.account_name = (account_name or "Основной счет ИП").strip()
         inc.invoice_number = invoice_number.strip() if invoice_number else None
         inc.ground_id = ground_id if ground_id else None
+        inc.counterparty_id = counterparty_id if counterparty_id else None
 
         resolved_ground_title = (ground_title or "").strip()
         resolved_client = (client_name or "").strip()
+
+        if counterparty_id:
+            cp = db.query(Counterparty).filter(Counterparty.id == counterparty_id).first()
+            if cp and not resolved_client:
+                resolved_client = cp.name
+
         if ground_id:
             ground = db.query(IpPaymentGround).filter(IpPaymentGround.id == ground_id).first()
             if ground:
@@ -794,6 +828,8 @@ def action_edit_ip_income(
                     resolved_ground_title = ground.name
                 if not resolved_client and ground.client_name:
                     resolved_client = ground.client_name
+                if not counterparty_id and ground.counterparty_id:
+                    inc.counterparty_id = ground.counterparty_id
 
         inc.ground_title = resolved_ground_title or None
         inc.client_name = resolved_client or None
@@ -817,15 +853,23 @@ def action_delete_ip_income(
 @router.post("/actions/add-ip-ground")
 def action_add_ip_ground(
     name: str = Form(...),
+    counterparty_id: Optional[int] = Form(None),
     client_name: Optional[str] = Form(None),
     default_account: Optional[str] = Form(None),
     description: Optional[str] = Form(None),
     redirect_to: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
+    resolved_client = client_name.strip() if client_name else None
+    if counterparty_id and not resolved_client:
+        cp = db.query(Counterparty).filter(Counterparty.id == counterparty_id).first()
+        if cp:
+            resolved_client = cp.name
+
     ground = IpPaymentGround(
         name=name.strip(),
-        client_name=client_name.strip() if client_name else None,
+        counterparty_id=counterparty_id if counterparty_id else None,
+        client_name=resolved_client,
         default_account=default_account.strip() if default_account else None,
         description=description.strip() if description else None
     )
@@ -844,6 +888,103 @@ def action_delete_ip_ground(
         db.delete(g)
         db.commit()
     return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance?tab=ip_incomes", status_code=303)
+
+# -------------------------------------------------------------
+# 5c. Counterparty Action Endpoints
+# -------------------------------------------------------------
+@router.post("/actions/add-counterparty")
+def action_add_counterparty(
+    name: str = Form(...),
+    full_name: Optional[str] = Form(None),
+    inn: Optional[str] = Form(None),
+    kpp: Optional[str] = Form(None),
+    ogrn: Optional[str] = Form(None),
+    legal_address: Optional[str] = Form(None),
+    actual_address: Optional[str] = Form(None),
+    bank_name: Optional[str] = Form(None),
+    bik: Optional[str] = Form(None),
+    corr_account: Optional[str] = Form(None),
+    checking_account: Optional[str] = Form(None),
+    contact_person: Optional[str] = Form(None),
+    contact_phone: Optional[str] = Form(None),
+    contact_email: Optional[str] = Form(None),
+    notes: Optional[str] = Form(None),
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    cp = Counterparty(
+        name=name.strip(),
+        full_name=full_name.strip() if full_name else None,
+        inn=inn.strip() if inn else None,
+        kpp=kpp.strip() if kpp else None,
+        ogrn=ogrn.strip() if ogrn else None,
+        legal_address=legal_address.strip() if legal_address else None,
+        actual_address=actual_address.strip() if actual_address else None,
+        bank_name=bank_name.strip() if bank_name else None,
+        bik=bik.strip() if bik else None,
+        corr_account=corr_account.strip() if corr_account else None,
+        checking_account=checking_account.strip() if checking_account else None,
+        contact_person=contact_person.strip() if contact_person else None,
+        contact_phone=contact_phone.strip() if contact_phone else None,
+        contact_email=contact_email.strip() if contact_email else None,
+        notes=notes.strip() if notes else None
+    )
+    db.add(cp)
+    db.commit()
+    return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance?tab=counterparties", status_code=303)
+
+@router.post("/actions/edit-counterparty/{counterparty_id}")
+def action_edit_counterparty(
+    counterparty_id: int,
+    name: str = Form(...),
+    full_name: Optional[str] = Form(None),
+    inn: Optional[str] = Form(None),
+    kpp: Optional[str] = Form(None),
+    ogrn: Optional[str] = Form(None),
+    legal_address: Optional[str] = Form(None),
+    actual_address: Optional[str] = Form(None),
+    bank_name: Optional[str] = Form(None),
+    bik: Optional[str] = Form(None),
+    corr_account: Optional[str] = Form(None),
+    checking_account: Optional[str] = Form(None),
+    contact_person: Optional[str] = Form(None),
+    contact_phone: Optional[str] = Form(None),
+    contact_email: Optional[str] = Form(None),
+    notes: Optional[str] = Form(None),
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    cp = db.query(Counterparty).filter(Counterparty.id == counterparty_id).first()
+    if cp:
+        cp.name = name.strip()
+        cp.full_name = full_name.strip() if full_name else None
+        cp.inn = inn.strip() if inn else None
+        cp.kpp = kpp.strip() if kpp else None
+        cp.ogrn = ogrn.strip() if ogrn else None
+        cp.legal_address = legal_address.strip() if legal_address else None
+        cp.actual_address = actual_address.strip() if actual_address else None
+        cp.bank_name = bank_name.strip() if bank_name else None
+        cp.bik = bik.strip() if bik else None
+        cp.corr_account = corr_account.strip() if corr_account else None
+        cp.checking_account = checking_account.strip() if checking_account else None
+        cp.contact_person = contact_person.strip() if contact_person else None
+        cp.contact_phone = contact_phone.strip() if contact_phone else None
+        cp.contact_email = contact_email.strip() if contact_email else None
+        cp.notes = notes.strip() if notes else None
+        db.commit()
+    return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance?tab=counterparties", status_code=303)
+
+@router.post("/actions/delete-counterparty/{counterparty_id}")
+def action_delete_counterparty(
+    counterparty_id: int,
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    cp = db.query(Counterparty).filter(Counterparty.id == counterparty_id).first()
+    if cp:
+        db.delete(cp)
+        db.commit()
+    return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/finance?tab=counterparties", status_code=303)
 
 @router.post("/actions/record-tax-payment")
 def action_record_tax_payment(
