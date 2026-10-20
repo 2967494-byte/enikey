@@ -41,7 +41,18 @@
 .ip-income-page .month-accordion-item > button .text-emerald-400 { color:var(--ip-ink)!important; font-size:.9rem!important; font-weight:600!important; }
 .ip-income-page .month-accordion-item > button > div:last-child > span:last-child { border-radius:2px!important; background:var(--ip-paper)!important; border-color:var(--ip-line)!important; color:var(--ip-muted)!important; font-weight:400!important; }
 .ip-income-page .month-content { padding:0!important; background:var(--ip-surface)!important; border-color:var(--ip-line)!important; }
-.ip-income-page .month-content table { border-collapse:collapse; min-width:860px; }
+.ip-income-page .month-content { width:100%; max-width:100%; overflow-x:auto; }
+.ip-income-page .month-content table { width:100%; min-width:0; table-layout:fixed; border-collapse:collapse; }
+.ip-income-page .month-content th, .ip-income-page .month-content td { box-sizing:border-box; overflow:hidden; text-overflow:ellipsis; }
+.ip-income-page .month-content th:nth-child(1), .ip-income-page .month-content td:nth-child(1) { width:8%; }
+.ip-income-page .month-content th:nth-child(2), .ip-income-page .month-content td:nth-child(2) { width:10%; }
+.ip-income-page .month-content th:nth-child(3), .ip-income-page .month-content td:nth-child(3) { width:16%; }
+.ip-income-page .month-content th:nth-child(4), .ip-income-page .month-content td:nth-child(4) { width:21%; }
+.ip-income-page .month-content th:nth-child(5), .ip-income-page .month-content td:nth-child(5) { width:13%; }
+.ip-income-page .month-content th:nth-child(6), .ip-income-page .month-content td:nth-child(6) { width:6%; }
+.ip-income-page .month-content th:nth-child(7), .ip-income-page .month-content td:nth-child(7) { width:10%; }
+.ip-income-page .month-content th:nth-child(8), .ip-income-page .month-content td:nth-child(8) { width:9%; }
+.ip-income-page .month-content th:nth-child(9), .ip-income-page .month-content td:nth-child(9) { width:7%; min-width:76px; }
 .ip-income-page .month-content thead { background:#f1f0eb!important; color:var(--ip-muted)!important; }
 .ip-income-page .month-content th { padding:12px 13px!important; color:var(--ip-muted)!important; font-size:.61rem!important; letter-spacing:.07em; font-weight:600!important; }
 .ip-income-page .month-content td { padding:13px!important; border-color:#e8e7e1!important; font-size:.72rem!important; }
@@ -52,6 +63,7 @@
 .ip-income-page .month-content td:nth-child(9) button { width:30px;height:30px; display:inline-flex;align-items:center;justify-content:center; background:transparent!important; border:1px solid transparent!important; color:var(--ip-muted)!important; }
 .ip-income-page .month-content td:nth-child(9) button:hover { background:var(--ip-paper)!important; border-color:var(--ip-line)!important; color:var(--ip-ink)!important; }
 .ip-income-page a:hover { color:var(--ip-accent); }
+@media(max-width:1200px) { .ip-income-page .month-content th:nth-child(8), .ip-income-page .month-content td:nth-child(8) { display:none; } .ip-income-page .month-content th:nth-child(7), .ip-income-page .month-content td:nth-child(7) { width:11%; } .ip-income-page .month-content th:nth-child(3), .ip-income-page .month-content td:nth-child(3) { width:18%; } .ip-income-page .month-content th:nth-child(4), .ip-income-page .month-content td:nth-child(4) { width:23%; } }
 @media(max-width:900px) { .ip-income-page .ip-income-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:640px) { .ip-income-page { gap:20px!important; } .ip-income-page .ip-income-header { align-items:stretch!important; } .ip-income-page .ip-income-header > div:last-child { width:100%; } .ip-income-page .ip-income-header > div:last-child button { flex:1; justify-content:center; } .ip-income-page .ip-income-metrics > div { min-height:116px; padding:15px!important; } .ip-income-page .ip-finance-tabs > a { padding:12px 13px!important; } .ip-income-page .ip-income-ledger > div:first-child { padding:16px!important; } .ip-income-page .ip-month-actions { width:100%; } .ip-income-page .month-accordion-item > button { padding:15px!important; } }
 </style>
