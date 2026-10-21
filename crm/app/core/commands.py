@@ -70,6 +70,7 @@ class CreateProjectCmd(BaseModel):
     """Команда создания нового проекта"""
     title: str = Field(..., description="Название проекта")
     description: Optional[str] = Field("", description="Описание, цели, документация")
+    parent_id: Optional[int] = Field(None, description="ID родительского проекта (если это центр/подпроект)")
     project_type: Literal["IT_SYSTEM", "NEW_IDEA", "DIY_BUILD", "AUTO", "LOAN", "HOUSEHOLD"] = Field(
         ..., description="Тип проекта"
     )
@@ -87,6 +88,7 @@ class UpdateProjectCmd(BaseModel):
     project_id: int = Field(..., description="ID проекта")
     title: Optional[str] = Field(None, description="Новое название")
     description: Optional[str] = Field(None, description="Новое описание")
+    parent_id: Optional[int] = Field(None, description="ID родительского проекта")
     stage: Optional[Literal["NOT_STARTED", "ACTIVE", "MAINTENANCE", "ON_HOLD", "COMPLETED"]] = None
     priority: Optional[int] = None
     color_hex: Optional[str] = None

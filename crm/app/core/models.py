@@ -92,12 +92,16 @@ class Project(Base):
     weekly_quota_minutes = Column(Integer, default=0)
     preferred_slot_minutes = Column(Integer, default=60)
     template_payload = Column(JSON, default=dict)
+    parent_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    parent = relationship("Project", remote_side=[id], back_populates="subprojects")
+    subprojects = relationship("Project", back_populates="parent", cascade="all, delete-orphan", foreign_keys=[parent_id])
     tasks = relationship("Task", back_populates="project", cascade="all, delete-orphan")
     supply_items = relationship("SupplyItem", back_populates="project", cascade="all, delete-orphan")
     finance_records = relationship("FinanceRecord", back_populates="project", cascade="all, delete-orphan")
+    material_assets = relationship("MaterialAsset", back_populates="project", cascade="all, delete-orphan", order_by="MaterialAsset.id.desc()")
 
 class SupplyItem(Base):
     __tablename__ = "supply_items"
@@ -242,3 +246,23 @@ class IpTaxPayment(Base):
     notes = Column(Text, default="")
     created_at = Column(DateTime, default=datetime.utcnow)
 
+
+class MaterialAsset(Base):
+    __tablename__ = "material_assets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(200), nullable=False)
+    category = Column(String(100), default="Другое")  # e.g. "ИБП / Электропитание", "Компьютеры / ПК", "Мониторы", "Ноутбуки", "Комплектующие / ЗИП", "Оргтехника", "Другое"
+    model_name = Column(String(200), nullable=True)
+    serial_number = Column(String(100), nullable=True)
+    quantity = Column(Integer, default=1)
+    purchase_date = Column(Date, nullable=True)
+    battery_replaced_at = Column(Date, nullable=True)
+    status = Column(String(50), default="В работе")  # "В работе", "В резерве", "Требует ремонта", "Списано"
+    is_shared = Column(Boolean, default=False)  # Галка "Для всех подпроектов данного проекта"
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    project = relationship("Project", back_populates="material_assets")

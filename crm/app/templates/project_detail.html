@@ -12,6 +12,12 @@
                 <span>←</span> Все проекты
             </a>
             <span>/</span>
+            {% if parent_project %}
+            <a href="{{ prefix }}/projects/{{ parent_project.id }}" class="hover:text-indigo-300 text-indigo-400 transition font-medium flex items-center gap-1">
+                <span>{{ parent_project.title }}</span>
+            </a>
+            <span>/</span>
+            {% endif %}
             <span class="text-white font-medium truncate max-w-xs sm:max-w-md">{{ project.title }}</span>
         </div>
         <div class="flex items-center gap-2">
@@ -38,6 +44,17 @@
                     <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                         {{ project.project_type.value }}
                     </span>
+                    {% if parent_project %}
+                    <a href="{{ prefix }}/projects/{{ parent_project.id }}" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 transition flex items-center gap-1">
+                        <svg class="w-3 h-3 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        <span>Центр проекта «{{ parent_project.title }}»</span>
+                    </a>
+                    {% elif is_parent_project %}
+                    <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                        <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        <span>Главный проект ({{ project.subprojects|length }} центров)</span>
+                    </span>
+                    {% endif %}
                     <span class="px-2 py-0.5 rounded text-[11px] font-medium {% if project.stage.value == 'ACTIVE' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% elif project.stage.value == 'NOT_STARTED' %}bg-slate-800 text-slate-400{% else %}bg-blue-500/10 text-blue-400 border border-blue-500/20{% endif %}">
                         {{ project.stage.value }}
                     </span>
@@ -274,6 +291,350 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- SUBPROJECTS / CENTERS SECTION (IF PARENT) -->
+    {% if is_parent_project or project.subprojects|length > 0 %}
+    <div id="centers-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+                <h3 class="font-bold text-lg text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    <span>Центры проекта (Подразделения: {{ project.subprojects|length }})</span>
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5">В каждом центре ведутся индивидуальные задачи и локальный учет материальных ценностей.</p>
+            </div>
+            <button onclick="document.getElementById('modal-create-subproject').classList.remove('hidden')" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition flex items-center gap-1.5 shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span>Добавить центр / подпроект</span>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {% for sp_stat in cross_center_summary.subprojects_stats if cross_center_summary %}
+            {% set sp = sp_stat.project %}
+            <div class="bg-slate-800/60 border border-slate-700/60 hover:border-indigo-500/50 rounded-xl p-4 flex flex-col justify-between transition group">
+                <div>
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-[10px] font-semibold uppercase tracking-wider text-indigo-400">Центр</span>
+                        <span class="w-2.5 h-2.5 rounded-full" style="background-color: {{ sp.color_hex or '#6366f1' }}"></span>
+                    </div>
+                    <h4 class="font-bold text-base text-white group-hover:text-indigo-300 transition mt-1 truncate">{{ sp.title }}</h4>
+                    <p class="text-xs text-slate-400 line-clamp-2 mt-1 leading-relaxed">{{ sp.description or "Без описания" }}</p>
+                </div>
+                
+                <div class="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-400">Задачи:</span>
+                        <span class="font-semibold {% if sp_stat.open_tasks > 0 %}text-amber-400{% else %}text-emerald-400{% endif %}">
+                            {{ sp_stat.open_tasks }} в работе / {{ sp_stat.total_tasks }} всего
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-400">ТМЦ / Оборудование:</span>
+                        <span class="font-semibold text-slate-200">{{ sp_stat.assets_count }} ед.</span>
+                    </div>
+                    <a href="{{ prefix }}/projects/{{ sp.id }}" class="mt-2 w-full py-1.5 px-3 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 text-xs font-semibold text-center transition flex items-center justify-center gap-1">
+                        <span>Открыть {{ sp.title }}</span>
+                        <span>→</span>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- MATERIAL ASSETS & INVENTORY SECTION -->
+    <div id="inventory" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+                <h3 class="font-bold text-lg text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    {% if is_parent_project %}
+                    <span>Учет материальных ценностей (Сводка по всем центрам)</span>
+                    {% else %}
+                    <span>Материальные ценности центра: {{ project.title }}</span>
+                    {% endif %}
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5">
+                    {% if is_parent_project %}
+                    Сводный учет ИБП, аккумуляторов, рабочих станций, мониторов, ноутбуков и резерва ЗИП по всем 4+ центрам.
+                    {% else %}
+                    Учет оборудования и комплектующих. Позиции с отметкой «для всех подпроектов» транслируются в сводку по всем центрам.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                {% if parent_project and cross_center_summary %}
+                <button onclick="document.getElementById('modal-cross-center-summary').classList.remove('hidden')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 hover:text-white border border-slate-700 text-xs font-semibold transition flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    <span>📊 Сводка по всем центрам</span>
+                </button>
+                {% endif %}
+                <button onclick="openAddAssetModal()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/20 transition flex items-center gap-2 shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <span>Добавить ТМЦ / Оборудование</span>
+                </button>
+            </div>
+        </div>
+
+        {% if cross_center_summary %}
+        <!-- Cross-Center Summary KPI Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-3 text-center">
+                <div class="text-[11px] text-slate-400">Всего оборудования</div>
+                <div class="text-xl font-bold text-white mt-0.5">{{ cross_center_summary.total_assets_count }} ед.</div>
+                <div class="text-[10px] text-slate-500">по {{ cross_center_summary.all_centers|length }} подразделениям</div>
+            </div>
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-3 text-center">
+                <div class="text-[11px] text-slate-400">Источники питания (ИБП)</div>
+                <div class="text-xl font-bold text-amber-400 mt-0.5">{{ cross_center_summary.total_ups_count }} шт.</div>
+                <div class="text-[10px] text-amber-500/80">с контролем АКБ</div>
+            </div>
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-3 text-center">
+                <div class="text-[11px] text-slate-400">ПК и Ноутбуки</div>
+                <div class="text-xl font-bold text-indigo-400 mt-0.5">{{ cross_center_summary.total_pcs_count + cross_center_summary.total_laptops_count }} шт.</div>
+                <div class="text-[10px] text-slate-500">ПК: {{ cross_center_summary.total_pcs_count }} | Ноут: {{ cross_center_summary.total_laptops_count }}</div>
+            </div>
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-3 text-center">
+                <div class="text-[11px] text-slate-400">Мониторы</div>
+                <div class="text-xl font-bold text-sky-400 mt-0.5">{{ cross_center_summary.total_monitors_count }} шт.</div>
+                <div class="text-[10px] text-slate-500">рабочие экраны</div>
+            </div>
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-3 text-center col-span-2 sm:col-span-1">
+                <div class="text-[11px] text-slate-400">ЗИП / Резерв / Запчасти</div>
+                <div class="text-xl font-bold text-emerald-400 mt-0.5">{{ cross_center_summary.total_spares_count }} шт.</div>
+                <div class="text-[10px] text-slate-500">DVD-приводы и склад</div>
+            </div>
+        </div>
+
+        <!-- SPECIAL BLOCK: UPS & BATTERY REPLACEMENT MONITOR -->
+        {% if cross_center_summary.ups_list|length > 0 %}
+        <div class="bg-slate-800/40 border border-amber-900/40 rounded-xl p-4 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-700/50 pb-2.5">
+                <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </span>
+                    <h4 class="text-xs font-bold text-amber-300 uppercase tracking-wider">Мониторинг ИБП и замены аккумуляторов по всем центрам</h4>
+                </div>
+                <span class="text-[11px] text-slate-400">Регламент замены АКБ: каждые 2–3 года</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="text-slate-400 border-b border-slate-700/60 text-[11px]">
+                            <th class="py-2 px-2.5">Центр / Подразделение</th>
+                            <th class="py-2 px-2.5">Модель / Марка ИБП</th>
+                            <th class="py-2 px-2.5">Дата покупки</th>
+                            <th class="py-2 px-2.5">Дата замены АКБ</th>
+                            <th class="py-2 px-2.5">Статус батарей</th>
+                            <th class="py-2 px-2.5 text-right">Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60">
+                        {% for ups in cross_center_summary.ups_list %}
+                        <tr class="hover:bg-slate-800/40 transition">
+                            <td class="py-2.5 px-2.5 font-medium text-white flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full" style="background-color: {{ ups.center.color_hex or '#6366f1' if ups.center else '#6366f1' }}"></span>
+                                <span>{{ ups.center.title if ups.center else "—" }}</span>
+                            </td>
+                            <td class="py-2.5 px-2.5 text-slate-200 font-semibold">{{ ups.asset.model_name or ups.asset.name }}</td>
+                            <td class="py-2.5 px-2.5 text-slate-400">{% if ups.asset.purchase_date %}{{ ups.asset.purchase_date.strftime('%d.%m.%Y') }}{% else %}—{% endif %}</td>
+                            <td class="py-2.5 px-2.5 text-slate-300 font-medium">{% if ups.asset.battery_replaced_at %}{{ ups.asset.battery_replaced_at.strftime('%d.%m.%Y') }}{% else %}<span class="text-amber-500/80">Не менялся</span>{% endif %}</td>
+                            <td class="py-2.5 px-2.5">
+                                {% if ups.bat_status == 'OK' %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">В норме ({{ ups.years_since_bat }} г.)</span>
+                                {% elif ups.bat_status == 'WARNING' %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">Скоро замена ({{ ups.years_since_bat }} г.)</span>
+                                {% else %}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">Требует замены!</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-2.5 px-2.5 text-right">
+                                <button type="button" 
+                                    data-id="{{ ups.asset.id }}"
+                                    data-name="{{ ups.asset.name }}"
+                                    data-category="{{ ups.asset.category }}"
+                                    data-model="{{ ups.asset.model_name or '' }}"
+                                    data-serial="{{ ups.asset.serial_number or '' }}"
+                                    data-qty="{{ ups.asset.quantity }}"
+                                    data-purchase="{% if ups.asset.purchase_date %}{{ ups.asset.purchase_date.isoformat() }}{% endif %}"
+                                    data-battery="{% if ups.asset.battery_replaced_at %}{{ ups.asset.battery_replaced_at.isoformat() }}{% endif %}"
+                                    data-status="{{ ups.asset.status }}"
+                                    data-shared="{% if ups.asset.is_shared %}1{% else %}0{% endif %}"
+                                    data-notes="{{ ups.asset.notes or '' }}"
+                                    onclick="openEditAssetModalFromBtn(this)"
+                                    class="text-indigo-400 hover:text-indigo-300 p-1" title="Обновить дату замены АКБ">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- CROSS-CENTER MATRIX -->
+        <div class="space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                <div class="flex items-center gap-2">
+                    <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Сводная матрица ТМЦ по центрам</h4>
+                    <span class="text-[11px] text-slate-500">Наличие оборудования и ЗИП по подразделениям</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="btn-filter-shared" onclick="setAssetFilter('shared')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-600 text-white transition">⭐ Только общие</button>
+                    <button id="btn-filter-all" onclick="setAssetFilter('all')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-400 transition">Все ТМЦ</button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table id="matrix-table" class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="text-slate-400 border-b border-slate-700 text-[11px] bg-slate-800/40">
+                            <th class="py-2.5 px-3">Категория и Наименование</th>
+                            {% for c in cross_center_summary.all_centers %}
+                            <th class="py-2.5 px-3 text-center min-w-[120px]">{{ c.title }}</th>
+                            {% endfor %}
+                            <th class="py-2.5 px-3 text-center font-bold text-white">Всего</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800">
+                        {% for row in cross_center_summary.matrix_rows %}
+                        <tr class="matrix-row hover:bg-slate-800/30 transition {% if not row.is_shared %}non-shared-row hidden{% endif %}" data-shared="{{ 'true' if row.is_shared else 'false' }}">
+                            <td class="py-2.5 px-3">
+                                <div class="font-semibold text-white flex items-center gap-1.5">
+                                    <span>{{ row.name }}</span>
+                                    {% if row.is_shared %}
+                                    <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20" title="Включено в общую сводку для всех центров">Общее</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-[10px] text-slate-400">{{ row.category }}</div>
+                            </td>
+                            {% for c in cross_center_summary.all_centers %}
+                            {% set c_items = row.centers.get(c.id, []) %}
+                            <td class="py-2.5 px-3 text-center">
+                                {% if c_items|length > 0 %}
+                                    {% set c_qty = c_items|sum(attribute='quantity') %}
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                        {{ c_qty }} шт
+                                    </span>
+                                    <div class="text-[10px] text-slate-400 truncate max-w-[130px] mx-auto mt-0.5" title="{% for item in c_items %}{{ item.model_name or item.name }}{% if not loop.last %}, {% endif %}{% endfor %}">
+                                        {{ c_items[0].model_name or c_items[0].name }}
+                                    </div>
+                                {% else %}
+                                    <span class="text-slate-600">—</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                            <td class="py-2.5 px-3 text-center font-bold text-indigo-300">
+                                {{ row.total_qty }} шт
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- LOCAL ASSETS LIST FOR CURRENT PROJECT / CENTER -->
+        <div class="space-y-3 pt-2">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    {% if is_parent_project %}
+                    Оборудование центрального узла / Склад
+                    {% else %}
+                    Оборудование центра: {{ project.title }} ({{ material_assets|length }})
+                    {% endif %}
+                </h4>
+            </div>
+
+            {% if material_assets|length == 0 %}
+            <div class="text-center py-8 bg-slate-800/20 rounded-xl border border-dashed border-slate-800">
+                <p class="text-xs text-slate-400">В этом подразделении пока нет внесенных материальных ценностей</p>
+                <button onclick="openAddAssetModal()" class="mt-2 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition">
+                    + Добавить первое оборудование
+                </button>
+            </div>
+            {% else %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="text-slate-400 border-b border-slate-700/60 text-[11px]">
+                            <th class="py-2 px-3">Наименование</th>
+                            <th class="py-2 px-3">Категория</th>
+                            <th class="py-2 px-3">Марка / Модель</th>
+                            <th class="py-2 px-3 text-center">Кол-во</th>
+                            <th class="py-2 px-3">Покупка</th>
+                            <th class="py-2 px-3">Замена АКБ / ТО</th>
+                            <th class="py-2 px-3">Статус</th>
+                            <th class="py-2 px-3 text-center">Сводка</th>
+                            <th class="py-2 px-3 text-right">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800">
+                        {% for a in material_assets %}
+                        <tr class="hover:bg-slate-800/40 transition">
+                            <td class="py-2.5 px-3 font-semibold text-white">
+                                {{ a.name }}
+                                {% if a.notes %}
+                                <div class="text-[10px] text-slate-400 font-normal truncate max-w-xs">{{ a.notes }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="py-2.5 px-3 text-slate-300">{{ a.category }}</td>
+                            <td class="py-2.5 px-3 text-slate-200">{{ a.model_name or "—" }}</td>
+                            <td class="py-2.5 px-3 text-center font-bold text-indigo-300">{{ a.quantity }} шт</td>
+                            <td class="py-2.5 px-3 text-slate-400">{% if a.purchase_date %}{{ a.purchase_date.strftime('%d.%m.%Y') }}{% else %}—{% endif %}</td>
+                            <td class="py-2.5 px-3 text-slate-300">{% if a.battery_replaced_at %}{{ a.battery_replaced_at.strftime('%d.%m.%Y') }}{% else %}—{% endif %}</td>
+                            <td class="py-2.5 px-3">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-medium {% if a.status == 'В работе' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% elif a.status == 'В резерве' %}bg-blue-500/10 text-blue-400 border border-blue-500/20{% else %}bg-rose-500/15 text-rose-300 border border-rose-500/30{% endif %}">
+                                    {{ a.status }}
+                                </span>
+                            </td>
+                            <td class="py-2.5 px-3 text-center">
+                                {% if a.is_shared %}
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30" title="Включается в общую сводку проекта">Да</span>
+                                {% else %}
+                                <span class="text-slate-600">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-2.5 px-3 text-right">
+                                <div class="flex items-center justify-end gap-1">
+                                    <button type="button" 
+                                        data-id="{{ a.id }}"
+                                        data-name="{{ a.name }}"
+                                        data-category="{{ a.category }}"
+                                        data-model="{{ a.model_name or '' }}"
+                                        data-serial="{{ a.serial_number or '' }}"
+                                        data-qty="{{ a.quantity }}"
+                                        data-purchase="{% if a.purchase_date %}{{ a.purchase_date.isoformat() }}{% endif %}"
+                                        data-battery="{% if a.battery_replaced_at %}{{ a.battery_replaced_at.isoformat() }}{% endif %}"
+                                        data-status="{{ a.status }}"
+                                        data-shared="{% if a.is_shared %}1{% else %}0{% endif %}"
+                                        data-notes="{{ a.notes or '' }}"
+                                        onclick="openEditAssetModalFromBtn(this)"
+                                        class="p-1 text-slate-400 hover:text-indigo-400 transition" title="Редактировать">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                    </button>
+                                    <form action="{{ prefix }}/actions/delete-material-asset/{{ a.id }}" method="POST" onsubmit="return confirm('Удалить позицию «{{ a.name }}»?');">
+                                        <button type="submit" class="p-1 text-slate-400 hover:text-rose-400 transition" title="Удалить">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 
     <!-- TASKS & SUBTASKS SECTION -->
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 space-y-5">
@@ -1053,5 +1414,400 @@
             cal.render();
         }
     });
+</script>
+
+<!-- Modal: Add Material Asset -->
+<div id="modal-add-material-asset" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <button onclick="document.getElementById('modal-add-material-asset').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>Добавить материальную ценность (ТМЦ)</span>
+        </h3>
+        <form id="form-add-asset" action="{{ prefix }}/actions/add-material-asset/{{ project.id }}" method="POST" class="space-y-4">
+            {% if is_parent_project and cross_center_summary %}
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Подразделение / Центр *</label>
+                <select name="target_project_id" onchange="document.getElementById('form-add-asset').action='{{ prefix }}/actions/add-material-asset/' + this.value" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <option value="{{ project.id }}">Центральный узел / {{ project.title }}</option>
+                    {% for sp in cross_center_summary.subprojects %}
+                    <option value="{{ sp.id }}">{{ sp.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Наименование ценности *</label>
+                <input type="text" name="name" required placeholder="Например: Источник бесперебойного питания (ИБП), Компьютер врача, DVD-привод" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Категория</label>
+                    <select name="category" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        <option value="ИБП / Электропитание">ИБП / Электропитание</option>
+                        <option value="Компьютеры / ПК">Компьютеры / ПК</option>
+                        <option value="Мониторы">Мониторы</option>
+                        <option value="Ноутбуки">Ноутбуки</option>
+                        <option value="Комплектующие / ЗИП">Комплектующие / ЗИП</option>
+                        <option value="Оргтехника">Оргтехника</option>
+                        <option value="Сетевое оборудование">Сетевое оборудование</option>
+                        <option value="Другое">Другое</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Количество (шт.)</label>
+                    <input type="number" name="quantity" value="1" min="1" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Марка / Модель</label>
+                    <input type="text" name="model_name" placeholder="APC Back-UPS 650VA, HP ProDesk 400..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Серийный / инв. номер</label>
+                    <input type="text" name="serial_number" placeholder="SN12345678 (опционально)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Дата покупки</label>
+                    <input type="date" name="purchase_date" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Замена аккумуляторов / ТО</label>
+                    <input type="date" name="battery_replaced_at" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <span class="text-[10px] text-slate-500">Для ИБП и обслуживаемой техники</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Статус</label>
+                    <select name="status" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        <option value="В работе" selected>В работе</option>
+                        <option value="В резерве">В резерве (ЗИП / запас)</option>
+                        <option value="Требует ремонта">Требует ремонта / замены</option>
+                        <option value="Списано">Списано</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Примечания / Описание</label>
+                    <input type="text" name="notes" placeholder="Характеристики, расположение..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <!-- THE REQUESTED CHECKBOX: "для всех подпроектов данного проекта" -->
+            <div class="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-700/50 flex items-start gap-3">
+                <input type="checkbox" name="is_shared" id="asset-is-shared" checked class="mt-0.5 w-4 h-4 rounded text-indigo-600 bg-slate-800 border-slate-700 focus:ring-indigo-500 cursor-pointer">
+                <div>
+                    <label for="asset-is-shared" class="text-xs font-semibold text-white cursor-pointer">Для всех подпроектов данного проекта</label>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Включать этот признак в общую сводку и сравнительную матрицу по всем центрам проекта.</p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+                <button type="button" onclick="document.getElementById('modal-add-material-asset').classList.add('hidden')" class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition">
+                    Отмена
+                </button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition shadow-lg shadow-indigo-600/20">
+                    Сохранить позицию
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Material Asset -->
+<div id="modal-edit-material-asset" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <button onclick="document.getElementById('modal-edit-material-asset').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            <span>Редактировать материальную ценность</span>
+        </h3>
+        <form id="form-edit-asset" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Наименование ценности *</label>
+                <input type="text" name="name" id="edit-asset-name" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Категория</label>
+                    <select name="category" id="edit-asset-category" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        <option value="ИБП / Электропитание">ИБП / Электропитание</option>
+                        <option value="Компьютеры / ПК">Компьютеры / ПК</option>
+                        <option value="Мониторы">Мониторы</option>
+                        <option value="Ноутбуки">Ноутбуки</option>
+                        <option value="Комплектующие / ЗИП">Комплектующие / ЗИП</option>
+                        <option value="Оргтехника">Оргтехника</option>
+                        <option value="Сетевое оборудование">Сетевое оборудование</option>
+                        <option value="Другое">Другое</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Количество (шт.)</label>
+                    <input type="number" name="quantity" id="edit-asset-quantity" min="1" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Марка / Модель</label>
+                    <input type="text" name="model_name" id="edit-asset-model" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Серийный / инв. номер</label>
+                    <input type="text" name="serial_number" id="edit-asset-serial" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Дата покупки</label>
+                    <input type="date" name="purchase_date" id="edit-asset-purchase" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Замена аккумуляторов / ТО</label>
+                    <input type="date" name="battery_replaced_at" id="edit-asset-battery" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <span class="text-[10px] text-slate-500">Для ИБП и техники</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Статус</label>
+                    <select name="status" id="edit-asset-status" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        <option value="В работе">В работе</option>
+                        <option value="В резерве">В резерве (ЗИП / запас)</option>
+                        <option value="Требует ремонта">Требует ремонта / замены</option>
+                        <option value="Списано">Списано</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Примечания</label>
+                    <input type="text" name="notes" id="edit-asset-notes" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-700/50 flex items-start gap-3">
+                <input type="checkbox" name="is_shared" id="edit-asset-shared" class="mt-0.5 w-4 h-4 rounded text-indigo-600 bg-slate-800 border-slate-700 focus:ring-indigo-500 cursor-pointer">
+                <div>
+                    <label for="edit-asset-shared" class="text-xs font-semibold text-white cursor-pointer">Для всех подпроектов данного проекта</label>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Включать в общую сводную матрицу по всем центрам.</p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+                <button type="button" onclick="document.getElementById('modal-edit-material-asset').classList.add('hidden')" class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition">
+                    Отмена
+                </button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition shadow-lg shadow-indigo-600/20">
+                    Сохранить изменения
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Create Subproject / Center -->
+<div id="modal-create-subproject" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+        <button onclick="document.getElementById('modal-create-subproject').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            <span>Добавить новый центр (подпроект)</span>
+        </h3>
+        <form action="{{ prefix }}/actions/create-project" method="POST" class="space-y-4">
+            <input type="hidden" name="parent_id" value="{{ project.id }}">
+            <input type="hidden" name="project_type" value="{{ project.project_type.value }}">
+            <input type="hidden" name="category_slug" value="{{ project.category_slug or '' }}">
+            <input type="hidden" name="redirect_to" value="{{ prefix }}/projects/{{ project.id }}">
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Название центра *</label>
+                <input type="text" name="title" required placeholder="Например: Центр 5 (Новокузнецкая)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Описание / Адрес</label>
+                <textarea name="description" rows="2" placeholder="Адрес, специфика или контакты центра" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Цвет метки</label>
+                    <input type="color" name="color_hex" value="#6366f1" class="w-full h-9 bg-slate-800 border border-slate-700 rounded-lg px-1 py-1 cursor-pointer">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Приоритет</label>
+                    <select name="priority" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        <option value="1">1: Критический</option>
+                        <option value="2">2: Высокий</option>
+                        <option value="3" selected>3: Обычный</option>
+                        <option value="4">4: Фоновый</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+                <button type="button" onclick="document.getElementById('modal-create-subproject').classList.add('hidden')" class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition">
+                    Отмена
+                </button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition shadow-lg shadow-indigo-600/20">
+                    Создать центр
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if parent_project and cross_center_summary %}
+<!-- Modal: Cross-Center Summary (Accessible from child center) -->
+<div id="modal-cross-center-summary" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-4xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto space-y-5">
+        <button onclick="document.getElementById('modal-cross-center-summary').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        
+        <div>
+            <div class="text-[11px] font-semibold text-indigo-400 uppercase tracking-wider">Сводка по проекту «{{ parent_project.title }}»</div>
+            <h3 class="text-xl font-bold text-white mt-0.5 flex items-center gap-2">
+                <span>Материальные ценности по всем {{ cross_center_summary.all_centers|length }} центрам</span>
+            </h3>
+        </div>
+
+        <!-- KPI Row -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-3 text-center">
+                <div class="text-[11px] text-slate-400">Всего оборудования</div>
+                <div class="text-lg font-bold text-white mt-0.5">{{ cross_center_summary.total_assets_count }} ед.</div>
+            </div>
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-3 text-center">
+                <div class="text-[11px] text-slate-400">ИБП (Источники питания)</div>
+                <div class="text-lg font-bold text-amber-400 mt-0.5">{{ cross_center_summary.total_ups_count }} шт.</div>
+            </div>
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-3 text-center">
+                <div class="text-[11px] text-slate-400">Рабочие места / ПК</div>
+                <div class="text-lg font-bold text-indigo-400 mt-0.5">{{ cross_center_summary.total_pcs_count + cross_center_summary.total_laptops_count }} шт.</div>
+            </div>
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-3 text-center">
+                <div class="text-[11px] text-slate-400">ЗИП / Резерв (DVD и др.)</div>
+                <div class="text-lg font-bold text-emerald-400 mt-0.5">{{ cross_center_summary.total_spares_count }} шт.</div>
+            </div>
+        </div>
+
+        <!-- Matrix table -->
+        <div class="overflow-x-auto border border-slate-800 rounded-xl">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="text-slate-400 border-b border-slate-700 text-[11px] bg-slate-800/60">
+                        <th class="py-2.5 px-3">Категория и Наименование</th>
+                        {% for c in cross_center_summary.all_centers %}
+                        <th class="py-2.5 px-3 text-center min-w-[110px]">{{ c.title }}</th>
+                        {% endfor %}
+                        <th class="py-2.5 px-3 text-center font-bold text-white">Всего</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800">
+                    {% for row in cross_center_summary.matrix_rows %}
+                    <tr class="hover:bg-slate-800/30 transition">
+                        <td class="py-2.5 px-3">
+                            <div class="font-semibold text-white flex items-center gap-1.5">
+                                <span>{{ row.name }}</span>
+                                {% if row.is_shared %}
+                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">Общее</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-[10px] text-slate-400">{{ row.category }}</div>
+                        </td>
+                        {% for c in cross_center_summary.all_centers %}
+                        {% set c_items = row.centers.get(c.id, []) %}
+                        <td class="py-2.5 px-3 text-center">
+                            {% if c_items|length > 0 %}
+                                {% set c_qty = c_items|sum(attribute='quantity') %}
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                    {{ c_qty }} шт
+                                </span>
+                                <div class="text-[10px] text-slate-400 truncate max-w-[110px] mx-auto mt-0.5" title="{% for item in c_items %}{{ item.model_name or item.name }}{% if not loop.last %}, {% endif %}{% endfor %}">
+                                    {{ c_items[0].model_name or c_items[0].name }}
+                                </div>
+                            {% else %}
+                                <span class="text-slate-600">—</span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                        <td class="py-2.5 px-3 text-center font-bold text-indigo-300">
+                            {{ row.total_qty }} шт
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex items-center justify-between pt-2">
+            <a href="{{ prefix }}/projects/{{ parent_project.id }}#inventory" class="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-medium">
+                <span>Перейти на полную страницу проекта «{{ parent_project.title }}»</span>
+                <span>→</span>
+            </a>
+            <button type="button" onclick="document.getElementById('modal-cross-center-summary').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition">
+                Закрыть
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function openAddAssetModal() {
+    document.getElementById('modal-add-material-asset').classList.remove('hidden');
+}
+
+function openEditAssetModalFromBtn(btn) {
+    const id = btn.getAttribute('data-id');
+    const form = document.getElementById('form-edit-asset');
+    form.action = '{{ prefix }}/actions/edit-material-asset/' + id;
+
+    document.getElementById('edit-asset-name').value = btn.getAttribute('data-name') || '';
+    document.getElementById('edit-asset-category').value = btn.getAttribute('data-category') || 'Другое';
+    document.getElementById('edit-asset-model').value = btn.getAttribute('data-model') || '';
+    document.getElementById('edit-asset-serial').value = btn.getAttribute('data-serial') || '';
+    document.getElementById('edit-asset-quantity').value = btn.getAttribute('data-qty') || '1';
+    document.getElementById('edit-asset-purchase').value = btn.getAttribute('data-purchase') || '';
+    document.getElementById('edit-asset-battery').value = btn.getAttribute('data-battery') || '';
+    document.getElementById('edit-asset-status').value = btn.getAttribute('data-status') || 'В работе';
+    document.getElementById('edit-asset-shared').checked = (btn.getAttribute('data-shared') === '1');
+    document.getElementById('edit-asset-notes').value = btn.getAttribute('data-notes') || '';
+
+    document.getElementById('modal-edit-material-asset').classList.remove('hidden');
+}
+
+function setAssetFilter(mode) {
+    const btnShared = document.getElementById('btn-filter-shared');
+    const btnAll = document.getElementById('btn-filter-all');
+    const nonSharedRows = document.querySelectorAll('.matrix-row.non-shared-row');
+
+    if (mode === 'shared') {
+        btnShared.className = 'px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-600 text-white transition';
+        btnAll.className = 'px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-400 transition';
+        nonSharedRows.forEach(r => r.classList.add('hidden'));
+    } else {
+        btnAll.className = 'px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-600 text-white transition';
+        btnShared.className = 'px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-400 transition';
+        nonSharedRows.forEach(r => r.classList.remove('hidden'));
+    }
+}
 </script>
 {% endblock %}

@@ -360,6 +360,7 @@ class CommandExecutor:
         proj = Project(
             title=cmd.title,
             description=cmd.description or "",
+            parent_id=cmd.parent_id if getattr(cmd, 'parent_id', None) and cmd.parent_id > 0 else None,
             project_type=ProjectType(cmd.project_type),
             stage=ProjectStage(cmd.stage),
             priority=cmd.priority,
@@ -384,6 +385,8 @@ class CommandExecutor:
         if not proj:
             raise ValueError(f"Проект ID={cmd.project_id} не найден")
 
+        if getattr(cmd, 'parent_id', None) is not None:
+            proj.parent_id = cmd.parent_id if cmd.parent_id > 0 else None
         if cmd.title is not None:
             proj.title = cmd.title
         if cmd.description is not None:

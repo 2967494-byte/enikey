@@ -59,6 +59,25 @@
                         {{ p.description or "Без описания" }}
                     </p>
 
+                    {% if p.subprojects|length > 0 %}
+                    <div class="mt-3 p-2.5 rounded-xl bg-indigo-950/40 border border-indigo-800/40 space-y-1.5 text-xs">
+                        <div class="flex items-center justify-between text-[11px] text-indigo-300 font-semibold">
+                            <span class="flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                <span>Центры / Подпроекты ({{ p.subprojects|length }})</span>
+                            </span>
+                            <span class="text-slate-400 font-normal">Подразделения</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 pt-0.5">
+                            {% for sp in p.subprojects %}
+                            <span class="px-2 py-0.5 rounded-md bg-slate-800/90 border border-slate-700/70 text-slate-200 text-[10px] font-medium">
+                                {{ sp.title }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <!-- Specialized Card Info (LOAN, AUTO, IT_SYSTEM) -->
                     {% if p.project_type.value == 'LOAN' and p.template_payload %}
                     {% set loan = p.template_payload %}
@@ -152,6 +171,19 @@
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Название проекта *</label>
                 <input type="text" name="title" required placeholder="Например: 3D-принтер Voron 2.4 или Сайт компании" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Родительский проект (если это центр / подпроект)</label>
+                <select name="parent_id" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <option value="">Самостоятельный главный проект (без родителя)</option>
+                    {% for cat in categories %}
+                        {% for p in cat.projects %}
+                            {% if not p.parent_id %}
+                            <option value="{{ p.id }}">{{ p.title }} ({{ cat.title }})</option>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                </select>
             </div>
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Описание / Заметки</label>

@@ -16,7 +16,8 @@ from app.core.models import (
     Task, TaskStatus,
     FinanceRecord, FinanceRecordType, FinanceStatus, RecurrenceType,
     WalletState, Location,
-    IpPaymentGround, IpIncome, IpTaxPayment, Counterparty
+    IpPaymentGround, IpIncome, IpTaxPayment, Counterparty,
+    MaterialAsset
 )
 from app.core.ip_accounting import calculate_ip_taxes, get_ip_incomes_grouped_by_month
 from app.core.executor import CommandExecutor
@@ -96,7 +97,7 @@ def get_categories_catalog(db: Optional[Session]) -> list:
     except Exception:
         pass
 
-    all_projects = db.query(Project).order_by(Project.priority.asc(), Project.title.asc()).all()
+    all_projects = db.query(Project).filter(Project.parent_id.is_(None)).order_by(Project.priority.asc(), Project.title.asc()).all()
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
@@ -318,6 +319,113 @@ def project_detail_page(project_id: int, request: Request, db: Session = Depends
 
     locations = db.query(Location).all()
 
+    # Material assets for this project / center
+    material_assets = db.query(MaterialAsset).filter(MaterialAsset.project_id == project_id).order_by(MaterialAsset.category.asc(), MaterialAsset.name.asc()).all()
+
+    # Hierarchy & Cross-Center aggregation
+    is_parent_project = len(project.subprojects) > 0
+    parent_project = project.parent
+    root_project = project if is_parent_project else parent_project
+
+    cross_center_summary = None
+    if root_project and (len(root_project.subprojects) > 0):
+        all_centers = [root_project] + list(root_project.subprojects)
+        all_center_ids = [c.id for c in all_centers]
+        all_assets = db.query(MaterialAsset).filter(MaterialAsset.project_id.in_(all_center_ids)).order_by(MaterialAsset.category.asc(), MaterialAsset.name.asc()).all()
+
+        grouped_items = {}
+        total_assets_count = 0
+        total_ups_count = 0
+        total_pcs_count = 0
+        total_monitors_count = 0
+        total_laptops_count = 0
+        total_spares_count = 0
+        ups_list = []
+        today = date.today()
+
+        for a in all_assets:
+            total_assets_count += (a.quantity or 1)
+            cat_l = (a.category or "").lower()
+            name_l = (a.name or "").lower()
+
+            if "ибп" in cat_l or "ибп" in name_l or "питани" in cat_l or "ups" in name_l:
+                total_ups_count += (a.quantity or 1)
+                bat_date = a.battery_replaced_at or a.purchase_date
+                days_since = (today - bat_date).days if bat_date else None
+                years_since = round(days_since / 365.25, 1) if days_since is not None else None
+                if bat_date is None:
+                    bat_status = "UNKNOWN"
+                    bat_label = "Не указана"
+                elif years_since >= 3.0:
+                    bat_status = "DANGER"
+                    bat_label = f"Требует замены ({years_since} г.)"
+                elif years_since >= 2.0:
+                    bat_status = "WARNING"
+                    bat_label = f"Скоро замена ({years_since} г.)"
+                else:
+                    bat_status = "OK"
+                    bat_label = f"В норме ({years_since} г.)"
+
+                ups_list.append({
+                    "asset": a,
+                    "center": next((c for c in all_centers if c.id == a.project_id), None),
+                    "battery_date": bat_date,
+                    "days_since_bat": days_since,
+                    "years_since_bat": years_since,
+                    "bat_status": bat_status,
+                    "bat_label": bat_label
+                })
+            elif "компьют" in cat_l or "компьют" in name_l or "пк" in name_l or "станци" in name_l:
+                total_pcs_count += (a.quantity or 1)
+            elif "монитор" in cat_l or "монитор" in name_l:
+                total_monitors_count += (a.quantity or 1)
+            elif "ноутбук" in cat_l or "ноутбук" in name_l or "laptop" in name_l:
+                total_laptops_count += (a.quantity or 1)
+            elif "зип" in cat_l or "запчаст" in cat_l or "dvd" in name_l or "привод" in name_l or a.status == "В резерве":
+                total_spares_count += (a.quantity or 1)
+
+            key = (a.category or "Другое", a.name.strip())
+            if key not in grouped_items:
+                grouped_items[key] = {
+                    "category": a.category or "Другое",
+                    "name": a.name.strip(),
+                    "is_shared": a.is_shared,
+                    "total_qty": 0,
+                    "centers": {c.id: [] for c in all_centers}
+                }
+            if a.is_shared:
+                grouped_items[key]["is_shared"] = True
+            grouped_items[key]["total_qty"] += (a.quantity or 1)
+            grouped_items[key]["centers"][a.project_id].append(a)
+
+        subprojects_stats = []
+        for sp in root_project.subprojects:
+            sp_tasks = db.query(Task).filter(Task.project_id == sp.id).all()
+            sp_assets = [a for a in all_assets if a.project_id == sp.id]
+            open_tasks = [t for t in sp_tasks if t.status.value != 'DONE']
+            subprojects_stats.append({
+                "project": sp,
+                "total_tasks": len(sp_tasks),
+                "open_tasks": len(open_tasks),
+                "done_tasks": len(sp_tasks) - len(open_tasks),
+                "assets_count": sum(a.quantity or 1 for a in sp_assets)
+            })
+
+        cross_center_summary = {
+            "root_project": root_project,
+            "all_centers": all_centers,
+            "subprojects": root_project.subprojects,
+            "subprojects_stats": subprojects_stats,
+            "matrix_rows": list(grouped_items.values()),
+            "ups_list": ups_list,
+            "total_assets_count": total_assets_count,
+            "total_ups_count": total_ups_count,
+            "total_pcs_count": total_pcs_count,
+            "total_monitors_count": total_monitors_count,
+            "total_laptops_count": total_laptops_count,
+            "total_spares_count": total_spares_count,
+        }
+
     return templates.TemplateResponse(
         request=request,
         name="project_detail.html",
@@ -328,7 +436,12 @@ def project_detail_page(project_id: int, request: Request, db: Session = Depends
             "finances": finances,
             "diy_stats": diy_stats,
             "auto_stats": auto_stats,
-            "locations": locations
+            "locations": locations,
+            "material_assets": material_assets,
+            "is_parent_project": is_parent_project,
+            "parent_project": parent_project,
+            "root_project": root_project,
+            "cross_center_summary": cross_center_summary
         }, db=db)
     )
 
@@ -683,6 +796,7 @@ def action_update_supply_status(
 def action_create_project(
     title: str = Form(...),
     description: Optional[str] = Form(""),
+    parent_id: Optional[int] = Form(None),
     project_type: str = Form("HOUSEHOLD"),
     category_slug: Optional[str] = Form(None),
     stage: str = Form("ACTIVE"),
@@ -696,6 +810,7 @@ def action_create_project(
     cmd = CreateProjectCmd(
         title=title,
         description=description,
+        parent_id=parent_id if parent_id and parent_id > 0 else None,
         project_type=project_type,
         stage=stage,
         priority=priority,
@@ -704,11 +819,17 @@ def action_create_project(
         preferred_slot_minutes=preferred_slot_minutes
     )
     res = CommandExecutor.execute(cmd, db)
-    if category_slug:
-        p = db.query(Project).filter(Project.id == res["project_id"]).first()
-        if p:
+    p = db.query(Project).filter(Project.id == res["project_id"]).first()
+    if p:
+        if parent_id and parent_id > 0:
+            p.parent_id = parent_id
+            parent_p = db.query(Project).filter(Project.id == parent_id).first()
+            if parent_p and not category_slug:
+                p.category_slug = parent_p.category_slug
+                p.project_type = parent_p.project_type
+        if category_slug:
             p.category_slug = category_slug.strip() or None
-            db.commit()
+        db.commit()
     return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/projects/{res['project_id']}", status_code=303)
 
 @router.post("/actions/create-category")
@@ -1506,3 +1627,124 @@ async def action_update_servers(
     return RedirectResponse(f"{settings.APP_PREFIX}/projects/{project_id}", status_code=303)
 
 
+
+# -------------------------------------------------------------
+# Material Assets (ТМЦ / Оборудование) Actions
+# -------------------------------------------------------------
+@router.post("/actions/add-material-asset/{project_id}")
+def action_add_material_asset(
+    project_id: int,
+    name: str = Form(...),
+    category: str = Form("Другое"),
+    model_name: Optional[str] = Form(None),
+    serial_number: Optional[str] = Form(None),
+    quantity: int = Form(1),
+    purchase_date: Optional[str] = Form(None),
+    battery_replaced_at: Optional[str] = Form(None),
+    status: str = Form("В работе"),
+    is_shared: Optional[str] = Form(None),
+    notes: Optional[str] = Form(None),
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        return RedirectResponse(f"{settings.APP_PREFIX}/projects", status_code=303)
+
+    p_date = None
+    if purchase_date and purchase_date.strip():
+        try:
+            p_date = datetime.strptime(purchase_date.strip(), "%Y-%m-%d").date()
+        except Exception:
+            pass
+
+    b_date = None
+    if battery_replaced_at and battery_replaced_at.strip():
+        try:
+            b_date = datetime.strptime(battery_replaced_at.strip(), "%Y-%m-%d").date()
+        except Exception:
+            pass
+
+    shared_flag = True if is_shared in ("on", "true", "1", "yes") else False
+
+    asset = MaterialAsset(
+        project_id=project_id,
+        name=name.strip(),
+        category=category.strip() or "Другое",
+        model_name=model_name.strip() if model_name else None,
+        serial_number=serial_number.strip() if serial_number else None,
+        quantity=max(1, quantity),
+        purchase_date=p_date,
+        battery_replaced_at=b_date,
+        status=status.strip() or "В работе",
+        is_shared=shared_flag,
+        notes=notes.strip() if notes else None
+    )
+    db.add(asset)
+    db.commit()
+
+    return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/projects/{project_id}", status_code=303)
+
+
+@router.post("/actions/edit-material-asset/{asset_id}")
+def action_edit_material_asset(
+    asset_id: int,
+    name: str = Form(...),
+    category: str = Form("Другое"),
+    model_name: Optional[str] = Form(None),
+    serial_number: Optional[str] = Form(None),
+    quantity: int = Form(1),
+    purchase_date: Optional[str] = Form(None),
+    battery_replaced_at: Optional[str] = Form(None),
+    status: str = Form("В работе"),
+    is_shared: Optional[str] = Form(None),
+    notes: Optional[str] = Form(None),
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    asset = db.query(MaterialAsset).filter(MaterialAsset.id == asset_id).first()
+    if not asset:
+        return RedirectResponse(f"{settings.APP_PREFIX}/projects", status_code=303)
+
+    asset.name = name.strip()
+    asset.category = category.strip() or "Другое"
+    asset.model_name = model_name.strip() if model_name else None
+    asset.serial_number = serial_number.strip() if serial_number else None
+    asset.quantity = max(1, quantity)
+
+    if purchase_date and purchase_date.strip():
+        try:
+            asset.purchase_date = datetime.strptime(purchase_date.strip(), "%Y-%m-%d").date()
+        except Exception:
+            pass
+    else:
+        asset.purchase_date = None
+
+    if battery_replaced_at and battery_replaced_at.strip():
+        try:
+            asset.battery_replaced_at = datetime.strptime(battery_replaced_at.strip(), "%Y-%m-%d").date()
+        except Exception:
+            pass
+    else:
+        asset.battery_replaced_at = None
+
+    asset.status = status.strip() or "В работе"
+    asset.is_shared = True if is_shared in ("on", "true", "1", "yes") else False
+    asset.notes = notes.strip() if notes else None
+    db.commit()
+
+    return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/projects/{asset.project_id}", status_code=303)
+
+
+@router.post("/actions/delete-material-asset/{asset_id}")
+def action_delete_material_asset(
+    asset_id: int,
+    redirect_to: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    asset = db.query(MaterialAsset).filter(MaterialAsset.id == asset_id).first()
+    pid = asset.project_id if asset else None
+    if asset:
+        db.delete(asset)
+        db.commit()
+    return RedirectResponse(redirect_to or (f"{settings.APP_PREFIX}/projects/{pid}" if pid else f"{settings.APP_PREFIX}/projects"), status_code=303)

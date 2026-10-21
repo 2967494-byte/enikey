@@ -22,6 +22,11 @@ async def lifespan(app: FastAPI):
         except Exception:
             pass
         try:
+            conn.execute(text("ALTER TABLE projects ADD COLUMN parent_id INTEGER REFERENCES projects(id) ON DELETE CASCADE"))
+            conn.commit()
+        except Exception:
+            pass
+        try:
             conn.execute(text("ALTER TABLE tasks ADD COLUMN is_urgent BOOLEAN DEFAULT 0"))
             conn.commit()
         except Exception:
