@@ -17,7 +17,7 @@ from app.core.models import (
     FinanceRecord, FinanceRecordType, FinanceStatus, RecurrenceType,
     WalletState, Location,
     IpPaymentGround, IpIncome, IpTaxPayment, Counterparty,
-    MaterialAsset
+    MaterialAsset, AssetServiceRecord
 )
 from app.core.ip_accounting import calculate_ip_taxes, get_ip_incomes_grouped_by_month
 from app.core.executor import CommandExecutor
@@ -442,6 +442,32 @@ def project_detail_page(project_id: int, request: Request, db: Session = Depends
             "parent_project": parent_project,
             "root_project": root_project,
             "cross_center_summary": cross_center_summary
+        }, db=db)
+    )
+
+
+@router.get("/projects/{project_id}/equipment/{asset_id}", response_class=HTMLResponse)
+def equipment_detail_page(project_id: int, asset_id: int, request: Request, db: Session = Depends(get_db)):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    asset = db.query(MaterialAsset).filter(
+        MaterialAsset.id == asset_id,
+        MaterialAsset.project_id == project_id
+    ).first()
+    if not project or not asset:
+        return RedirectResponse(f"{settings.APP_PREFIX}/projects/{project_id}", status_code=303)
+
+    records = db.query(AssetServiceRecord).filter(
+        AssetServiceRecord.asset_id == asset_id
+    ).order_by(AssetServiceRecord.performed_at.desc(), AssetServiceRecord.id.desc()).all()
+    return templates.TemplateResponse(
+        request=request,
+        name="equipment_detail.html",
+        context=template_context(request, {
+            "project": project,
+            "asset": asset,
+            "records": records,
+            "total_service_cost": sum(float(record.cost or 0) for record in records),
+            "replacements_count": sum(1 for record in records if record.action == "Замена"),
         }, db=db)
     )
 
@@ -1640,6 +1666,8 @@ def action_add_material_asset(
     serial_number: Optional[str] = Form(None),
     quantity: int = Form(1),
     purchase_date: Optional[str] = Form(None),
+    purchase_cost: Optional[str] = Form(None),
+    warranty_until: Optional[str] = Form(None),
     battery_replaced_at: Optional[str] = Form(None),
     status: str = Form("В работе"),
     is_shared: Optional[str] = Form(None),
@@ -1665,6 +1693,17 @@ def action_add_material_asset(
         except Exception:
             pass
 
+    warranty_date = None
+    if warranty_until and warranty_until.strip():
+        try:
+            warranty_date = datetime.strptime(warranty_until.strip(), "%Y-%m-%d").date()
+        except Exception:
+            pass
+    try:
+        parsed_cost = max(0.0, float((purchase_cost or "0").replace(",", ".")))
+    except (TypeError, ValueError):
+        parsed_cost = 0.0
+
     shared_flag = True if is_shared in ("on", "true", "1", "yes") else False
 
     asset = MaterialAsset(
@@ -1675,12 +1714,26 @@ def action_add_material_asset(
         serial_number=serial_number.strip() if serial_number else None,
         quantity=max(1, quantity),
         purchase_date=p_date,
+        purchase_cost=parsed_cost,
+        warranty_until=warranty_date,
         battery_replaced_at=b_date,
         status=status.strip() or "В работе",
         is_shared=shared_flag,
         notes=notes.strip() if notes else None
     )
     db.add(asset)
+    db.flush()
+    if p_date or parsed_cost or model_name or serial_number:
+        db.add(AssetServiceRecord(
+            asset_id=asset.id,
+            performed_at=p_date or date.today(),
+            action="Покупка и установка",
+            model_name=asset.model_name,
+            serial_number=asset.serial_number,
+            cost=parsed_cost,
+            warranty_until=warranty_date,
+            notes="Первичное внесение оборудования"
+        ))
     db.commit()
 
     return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/projects/{project_id}", status_code=303)
@@ -1695,6 +1748,8 @@ def action_edit_material_asset(
     serial_number: Optional[str] = Form(None),
     quantity: int = Form(1),
     purchase_date: Optional[str] = Form(None),
+    purchase_cost: Optional[str] = Form(None),
+    warranty_until: Optional[str] = Form(None),
     battery_replaced_at: Optional[str] = Form(None),
     status: str = Form("В работе"),
     is_shared: Optional[str] = Form(None),
@@ -1720,6 +1775,18 @@ def action_edit_material_asset(
     else:
         asset.purchase_date = None
 
+    try:
+        asset.purchase_cost = max(0.0, float((purchase_cost or "0").replace(",", ".")))
+    except (TypeError, ValueError):
+        asset.purchase_cost = 0.0
+    if warranty_until and warranty_until.strip():
+        try:
+            asset.warranty_until = datetime.strptime(warranty_until.strip(), "%Y-%m-%d").date()
+        except Exception:
+            pass
+    else:
+        asset.warranty_until = None
+
     if battery_replaced_at and battery_replaced_at.strip():
         try:
             asset.battery_replaced_at = datetime.strptime(battery_replaced_at.strip(), "%Y-%m-%d").date()
@@ -1734,6 +1801,86 @@ def action_edit_material_asset(
     db.commit()
 
     return RedirectResponse(redirect_to or f"{settings.APP_PREFIX}/projects/{asset.project_id}", status_code=303)
+
+
+@router.post("/actions/add-equipment-record/{asset_id}")
+def action_add_equipment_record(
+    asset_id: int,
+    performed_at: str = Form(...),
+    action: str = Form("Замена"),
+    model_name: Optional[str] = Form(None),
+    serial_number: Optional[str] = Form(None),
+    cost: Optional[str] = Form(None),
+    warranty_until: Optional[str] = Form(None),
+    notes: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    asset = db.query(MaterialAsset).filter(MaterialAsset.id == asset_id).first()
+    if not asset:
+        return RedirectResponse(f"{settings.APP_PREFIX}/projects", status_code=303)
+    try:
+        record_date = datetime.strptime(performed_at, "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        record_date = date.today()
+    try:
+        record_cost = max(0.0, float((cost or "0").replace(",", ".")))
+    except (TypeError, ValueError):
+        record_cost = 0.0
+    record_warranty = None
+    if warranty_until:
+        try:
+            record_warranty = datetime.strptime(warranty_until, "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            pass
+    record = AssetServiceRecord(
+        asset_id=asset.id,
+        performed_at=record_date,
+        action=action.strip() or "Работа",
+        model_name=model_name.strip() if model_name else None,
+        serial_number=serial_number.strip() if serial_number else None,
+        cost=record_cost,
+        warranty_until=record_warranty,
+        notes=notes.strip() if notes else None
+    )
+    db.add(record)
+    if action == "Замена":
+        asset.model_name = record.model_name or asset.model_name
+        asset.serial_number = record.serial_number or asset.serial_number
+        asset.purchase_date = record_date
+        asset.purchase_cost = record_cost
+        asset.warranty_until = record_warranty
+        asset.status = "В работе"
+    db.commit()
+    return RedirectResponse(f"{settings.APP_PREFIX}/projects/{asset.project_id}/equipment/{asset.id}", status_code=303)
+
+
+@router.post("/actions/update-project-layout/{project_id}")
+def action_update_project_layout(
+    project_id: int,
+    layout_order: str = Form("[]"),
+    hidden_blocks: str = Form("[]"),
+    db: Session = Depends(get_db)
+):
+    import json
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        return RedirectResponse(f"{settings.APP_PREFIX}/projects", status_code=303)
+    allowed = {"tasks", "equipment", "centers", "planning"}
+    try:
+        order = [key for key in json.loads(layout_order) if key in allowed]
+    except (TypeError, ValueError, json.JSONDecodeError):
+        order = []
+    try:
+        hidden = [key for key in json.loads(hidden_blocks) if key in allowed]
+    except (TypeError, ValueError, json.JSONDecodeError):
+        hidden = []
+    for key in ("tasks", "equipment", "centers", "planning"):
+        if key not in order:
+            order.append(key)
+    project.dashboard_layout = {"order": order, "hidden": hidden}
+    flag_modified(project, "dashboard_layout")
+    db.commit()
+    return RedirectResponse(f"{settings.APP_PREFIX}/projects/{project_id}", status_code=303)
 
 
 @router.post("/actions/delete-material-asset/{asset_id}")

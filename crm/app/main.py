@@ -27,6 +27,21 @@ async def lifespan(app: FastAPI):
         except Exception:
             pass
         try:
+            conn.execute(text("ALTER TABLE projects ADD COLUMN dashboard_layout JSON"))
+            conn.commit()
+        except Exception:
+            pass
+        try:
+            conn.execute(text("ALTER TABLE material_assets ADD COLUMN purchase_cost NUMERIC(12, 2) DEFAULT 0"))
+            conn.commit()
+        except Exception:
+            pass
+        try:
+            conn.execute(text("ALTER TABLE material_assets ADD COLUMN warranty_until DATE"))
+            conn.commit()
+        except Exception:
+            pass
+        try:
             conn.execute(text("ALTER TABLE tasks ADD COLUMN is_urgent BOOLEAN DEFAULT 0"))
             conn.commit()
         except Exception:

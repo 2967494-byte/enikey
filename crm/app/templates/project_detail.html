@@ -21,6 +21,9 @@
             <span class="text-white font-medium truncate max-w-xs sm:max-w-md">{{ project.title }}</span>
         </div>
         <div class="flex items-center gap-2">
+            <button onclick="document.getElementById('modal-project-layout').classList.remove('hidden')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-medium text-xs transition">
+                Настроить страницу
+            </button>
             <button onclick="document.getElementById('modal-edit-project').classList.remove('hidden')" class="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 font-medium text-xs transition flex items-center gap-1.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                 <span>Редактировать проект</span>
@@ -76,6 +79,8 @@
             </div>
         </div>
     </div>
+
+    <div id="project-layout-host" class="space-y-6"></div>
 
     <!-- Dynamic Template Specific Module -->
     {% set p_type = project.project_type.value %}
@@ -294,7 +299,7 @@
 
     <!-- SUBPROJECTS / CENTERS SECTION (IF PARENT) -->
     {% if is_parent_project or project.subprojects|length > 0 %}
-    <div id="centers-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 space-y-4">
+    <div id="centers-section" data-project-block="centers" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
                 <h3 class="font-bold text-lg text-white flex items-center gap-2">
@@ -345,7 +350,7 @@
     {% endif %}
 
     <!-- MATERIAL ASSETS & INVENTORY SECTION -->
-    <div id="inventory" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 space-y-5">
+    <div id="inventory" data-project-block="equipment" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 space-y-5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
                 <h3 class="font-bold text-lg text-white flex items-center gap-2">
@@ -435,7 +440,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-800/60">
                         {% for ups in cross_center_summary.ups_list %}
-                        <tr class="hover:bg-slate-800/40 transition">
+                        <tr onclick="if (!event.target.closest('a, button, form')) window.location='{{ prefix }}/projects/{{ project.id }}/equipment/{{ a.id }}'" class="cursor-pointer hover:bg-slate-800/40 transition">
                             <td class="py-2.5 px-2.5 font-medium text-white flex items-center gap-1.5">
                                 <span class="w-2 h-2 rounded-full" style="background-color: {{ ups.center.color_hex or '#6366f1' if ups.center else '#6366f1' }}"></span>
                                 <span>{{ ups.center.title if ups.center else "—" }}</span>
@@ -461,6 +466,8 @@
                                     data-serial="{{ ups.asset.serial_number or '' }}"
                                     data-qty="{{ ups.asset.quantity }}"
                                     data-purchase="{% if ups.asset.purchase_date %}{{ ups.asset.purchase_date.isoformat() }}{% endif %}"
+                                    data-cost="{{ ups.asset.purchase_cost or '' }}"
+                                    data-warranty="{% if ups.asset.warranty_until %}{{ ups.asset.warranty_until.isoformat() }}{% endif %}"
                                     data-battery="{% if ups.asset.battery_replaced_at %}{{ ups.asset.battery_replaced_at.isoformat() }}{% endif %}"
                                     data-status="{{ ups.asset.status }}"
                                     data-shared="{% if ups.asset.is_shared %}1{% else %}0{% endif %}"
@@ -570,6 +577,7 @@
                             <th class="py-2 px-3">Марка / Модель</th>
                             <th class="py-2 px-3 text-center">Кол-во</th>
                             <th class="py-2 px-3">Покупка</th>
+                            <th class="py-2 px-3">Гарантия</th>
                             <th class="py-2 px-3">Замена АКБ / ТО</th>
                             <th class="py-2 px-3">Статус</th>
                             <th class="py-2 px-3 text-center">Сводка</th>
@@ -580,15 +588,16 @@
                         {% for a in material_assets %}
                         <tr class="hover:bg-slate-800/40 transition">
                             <td class="py-2.5 px-3 font-semibold text-white">
-                                {{ a.name }}
+                                <a href="{{ prefix }}/projects/{{ project.id }}/equipment/{{ a.id }}" class="hover:text-indigo-300 transition underline-offset-4 hover:underline">{{ a.name }}</a>
                                 {% if a.notes %}
                                 <div class="text-[10px] text-slate-400 font-normal truncate max-w-xs">{{ a.notes }}</div>
                                 {% endif %}
                             </td>
                             <td class="py-2.5 px-3 text-slate-300">{{ a.category }}</td>
-                            <td class="py-2.5 px-3 text-slate-200">{{ a.model_name or "—" }}</td>
+                            <td class="py-2.5 px-3 text-slate-200"><a href="{{ prefix }}/projects/{{ project.id }}/equipment/{{ a.id }}" class="hover:text-indigo-300 transition">{{ a.model_name or "—" }}</a></td>
                             <td class="py-2.5 px-3 text-center font-bold text-indigo-300">{{ a.quantity }} шт</td>
-                            <td class="py-2.5 px-3 text-slate-400">{% if a.purchase_date %}{{ a.purchase_date.strftime('%d.%m.%Y') }}{% else %}—{% endif %}</td>
+                            <td class="py-2.5 px-3 text-slate-400">{% if a.purchase_date %}{{ a.purchase_date.strftime('%d.%m.%Y') }}{% else %}—{% endif %}{% if a.purchase_cost %}<div class="text-[10px] text-slate-500">{{ a.purchase_cost|money }} ₽</div>{% endif %}</td>
+                            <td class="py-2.5 px-3 text-slate-300">{% if a.warranty_until %}до {{ a.warranty_until.strftime('%d.%m.%Y') }}{% else %}—{% endif %}</td>
                             <td class="py-2.5 px-3 text-slate-300">{% if a.battery_replaced_at %}{{ a.battery_replaced_at.strftime('%d.%m.%Y') }}{% else %}—{% endif %}</td>
                             <td class="py-2.5 px-3">
                                 <span class="px-2 py-0.5 rounded text-[10px] font-medium {% if a.status == 'В работе' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% elif a.status == 'В резерве' %}bg-blue-500/10 text-blue-400 border border-blue-500/20{% else %}bg-rose-500/15 text-rose-300 border border-rose-500/30{% endif %}">
@@ -612,6 +621,8 @@
                                         data-serial="{{ a.serial_number or '' }}"
                                         data-qty="{{ a.quantity }}"
                                         data-purchase="{% if a.purchase_date %}{{ a.purchase_date.isoformat() }}{% endif %}"
+                                        data-cost="{{ a.purchase_cost or '' }}"
+                                        data-warranty="{% if a.warranty_until %}{{ a.warranty_until.isoformat() }}{% endif %}"
                                         data-battery="{% if a.battery_replaced_at %}{{ a.battery_replaced_at.isoformat() }}{% endif %}"
                                         data-status="{{ a.status }}"
                                         data-shared="{% if a.is_shared %}1{% else %}0{% endif %}"
@@ -637,7 +648,7 @@
     </div>
 
     <!-- TASKS & SUBTASKS SECTION -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 space-y-5">
+    <div id="project-tasks" data-project-block="tasks" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 space-y-5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
                 <h3 class="font-bold text-lg text-white flex items-center gap-2">
@@ -806,7 +817,7 @@
     </div>
 
     <!-- Project Calendar & Finances Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+    <div id="project-planning" data-project-block="planning" class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         <!-- Project Calendar -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
             <h3 class="font-bold text-base text-white flex items-center gap-2"> Расписание проекта</h3>
@@ -1416,6 +1427,69 @@
     });
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const host = document.getElementById('project-layout-host');
+    const saved = {{ (project.dashboard_layout or {}) | tojson }};
+    const order = Array.isArray(saved.order) && saved.order.length ? saved.order : ['tasks', 'equipment', 'centers', 'planning'];
+    const hidden = Array.isArray(saved.hidden) ? saved.hidden : [];
+    const blocks = {};
+    document.querySelectorAll('[data-project-block]').forEach(function (block) {
+        blocks[block.dataset.projectBlock] = block;
+    });
+    if (host) {
+        order.forEach(function (key) {
+            const block = blocks[key];
+            if (!block) return;
+            block.classList.toggle('hidden', hidden.includes(key));
+            host.appendChild(block);
+        });
+    }
+
+    const list = document.getElementById('layout-block-list');
+    const form = document.getElementById('project-layout-form');
+    if (!list || !form) return;
+    order.forEach(function (key) {
+        const row = list.querySelector('[data-key="' + key + '"]');
+        if (row) list.appendChild(row);
+    });
+    list.querySelectorAll('[data-key]').forEach(function (row) {
+        row.querySelector('input').checked = !hidden.includes(row.dataset.key);
+    });
+    function updateLayoutFields() {
+        const rows = Array.from(list.querySelectorAll('[data-key]'));
+        form.querySelector('[name="layout_order"]').value = JSON.stringify(rows.map(function (row) { return row.dataset.key; }));
+        form.querySelector('[name="hidden_blocks"]').value = JSON.stringify(rows.filter(function (row) { return !row.querySelector('input').checked; }).map(function (row) { return row.dataset.key; }));
+    }
+    list.addEventListener('click', function (event) {
+        const button = event.target.closest('button[data-move]');
+        if (!button) return;
+        const row = button.closest('[data-key]');
+        if (button.dataset.move === 'up' && row.previousElementSibling) list.insertBefore(row, row.previousElementSibling);
+        if (button.dataset.move === 'down' && row.nextElementSibling) list.insertBefore(row.nextElementSibling, row);
+        updateLayoutFields();
+    });
+    list.addEventListener('change', updateLayoutFields);
+    updateLayoutFields();
+});
+</script>
+
+<div id="modal-project-layout" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+        <div class="flex items-start justify-between gap-4"><div><h3 class="text-lg font-bold text-white">Настроить страницу</h3><p class="mt-1 text-xs text-slate-400">Перемещайте разделы кнопками. Настройка сохраняется только для этого проекта.</p></div><button type="button" onclick="document.getElementById('modal-project-layout').classList.add('hidden')" class="text-slate-400 hover:text-white">×</button></div>
+        <form id="project-layout-form" action="{{ prefix }}/actions/update-project-layout/{{ project.id }}" method="POST" class="mt-5">
+            <input type="hidden" name="layout_order"><input type="hidden" name="hidden_blocks">
+            <div id="layout-block-list" class="space-y-2">
+                <div data-key="tasks" class="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/60 p-3"><input id="layout-tasks" type="checkbox" class="h-4 w-4" checked><label for="layout-tasks" class="flex-1 text-sm font-semibold text-white">Задачи</label><button type="button" data-move="up" class="px-2 text-slate-400 hover:text-white">↑</button><button type="button" data-move="down" class="px-2 text-slate-400 hover:text-white">↓</button></div>
+                <div data-key="equipment" class="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/60 p-3"><input id="layout-equipment" type="checkbox" class="h-4 w-4" checked><label for="layout-equipment" class="flex-1 text-sm font-semibold text-white">Оборудование</label><button type="button" data-move="up" class="px-2 text-slate-400 hover:text-white">↑</button><button type="button" data-move="down" class="px-2 text-slate-400 hover:text-white">↓</button></div>
+                <div data-key="centers" class="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/60 p-3"><input id="layout-centers" type="checkbox" class="h-4 w-4" checked><label for="layout-centers" class="flex-1 text-sm font-semibold text-white">Центры и подразделения</label><button type="button" data-move="up" class="px-2 text-slate-400 hover:text-white">↑</button><button type="button" data-move="down" class="px-2 text-slate-400 hover:text-white">↓</button></div>
+                <div data-key="planning" class="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/60 p-3"><input id="layout-planning" type="checkbox" class="h-4 w-4" checked><label for="layout-planning" class="flex-1 text-sm font-semibold text-white">Расписание и финансы</label><button type="button" data-move="up" class="px-2 text-slate-400 hover:text-white">↑</button><button type="button" data-move="down" class="px-2 text-slate-400 hover:text-white">↓</button></div>
+            </div>
+            <div class="mt-5 flex justify-end gap-2"><button type="button" onclick="document.getElementById('modal-project-layout').classList.add('hidden')" class="px-3.5 py-2 text-xs text-slate-300">Отмена</button><button type="submit" class="rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-xs font-bold text-white">Сохранить</button></div>
+        </form>
+    </div>
+</div>
+
 <!-- Modal: Add Material Asset -->
 <div id="modal-add-material-asset" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
@@ -1479,6 +1553,17 @@
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Дата покупки</label>
                     <input type="date" name="purchase_date" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Стоимость покупки</label>
+                    <input type="number" name="purchase_cost" min="0" step="0.01" placeholder="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Гарантия до</label>
+                    <input type="date" name="warranty_until" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Замена аккумуляторов / ТО</label>
@@ -1575,6 +1660,17 @@
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Дата покупки</label>
                     <input type="date" name="purchase_date" id="edit-asset-purchase" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Стоимость покупки</label>
+                    <input type="number" name="purchase_cost" id="edit-asset-cost" min="0" step="0.01" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Гарантия до</label>
+                    <input type="date" name="warranty_until" id="edit-asset-warranty" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Замена аккумуляторов / ТО</label>
@@ -1786,6 +1882,8 @@ function openEditAssetModalFromBtn(btn) {
     document.getElementById('edit-asset-serial').value = btn.getAttribute('data-serial') || '';
     document.getElementById('edit-asset-quantity').value = btn.getAttribute('data-qty') || '1';
     document.getElementById('edit-asset-purchase').value = btn.getAttribute('data-purchase') || '';
+    document.getElementById('edit-asset-cost').value = btn.getAttribute('data-cost') || '';
+    document.getElementById('edit-asset-warranty').value = btn.getAttribute('data-warranty') || '';
     document.getElementById('edit-asset-battery').value = btn.getAttribute('data-battery') || '';
     document.getElementById('edit-asset-status').value = btn.getAttribute('data-status') || 'В работе';
     document.getElementById('edit-asset-shared').checked = (btn.getAttribute('data-shared') === '1');

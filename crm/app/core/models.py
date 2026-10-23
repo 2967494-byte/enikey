@@ -92,6 +92,7 @@ class Project(Base):
     weekly_quota_minutes = Column(Integer, default=0)
     preferred_slot_minutes = Column(Integer, default=60)
     template_payload = Column(JSON, default=dict)
+    dashboard_layout = Column(JSON, default=dict)
     parent_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -258,6 +259,8 @@ class MaterialAsset(Base):
     serial_number = Column(String(100), nullable=True)
     quantity = Column(Integer, default=1)
     purchase_date = Column(Date, nullable=True)
+    purchase_cost = Column(Numeric(12, 2), default=0.0)
+    warranty_until = Column(Date, nullable=True)
     battery_replaced_at = Column(Date, nullable=True)
     status = Column(String(50), default="В работе")  # "В работе", "В резерве", "Требует ремонта", "Списано"
     is_shared = Column(Boolean, default=False)  # Галка "Для всех подпроектов данного проекта"
@@ -266,3 +269,26 @@ class MaterialAsset(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     project = relationship("Project", back_populates="material_assets")
+    service_records = relationship(
+        "AssetServiceRecord",
+        back_populates="asset",
+        cascade="all, delete-orphan",
+        order_by="AssetServiceRecord.performed_at.desc()"
+    )
+
+
+class AssetServiceRecord(Base):
+    __tablename__ = "asset_service_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    asset_id = Column(Integer, ForeignKey("material_assets.id", ondelete="CASCADE"), nullable=False)
+    performed_at = Column(Date, nullable=False, default=date.today)
+    action = Column(String(50), nullable=False, default="Замена")
+    model_name = Column(String(200), nullable=True)
+    serial_number = Column(String(100), nullable=True)
+    cost = Column(Numeric(12, 2), default=0.0)
+    warranty_until = Column(Date, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    asset = relationship("MaterialAsset", back_populates="service_records")
